@@ -1,0 +1,107 @@
+-- DyrosXindigo | By INDIGO - COMPACTO & OPTIMIZADO 2025
+loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library/main/Library",true))()
+
+local plr = game.Players.LocalPlayer
+local rs = game:GetService("ReplicatedStorage")
+local ws = game:GetService("Workspace")
+local vum = game:GetService("VirtualUser")
+local vim = game:GetService("VirtualInputManager")
+local uis = game:GetService("UserInputService")
+local sg = game:GetService("StarterGui")
+local rsEvents = rs:WaitForChild("rEvents")
+local muscleEvent = plr:WaitForChild("muscleEvent")
+
+local window = library:AddWindow("DyrosXindigo", {main_color = Color3.fromRGB(144,0,194), min_size = Vector2.new(540,580), can_resize = true})
+
+local main = window:AddTab("Main")
+local farm = window:AddTab("Farm")
+local brawl = window:AddTab("Brawl")
+local kill = window:AddTab("Kill")
+local player = window:AddTab("Player")
+local tp = window:AddTab("TP")
+local misc = window:AddTab("Misc")
+
+main:Show()
+for _,t in pairs({main,farm,brawl,kill,player,tp,misc}) do t:AddLabel("DyrosXindigo | By INDIGO") end
+
+-- === GLOBALS ===
+getgenv().afk = false; getgenv().knock = false; getgenv().winb = false; getgenv().jungle = false
+getgenv().aura = false; getgenv().fastp = false; getgenv().noclip = false; getgenv().infj = false
+getgenv().whitelist = {}
+
+-- === MAIN ===
+main:AddSwitch("Anti AFK", function(s) getgenv().afk = s if s then vum.Idled:Connect(function() vum:ClickButton2(Vector2.new()) end) end end, true)
+main:AddSwitch("Anti Knockback", function(s) getgenv().knock = s plr.CharacterAdded:Connect(function(c) if s then c:WaitForChild("HumanoidRootPart").Anchored = true task.wait(0.1) c.HumanoidRootPart.Anchored = false end end) end)
+
+-- === FARM ===
+farm:AddSwitch("Auto Rebirth", function(s) while s do rsEvents.rebirthRemote:InvokeServer("rebirthRequest") task.wait(0.1) end end)
+farm:AddSwitch("Jungle Gym (Todos)", function(s)
+    getgenv().jungle = s
+    while getgenv().jungle do
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local pos = {
+                CFrame.new(-8173,64,1898), CFrame.new(-8352,34,2878),
+                CFrame.new(-8666,34,2070), CFrame.new(-8621,34,2684)
+            }
+            for _,p in pairs(pos) do
+                plr.Character.HumanoidRootPart.CFrame = p task.wait(0.2)
+                vim:SendKeyEvent(true,"E",false,game) task.wait(0.1)
+                vim:SendKeyEvent(false,"E",false,game)
+                while getgenv().jungle do muscleEvent:FireServer("rep") task.wait() end
+            end
+        end task.wait(1)
+    end
+end)
+
+-- === BRAWL ===
+brawl:AddSwitch("Auto Win Brawl", function(s)
+    getgenv().winb = s
+    spawn(function() while getgenv().winb do if plr.PlayerGui.gameGui.brawlJoinLabel.Visible then rsEvents.brawlEvent:FireServer("joinBrawl") end task.wait(0.5) end end)
+    spawn(function() while getgenv().winb do muscleEvent:FireServer("punch","rightHand") muscleEvent:FireServer("punch","leftHand") task.wait(0.05) end end)
+    spawn(function() while getgenv().winb do
+        for _,p in pairs(game.Players:GetPlayers()) do
+            if p ~= plr and p.Character and p.Character:FindFirstChild("LeftHand") then
+                firetouchinterest(p.Character.HumanoidRootPart, plr.Character.LeftHand, 0)
+                firetouchinterest(p.Character.HumanoidRootPart, plr.Character.RightHand, 0)
+                task.wait() firetouchinterest(p.Character.HumanoidRootPart, plr.Character.LeftHand, 1)
+                firetouchinterest(p.Character.HumanoidRootPart, plr.Character.RightHand, 1)
+            end
+        end task.wait(0.05)
+    end end)
+end)
+
+-- === KILL ===
+kill:AddSwitch("Kill Aura", function(s)
+    getgenv().aura = s
+    while getgenv().aura do
+        for _,p in pairs(game.Players:GetPlayers()) do
+            if p ~= plr and not table.find(getgenv().whitelist,p.Name) and p.Character then
+                muscleEvent:FireServer("punch","rightHand")
+                muscleEvent:FireServer("punch","leftHand")
+            end
+        end task.wait(0.1)
+    end
+end)
+kill:AddTextBox("Add Whitelist", function(t) table.insert(getgenv().whitelist,t) end)
+
+-- === PLAYER ===
+player:AddTextBox("WalkSpeed", function(v) plr.Character.Humanoid.WalkSpeed = tonumber(v) or 16 end)
+player:AddSwitch("Noclip", function(s)
+    getgenv().noclip = s
+    if s then game.RunService.Stepped:Connect(function() for _,p in pairs(plr.Character:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end end) end
+end)
+player:AddSwitch("Infinite Jump", function(s)
+    getgenv().infj = s
+    if s then uis.JumpRequest:Connect(function() plr.Character.Humanoid:ChangeState("Jumping") end) end
+end)
+
+-- === TELEPORTS ===
+local tps = {
+    Spawn = CFrame.new(2,8,115), Inferno = CFrame.new(-6768,7,-1287),
+    Legends = CFrame.new(4604,991,-3887), MuscleKing = CFrame.new(-8646,17,-5738),
+    Jungle = CFrame.new(-8659,6,2384)
+}
+for n,c in pairs(tps) do tp:AddButton(n, function() plr.Character.HumanoidRootPart.CFrame = c end) end
+
+sg:SetCore("SendNotification",{Title="DyrosXindigo",Text="¡Cargado crack! @francisco_81449",Duration=5})
+print("DyrosXindigo Compacto cargado")
