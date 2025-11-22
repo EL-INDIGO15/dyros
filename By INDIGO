@@ -2075,7 +2075,7 @@ local speedGrind = rebirthFarmFolder:AddSwitch("Fast Strength", function(bool)
 end)
 
 
-local killerTab = window:AddTab("Killer")
+
 
 
 _G.whitelistedPlayers = _G.whitelistedPlayers or {}
@@ -2608,7 +2608,7 @@ end)
 local noteTab = window:AddTab("Note")
 
 -- Add a decorative header with centered text
-noteTab:AddLabel("Dyros fuerza script")
+noteTab:AddLabel("HadesHub fuerza script")
 
 -- Add spacers for better layout
 noteTab:AddLabel("script para todos")
