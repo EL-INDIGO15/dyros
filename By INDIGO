@@ -2608,7 +2608,7 @@ end)
 local noteTab = window:AddTab("Note")
 
 -- Add a decorative header with centered text
-noteTab:AddLabel("HONNYDEZZ - SCRIPT PUBLICO")
+noteTab:AddLabel("Dyros script")
 
 -- Add spacers for better layout
 noteTab:AddLabel("script para todos ")
