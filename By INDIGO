@@ -31,8 +31,8 @@ end
 setupAntiAFK()
 
 -- Create Main Window
-local window = library:AddWindow("HONNYDEZZ - SCRIP | Crackeado By Alejandro", {
-    main_color = Color5.fromRGB(144, 0, 194),
+local window = library:AddWindow("By Dyros", {
+    main_color = Color3.fromRGB(144, 0, 194),
     min_size = Vector2.new(550, 600),
     can_resize = true,
 })
@@ -42,7 +42,7 @@ local mainTab = window:AddTab("Main")
 local farmPlusTab = window:AddTab("Farm")
 mainTab:Show() -- Show this tab by default
 
-mainTab:AddLabel("HONNYDEZZ|SCRIP PUBLICO")
+mainTab:AddLabel("Dyros script jajajajajas")
 
 
 -- Add Anti-AFK toggle
@@ -2611,7 +2611,7 @@ local noteTab = window:AddTab("Note")
 noteTab:AddLabel("HONNYDEZZ - SCRIPT PUBLICO")
 
 -- Add spacers for better layout
-noteTab:AddLabel("CREDIT : CHRISDEZZ, MATHIKINGDEZZ, MAYKEDEZZ, MIUDEZZ, SALVADEZZ, EDDIEDEZZ, DORITOSDEZZ, HADESDEZZ, MATHIDEZZ")
+noteTab:AddLabel("script para todos ")
 -- Instead of one large text block, let's add each paragraph separately
 -- This gives better control over formatting
-noteTab:AddLabel("CREADO POR HONNYDEZZ")
+noteTab:AddLabel("By Dyros")
