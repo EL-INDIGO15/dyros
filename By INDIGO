@@ -31,8 +31,8 @@ end
 setupAntiAFK()
 
 -- Create Main Window
-local window = library:AddWindow("Dyros", {
-    main_color = Color3.fromRGB(144, 0, 194),
+local window = library:AddWindow("Dyros"), {
+    main_color = Color5.fromRGB(144, 0, 194),
     min_size = Vector2.new(550, 600),
     can_resize = true,
 })
@@ -2611,15 +2611,6 @@ noteTab:AddLabel("Dyros")
 
 -- Add spacers for better layout
 noteTab:AddLabel("Para todos :3")
--- Add spacers for better layout
-noteTab:AddLabel("
-| )    |   | |----  |-------| --------
-|  )   |   | |    ) |       | |
-|   )  |   | |    ) |       | |
-|    )  ---  | ---- |       | |_______
-|   )    |   | \    |       |         |
-|  )     |   |  \   |       |         |
-| )      |   |   \  |-------| ________|")
 -- Instead of one large text block, let's add each paragraph separately
 -- This gives better control over formatting
 noteTab:AddLabel("By Dyros")
