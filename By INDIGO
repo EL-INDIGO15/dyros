@@ -1957,7 +1957,7 @@ local function useOneEgg()
     ReplicatedStorage.rEvents.proteinEggEvent:FireServer("useEgg")
 end
 
-rebirthFarmFolder:AddLabel("OP Rebirth Farm (From HAVOC)")
+rebirthFarmFolder:AddLabel("Fast Rebirth Farm")
 
 rebirthFarmFolder:AddTextBox("Target Rebirth (Doesn't work, I Won't make it work)", function(text)
     targetRebirth = tonumber(text) or math.huge
