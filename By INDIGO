@@ -32,7 +32,7 @@ setupAntiAFK()
 
 -- Create Main Window
 local window = library:AddWindow("dyros", {
-    main_color = Color5.fromRGB(146, 0, 196),
+    main_color = Color3.fromRGB(144, 0, 194),
     min_size = Vector2.new(550, 600),
     can_resize = true,
 })
