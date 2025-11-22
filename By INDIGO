@@ -31,8 +31,8 @@ end
 setupAntiAFK()
 
 -- Create Main Window
-local window = library:AddWindow("Dyros script de fuerza", {
-    main_color = Color4.fromRGB(144, 0, 194),
+local window = library:AddWindow("HadesHub", {
+    main_color = Color3.fromRGB(144, 0, 194),
     min_size = Vector2.new(550, 600),
     can_resize = true,
 })
@@ -42,7 +42,7 @@ local mainTab = window:AddTab("Main")
 local farmPlusTab = window:AddTab("Farm")
 mainTab:Show() -- Show this tab by default
 
-mainTab:AddLabel("Dyros script para fuerza,renacimientos,teleport,pets")
+mainTab:AddLabel("HadesHub script public")
 
 
 -- Add Anti-AFK toggle
@@ -2605,13 +2605,13 @@ teleportTab:AddButton("Brawl Regular", function()
     })
 end)
 
-local noteTab = window:AddTab("note")
+local noteTab = window:AddTab("Note")
 
 -- Add a decorative header with centered text
-noteTab:AddLabel("Dyros script fuerza")
+noteTab:AddLabel("Dyros fuerza script")
 
 -- Add spacers for better layout
-noteTab:AddLabel("Dyroz fuerza ")
-
+noteTab:AddLabel("script para todos")
+-- Instead of one large text block, let's add each paragraph separately
 -- This gives better control over formatting
 noteTab:AddLabel("By Dyros")
