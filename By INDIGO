@@ -2605,7 +2605,7 @@ teleportTab:AddButton("Brawl Regular", function()
     })
 end)
 
-local noteTab = window:AddTab("notas🗒️")
+local noteTab = window:AddTab("note")
 
 -- Add a decorative header with centered text
 noteTab:AddLabel("Dyros script fuerza")
