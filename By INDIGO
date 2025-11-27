@@ -2201,6 +2201,8 @@ local function findClosestPlayer(input)
     return nil
 end
 
+local killerTab = window:AddTab("Killer")
+
 local whitelistedPlayersLabel = killerTab:AddLabel("Whitelisted Players: None")
 local targetPlayerLabel = killerTab:AddLabel("Target Player: None")
 
