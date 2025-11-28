@@ -2204,10 +2204,9 @@ end
 
 
 
--- NUEVA PESTAÑA: boost / FAST GLITCH --
-local PaidTab = window:AddTab("FastRock Tab")
+local PaidTab = window:AddTab("Rock Tab")
 
-local FastGlitchFolder = FastRockTab:AddFolder("Fast Glitch (Normal)")
+local FastGlitchFolder = RockTab:AddFolder("Fast Glitch (Normal)")
 
 local rockData = {
     {Name = "Tiny Island Rock",         Title = "Tiny Rock",          Durability = 0},
@@ -2250,7 +2249,7 @@ for _, rock in ipairs(rockData) do
 end
 
 -- Fast Glitch V2 (teleport al rock + punch ultra rápido)
-local FastGlitchV2Folder = FastRockTab:AddFolder("Fast Glitch V2 (Teleport)")
+local FastGlitchV2Folder = RockTab:AddFolder("Fast Glitch V2 (Teleport)")
 
 local glitchV2Data = {
     ["Tiny Rock V2"]          = "Tiny Island Rock",
@@ -2282,9 +2281,9 @@ for title, rockName in pairs(glitchV2Data) do
                     task.wait(0.03) -- más rápido que el original
                 end
             end)
-        end)
+        end
     end)
-end)
+end
 
 
 local teleportTab = window:AddTab("Teleport")
