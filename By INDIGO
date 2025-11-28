@@ -2204,10 +2204,10 @@ end
 
 
 
--- ==================== NUEVA PESTAÑA: PAID / FAST GLITCH ====================
-local PaidTab = window:AddTab("Paid Tab")
+-- NUEVA PESTAÑA: boost / FAST GLITCH --
+local PaidTab = window:AddTab("FastRock Tab")
 
-local FastGlitchFolder = PaidTab:AddFolder("Fast Glitch (Normal)")
+local FastGlitchFolder = FastRockTab:AddFolder("Fast Glitch (Normal)")
 
 local rockData = {
     {Name = "Tiny Island Rock",         Title = "Tiny Rock",          Durability = 0},
@@ -2215,8 +2215,7 @@ local rockData = {
     {Name = "Legend Beach Rock",        Title = "Large Rock",         Durability = 5000},
     {Name = "Frost Gym Rock",           Title = "Golden Rock",        Durability = 150000},
     {Name = "Mythical Gym Rock",        Title = "Frost Rock",         Durability = 400000},
-    {Name = "Inferno Gym Rock",         Title = "Inferno Rock",       Durability = 750000},
-    {Name = "Eternal Gym Rock",         Title = "Eternal Rock",       Durability = 1000000},
+    {Name = "Eternal Gym Rock",         Title = "Eternal Rock",       Durability = 750000},
     {Name = "Legend Gym Rock",          Title = "Legends Rock",       Durability = 1000000},
     {Name = "Muscle King Gym Rock",     Title = "Muscle King Rock",   Durability = 5000000},
     {Name = "Ancient Jungle Rock",      Title = "Ancient Jungle Rock",Durability = 10000000},
@@ -2251,7 +2250,7 @@ for _, rock in ipairs(rockData) do
 end
 
 -- Fast Glitch V2 (teleport al rock + punch ultra rápido)
-local FastGlitchV2Folder = PaidTab:AddFolder("Fast Glitch V2 (Teleport)")
+local FastGlitchV2Folder = FastRockTab:AddFolder("Fast Glitch V2 (Teleport)")
 
 local glitchV2Data = {
     ["Tiny Rock V2"]          = "Tiny Island Rock",
@@ -2283,11 +2282,9 @@ for title, rockName in pairs(glitchV2Data) do
                     task.wait(0.03) -- más rápido que el original
                 end
             end)
-        end
+        end)
     end)
-end
--- ==========================================================================
-
+end)
 
 
 local teleportTab = window:AddTab("Teleport")
