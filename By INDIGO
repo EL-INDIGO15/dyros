@@ -2204,43 +2204,50 @@ end
 
 
 
-local PaidTab = window:AddTab("Rock Tab")
+-- ==================== PESTAÑA ROCK - FAST GLITCH (2025) ====================
+print("Creando pestaña Rock...")
 
-local FastGlitchFolder = RockTab:AddFolder("Fast Glitch (Normal)")
+local RockTab = window:AddTab("Rock")        -- ← Aquí está el nuevo nombre
+print("Pestaña Rock creada!")
+
+-- Fast Glitch clásico (touch desde cualquier sitio)
+local FastGlitchFolder = RockTab:AddFolder("Fast Glitch Clásico")
 
 local rockData = {
-    {Name = "Tiny Island Rock",         Title = "Tiny Rock",          Durability = 0},
-    {Name = "Starter Island Rock",      Title = "Punching Rock",      Durability = 100},
-    {Name = "Legend Beach Rock",        Title = "Large Rock",         Durability = 5000},
-    {Name = "Frost Gym Rock",           Title = "Golden Rock",        Durability = 150000},
-    {Name = "Mythical Gym Rock",        Title = "Frost Rock",         Durability = 400000},
-    {Name = "Eternal Gym Rock",         Title = "Eternal Rock",       Durability = 750000},
-    {Name = "Legend Gym Rock",          Title = "Legends Rock",       Durability = 1000000},
-    {Name = "Muscle King Gym Rock",     Title = "Muscle King Rock",   Durability = 5000000},
-    {Name = "Ancient Jungle Rock",      Title = "Ancient Jungle Rock",Durability = 10000000},
+    {Name = "Tiny Island Rock",        Title = "Tiny Rock",        Durability = 0},
+    {Name = "Starter Island Rock",     Title = "Starter Rock",     Durability = 100},
+    {Name = "Legend Beach Rock",       Title = "Legend Beach",     Durability = 5000},
+    {Name = "Frost Gym Rock",          Title = "Frozen Rock",      Durability = 150000},
+    {Name = "Mythical Gym Rock",       Title = "Mythical Rock",    Durability = 400000},
+    {Name = "Eternal Gym Rock",        Title = "Eternal Rock",     Durability = 750000},
+    {Name = "Legend Gym Rock",         Title = "Legend Rock",      Durability = 1000000},
+    {Name = "Muscle King Gym Rock",    Title = "Muscle King Rock", Durability = 5000000},
+    {Name = "Ancient Jungle Rock",     Title = "Jungle Rock",      Durability = 10000000},
 }
 
 for _, rock in ipairs(rockData) do
     FastGlitchFolder:AddSwitch(rock.Title, function(state)
         getgenv().fastGlitch = getgenv().fastGlitch or {}
         getgenv().fastGlitch[rock.Name] = state
-
         if state then
             task.spawn(function()
-                while getgenv().fastGlitch[rock.Name] and game.Players.LocalPlayer.Character do
-                    if game.Players.LocalPlayer.Durability.Value >= rock.Durability then
-                        for _, v in pairs(workspace.machinesFolder:GetDescendants()) do
-                            if v.Name == "neededDurability" and v.Value == rock.Durability and v.Parent:FindFirstChild("Rock") then
-                                firetouchinterest(v.Parent.Rock, game.Players.LocalPlayer.Character.RightHand, 0)
-                                firetouchinterest(v.Parent.Rock, game.Players.LocalPlayer.Character.LeftHand, 0)
-                                task.wait()
-                                firetouchinterest(v.Parent.Rock, game.Players.LocalPlayer.Character.RightHand, 1)
-                                firetouchinterest(v.Parent.Rock, game.Players.LocalPlayer.Character.LeftHand, 1)
-                                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                while getgenv().fastGlitch[rock.Name] do
+                    pcall(function()
+                        if game.Players.LocalPlayer.Durability.Value >= rock.Durability then
+                            for _, v in pairs(workspace.machinesFolder:GetDescendants()) do
+                                if v.Name == "neededDurability" and v.Value == rock.Durability and v.Parent:FindFirstChild("Rock") then
+                                    local hands = game.Players.LocalPlayer.Character
+                                    firetouchinterest(v.Parent.Rock, hands.RightHand, 0)
+                                    firetouchinterest(v.Parent.Rock, hands.LeftHand, 0)
+                                    task.wait()
+                                    firetouchinterest(v.Parent.Rock, hands.RightHand, 1)
+                                    firetouchinterest(v.Parent.Rock, hands.LeftHand, 1)
+                                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                                end
                             end
                         end
-                    end
+                    end)
                     task.wait(0.05)
                 end
             end)
@@ -2248,42 +2255,48 @@ for _, rock in ipairs(rockData) do
     end)
 end
 
--- Fast Glitch V2 (teleport al rock + punch ultra rápido)
+-- Fast Glitch V2 (el más OP: teleport + golpeo instantáneo)
 local FastGlitchV2Folder = RockTab:AddFolder("Fast Glitch V2 (Teleport)")
 
 local glitchV2Data = {
-    ["Tiny Rock V2"]          = "Tiny Island Rock",
-    ["Punching Rock V2"]      = "Starter Island Rock",
-    ["Large Rock V2"]         = "Legend Beach Rock",
-    ["Golden Rock V2"]        = "Frost Gym Rock",
-    ["Frost Rock V2"]         = "Mythical Gym Rock",
-    ["Inferno Rock V2"]       = "Inferno Gym Rock",
-    ["Eternal Rock V2"]       = "Eternal Gym Rock",
-    ["Legends Rock V2"]       = "Legend Gym Rock",
-    ["Muscle King V2"]        = "Muscle King Gym Rock",
-    ["Ancient Jungle V2"]     = "Ancient Jungle Rock",
+    ["Tiny V2"]          = "Tiny Island Rock",
+    ["Starter V2"]       = "Starter Island Rock",
+    ["Legend Beach V2"]  = "Legend Beach Rock",
+    ["Frozen V2"]        = "Frost Gym Rock",
+    ["Mythical V2"]      = "Mythical Gym Rock",
+    ["Eternal V2"]       = "Eternal Gym Rock",
+    ["Legend V2"]        = "Legend Gym Rock",
+    ["Muscle King V2"]   = "Muscle King Gym Rock",
+    ["Jungle V2"]        = "Ancient Jungle Rock",
 }
 
 for title, rockName in pairs(glitchV2Data) do
     FastGlitchV2Folder:AddSwitch(title, function(state)
         getgenv().fastGlitchV2 = getgenv().fastGlitchV2 or {}
         getgenv().fastGlitchV2[rockName] = state
-
         if state then
             task.spawn(function()
-                while getgenv().fastGlitchV2[rockName] and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") do
-                    local rockObj = workspace.machinesFolder:FindFirstChild(rockName)
-                    if rockObj and rockObj:FindFirstChild("Rock") then
-                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = rockObj.Rock.CFrame + Vector3.new(0, 5, 0)
-                        game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                        game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-                    end
-                    task.wait(0.03) -- más rápido que el original
+                while getgenv().fastGlitchV2[rockName] do
+                    pcall(function()
+                        local char = game.Players.LocalPlayer.Character
+                        if char and char:FindFirstChild("HumanoidRootPart") then
+                            local rockObj = workspace.machinesFolder:FindFirstChild(rockName)
+                            if rockObj and rockObj:FindFirstChild("Rock") then
+                                char.HumanoidRootPart.CFrame = rockObj.Rock.CFrame + Vector3.new(0, 5, 0)
+                                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                            end
+                        end
+                    end)
+                    task.wait(0.03)
                 end
             end)
         end
     end)
 end
+
+
+-- =========================================================================
 
 
 local teleportTab = window:AddTab("Teleport")
