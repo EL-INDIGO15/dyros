@@ -2217,9 +2217,9 @@ local rockData = {
     {Name = "Mythical Gym Rock",        Title = "Frost Rock",         Durability = 400000},
     {Name = "Inferno Gym Rock",         Title = "Inferno Rock",       Durability = 750000},
     {Name = "Eternal Gym Rock",         Title = "Eternal Rock",       Durability = 1000000},
-    {Name = "Legend Gym Rock",          Title = "Legends Rock",       Durability = 5000000},
-    {Name = "Muscle King Gym Rock",     Title = "Muscle King Rock",   Durability = 10000000},
-    {Name = "Ancient Jungle Rock",      Title = "Ancient Jungle Rock",Durability = 50000000},
+    {Name = "Legend Gym Rock",          Title = "Legends Rock",       Durability = 1000000},
+    {Name = "Muscle King Gym Rock",     Title = "Muscle King Rock",   Durability = 5000000},
+    {Name = "Ancient Jungle Rock",      Title = "Ancient Jungle Rock",Durability = 10000000},
 }
 
 for _, rock in ipairs(rockData) do
