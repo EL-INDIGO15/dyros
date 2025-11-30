@@ -1,11 +1,18 @@
--- Elerium v2 UI Library Implementation
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library//main/Library", true))()
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local startTime = os.time()
-local startRebirths = player.leaderstats.Rebirths.Value
-local displayName = player.DisplayName
+loadstring(game:HttpGet("https://raw.githubusercontent.com/SadOz8/Library/refs/heads/main/Library.txt"))()
+
+local Library = getgenv().Library  -- O como se llame internamente
+local Window = Library:CreateWindow({
+    Name = "HadesHub",
+    LoadingScreen = true,
+    Theme = "Dark"
+})
+
+-- Ejemplo: Toggle para Auto Farm
+FarmFolder:CreateToggle("Auto Rebirth", false, function(state)
+    getgenv().AutoRebirth = state
+    if state then
+        -- Tu código de auto-rebirth aquí
+      
 
 -- Anti-AFK System
 local VirtualUser = game:GetService("VirtualUser")
