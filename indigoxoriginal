@@ -1748,3 +1748,353 @@ misc2Folder:AddSwitch("Auto Pushups", function(bool)
 
                 wait(0.1)
             end
+        end)
+
+        -- Auto do pushups
+        spawn(function()
+            while _G.FastPushups do
+                game:GetService("Players").LocalPlayer.muscleEvent:FireServer("rep")
+                task.wait(0)
+            end
+        end)
+    else
+        -- Unequip and reset tool
+        local character = game.Players.LocalPlayer.Character
+        local equipped = character:FindFirstChild("Pushups")
+        if equipped then
+            if equipped:FindFirstChild("repTime") then
+                equipped.repTime.Value = 1
+            end
+            equipped.Parent = game.Players.LocalPlayer.Backpack
+        end
+
+        -- Also reset the backpack tool
+        local backpackTool = game.Players.LocalPlayer.Backpack:FindFirstChild("Pushups")
+        if backpackTool and backpackTool:FindFirstChild("repTime") then
+            backpackTool.repTime.Value = 1
+        end
+    end
+end)
+
+-- Fast Handstands toggle with auto-handstands functionality and persistent equipping
+misc2Folder:AddSwitch("Auto Handstands", function(bool)
+    _G.FastHandstands = bool
+
+    if bool then
+        -- Continuously equip and modify handstands tool
+        spawn(function()
+            while _G.FastHandstands do
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+
+                -- Check if tool is not equipped
+                if character and not character:FindFirstChild("Handstands") then
+                    local handstandsTool = player.Backpack:FindFirstChild("Handstands")
+                    if handstandsTool then
+                        if handstandsTool:FindFirstChild("repTime") then
+                            handstandsTool.repTime.Value = 0
+                        end
+                        character.Humanoid:EquipTool(handstandsTool)
+                    end
+                elseif character and character:FindFirstChild("Handstands") then
+                    -- Make sure equipped tool is modified
+                    local equipped = character:FindFirstChild("Handstands")
+                    if equipped:FindFirstChild("repTime") then
+                        equipped.repTime.Value = 0
+                    end
+                end
+
+                wait(0.1)
+            end
+        end)
+
+        -- Auto do handstands
+        spawn(function()
+            while _G.FastHandstands do
+                game:GetService("Players").LocalPlayer.muscleEvent:FireServer("rep")
+                task.wait(0)
+            end
+        end)
+    else
+        -- Unequip and reset tool
+        local character = game.Players.LocalPlayer.Character
+        local equipped = character:FindFirstChild("Handstands")
+        if equipped then
+            if equipped:FindFirstChild("repTime") then
+                equipped.repTime.Value = 1
+            end
+            equipped.Parent = game.Players.LocalPlayer.Backpack
+        end
+
+        -- Also reset the backpack tool
+        local backpackTool = game.Players.LocalPlayer.Backpack:FindFirstChild("Handstands")
+        if backpackTool and backpackTool:FindFirstChild("repTime") then
+            backpackTool.repTime.Value = 1
+        end
+    end
+end)
+
+-- Create the third folder
+local misc3Folder = miscTab:AddFolder("Misc 3")
+
+-- Add No-Clip toggle
+misc3Folder:AddSwitch("No-Clip", function(bool)
+    _G.NoClip = bool
+
+    if bool then
+        local noclipLoop
+        noclipLoop = game:GetService("RunService").Stepped:Connect(function()
+            if _G.NoClip then
+                for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide then
+                        part.CanCollide = false
+                    end
+                end
+            else
+                noclipLoop:Disconnect()
+            end
+        end)
+
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "No-Clip Activado",
+            Text = "Ahora puedes atravesar objetos",
+            Duration = 0
+        })
+    end
+end)
+
+-- Add Infinite Jump toggle
+misc3Folder:AddSwitch("Jumpy Infinite", function(bool)
+    _G.InfiniteJump = bool
+
+    if bool then
+local InfiniteJumpConnection
+        InfiniteJumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
+            if _G.InfiniteJump then
+                game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+            else
+                InfiniteJumpConnection:Disconnect()
+            end
+        end)
+
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Salto Infinito Activado",
+            Text = "Ahora puedes saltar sin límites",
+            Duration = 0
+        })
+    end
+end)
+
+local timeDropdown = misc3Folder:AddDropdown("Change Time", function(selection)
+    local lighting = game:GetService("Lighting")
+
+    if selection == "Night" then
+        lighting.ClockTime = 0
+    elseif selection == "Day" then
+        lighting.ClockTime = 12
+    elseif selection == "Midnight" then
+        lighting.ClockTime = 6
+    end
+
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Hora Cambiada",
+        Text = "La hora del día ha sido cambiada a: " .. selection,
+        Duration = 0
+    })
+end)
+
+-- Add time options
+timeDropdown:Add("Night")
+timeDropdown:Add("Day")
+timeDropdown:Add("Midnight")
+
+-- Create the Rebirth Farm folder in Spanish
+local rebirthFarmFolder = miscTab:AddFolder("Premium Farm")
+
+local function unequipAllPets()
+    local petsFolder = player.petsFolder
+    for _, folder in pairs(petsFolder:GetChildren()) do
+        if folder:IsA("Folder") then
+            for _, pet in pairs(folder:GetChildren()) do
+                ReplicatedStorage.rEvents.equipPetEvent:FireServer("unequipPet", pet)
+            end
+        end
+    end
+    task.wait(0.1)
+end
+
+local function equipUniquePet(petName)
+    unequipAllPets()
+    task.wait(0.01)
+    for _, pet in pairs(player.petsFolder.Unique:GetChildren()) do
+        if pet.Name == petName then
+            ReplicatedStorage.rEvents.equipPetEvent:FireServer("equipPet", pet)
+        end
+    end
+end
+
+local function findMachine(machineName)
+    local machine = workspace.machinesFolder:FindFirstChild(machineName)
+    if not machine then
+        for _, folder in pairs(workspace:GetChildren()) do
+            if folder:IsA("Folder") and folder.Name:find("machines") then
+                machine = folder:FindFirstChild(machineName)
+                if machine then break end
+            end
+        end
+    end
+    return machine
+end
+
+local function pressE()
+    local vim = game:GetService("VirtualInputManager")
+    vim:SendKeyEvent(true, "E", false, game)
+    task.wait(0.1)
+    vim:SendKeyEvent(false, "E", false, game)
+end
+
+local function useOneEgg()
+    ReplicatedStorage.rEvents.proteinEggEvent:FireServer("useEgg")
+end
+
+rebirthFarmFolder:AddLabel("Fast Rebirth Farm")
+
+rebirthFarmFolder:AddTextBox("Target Rebirth (Doesn't work, I Won't make it work)", function(text)
+    targetRebirth = tonumber(text) or math.huge
+end)
+
+-- Variable to store the position lock connection
+local positionLockConnection = nil
+
+-- Function to lock player position
+local function lockPlayerPosition(position)
+    if positionLockConnection then
+        positionLockConnection:Disconnect()
+    end
+
+    positionLockConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = position
+        end
+    end)
+end
+
+-- Function to unlock player position
+local function unlockPlayerPosition()
+    if positionLockConnection then
+        positionLockConnection:Disconnect()
+        positionLockConnection = nil
+    end
+end
+
+-- Add position lock toggle
+rebirthFarmFolder:AddSwitch("Lock Position", function(bool)
+    if bool then
+        -- Get current position and lock it
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local currentPosition = player.Character.HumanoidRootPart.CFrame
+            lockPlayerPosition(currentPosition)
+        end
+    else
+        -- Unlock position
+        unlockPlayerPosition()
+    end
+end)
+
+local packFarm = rebirthFarmFolder:AddSwitch("Rebirth Farm", function(bool)
+    isRunning = bool
+
+    task.spawn(function()
+        while isRunning do
+            local currentRebirths = player.leaderstats.Rebirths.Value
+            local rebirthCost = 10000 + (5000 * currentRebirths)
+
+            if player.ultimatesFolder:FindFirstChild("Golden Rebirth") then
+                local goldenRebirths = player.ultimatesFolder["Golden Rebirth"].Value
+                rebirthCost = math.floor(rebirthCost * (1 - (goldenRebirths * 0.1)))
+            end
+            unequipAllPets()
+            task.wait(0.1)
+            equipUniquePet("Swift Samurai")
+
+            while isRunning and player.leaderstats.Strength.Value < rebirthCost do
+                for i = 1, 10 do
+                    player.muscleEvent:FireServer("rep")
+                end
+                task.wait()
+            end
+            unequipAllPets()
+            task.wait(0.1)
+            equipUniquePet("Tribal Overlord")
+            local machine = findMachine("Jungle Bar Lift")
+            if machine and machine:FindFirstChild("interactSeat") then
+                player.Character.HumanoidRootPart.CFrame = machine.interactSeat.CFrame * CFrame.new(0, 3, 0)
+                repeat
+                    task.wait(0.1)
+                    pressE()
+                until player.Character.Humanoid.Sit
+            end
+            local initialRebirths = player.leaderstats.Rebirths.Value
+            repeat
+                ReplicatedStorage.rEvents.rebirthRemote:InvokeServer("rebirthRequest")
+                task.wait(0.1)
+            until player.leaderstats.Rebirths.Value > initialRebirths
+            if not isRunning then break end
+            task.wait()
+        end
+    end)
+end)
+
+local frameToggle = rebirthFarmFolder:AddSwitch("Hide Frames", function(bool)
+    local rSto = game:GetService("ReplicatedStorage")
+    for _, obj in pairs(rSto:GetChildren()) do
+        if obj.Name:match("Frame$") then
+            obj.Visible = not bool
+        end
+    end
+end)
+
+local speedGrind = rebirthFarmFolder:AddSwitch("Fast Strength", function(bool)
+    local isGrinding = bool
+
+    if not bool then
+        unequipAllPets()
+        return
+    end
+
+    equipUniquePet("Swift Samurai")
+
+    for i = 1, 14 do
+        task.spawn(function()
+            while isGrinding do
+                player.muscleEvent:FireServer("rep")
+                task.wait()
+            end
+        end)
+    end
+end)
+
+
+
+
+
+_G.whitelistedPlayers = _G.whitelistedPlayers or {}
+_G.targetPlayer = _G.targetPlayer or ""
+
+-- Improved character checking function with timeout
+local function checkCharacter()
+    local player = game.Players.LocalPlayer
+
+    if not player then
+        return nil
+    end
+
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        -- Wait for character to load, but with a timeout
+        local startTime = tick()
+        repeat
+            task.wait(0.1)
+            -- If waiting too long (5 seconds), give up
+            if tick() - startTime > 5 then
+                return nil
+            end
