@@ -2448,3 +2448,22 @@ teleportTab:AddButton("Brawl Regular", function()
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    humanoidRootPart.CFrame = CFrame.new(-1849, 20, -6335)
+
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Teletransporte",
+        Text = "Teletransportado al Combate de Playa",
+        Duration = 0
+    })
+end)
+
+local noteTab = window:AddTab("Note")
+
+-- Add a decorative header with centered text
+noteTab:AddLabel("HadesHub fuerza script")
+
+-- Add spacers for better layout
+noteTab:AddLabel("script para todos")
+-- Instead of one large text block, let's add each paragraph separately
+-- This gives better control over formatting
+noteTab:AddLabel("By Dyros")
