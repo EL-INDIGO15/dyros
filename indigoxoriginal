@@ -6,14 +6,7 @@ local Window = Library:CreateWindow({
     LoadingScreen = true,
     Theme = "Dark"
 })
-
--- Ejemplo: Toggle para Auto Farm
-FarmFolder:CreateToggle("Auto Rebirth", false, function(state)
-    getgenv().AutoRebirth = state
-    if state then
-        -- Tu código de auto-rebirth aquí
       
-
 -- Anti-AFK System
 local VirtualUser = game:GetService("VirtualUser")
 local antiAFKConnection
