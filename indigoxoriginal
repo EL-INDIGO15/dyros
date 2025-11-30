@@ -2457,115 +2457,188 @@ teleportTab:AddButton("Brawl Regular", function()
     })
 end)
 
--- ===================================================================
--- CARPETA: Jugadores (Gift + Stats de jugadores + Auto-consumibles)
--- ===================================================================
+
+                
+    end
+end)
+
+-- ================================================
+-- CARPETA: Jugadores (Todo lo que pediste)
+-- ================================================
 local jugadoresFolder = farmPlusTab:AddFolder("Jugadores")
 
--- ==================== SECCIÓN: REGALAR ITEMS (Protein Egg + Tropical Shake) ====================
-jugadoresFolder:AddLabel("Regalar Items").TextSize = 22
+-- ==================== REGALAR ITEMS ====================
+jugadoresFolder:AddLabel("Regalar Items", true) -- true = negrita
 
 local proteinEggLabel = jugadoresFolder:AddLabel("Protein Eggs: 0")
-proteinEggLabel.TextSize = 18
 local tropicalShakeLabel = jugadoresFolder:AddLabel("Tropical Shakes: 0")
-tropicalShakeLabel.TextSize = 18
 
 local selectedEggPlayer = nil
-local eggCount = 0
 local selectedShakePlayer = nil
+local eggCount = 0
 local shakeCount = 0
 
--- Dropdown para Protein Egg
-local eggDropdown = jugadoresFolder:AddDropdown("Jugador → Protein Egg", function(selected)
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr.DisplayName == selected or plr.Name == selected then
+-- Dropdowns para elegir jugador
+local eggDropdown = jugadoresFolder:AddDropdown("→ Regalar Protein Eggs", function(text)
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr.DisplayName == text or plr.Name == text then
             selectedEggPlayer = plr
             break
         end
     end
 end)
 
--- Dropdown para Tropical Shake
-local shakeDropdown = jugadoresFolder:AddDropdown("Jugador → Tropical Shake", function(selected)
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr.DisplayName == selected or plr.Name == selected then
+local shakeDropdown = jugadoresFolder:AddDropdown("→ Regalar Tropical Shakes", function(text)
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr.DisplayName == text or plr.Name == text then
             selectedShakePlayer = plr
             break
         end
     end
 end)
 
--- Añadir jugadores existentes
-for _, plr in pairs(Players:GetPlayers()) do
-    if plr ~= Players.LocalPlayer then
-        local display = plr.DisplayName .. " (@ " .. plr.Name .. ")"
-        eggDropdown:Add(display)
-        shakeDropdown:Add(display)
+-- Añadir jugadores actuales
+local function refreshPlayers()
+    eggDropdown:Clear()
+    shakeDropdown:Clear()
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr ~= game.Players.LocalPlayer then
+            local name = plr.DisplayName .. " (@" .. plr.Name .. ")"
+            eggDropdown:Add(name)
+            shakeDropdown:Add(name)
+        end
     end
 end
+refreshPlayers()
+game.Players.PlayerAdded:Connect(refreshPlayers)
+game.Players.PlayerRemoving:Connect(refreshPlayers)
 
--- Añadir nuevos jugadores que entren
-Players.PlayerAdded:Connect(function(plr)
-    if plr ~= Players.LocalPlayer then
-        local display = plr.DisplayName .. " (@ " .. plr.Name .. ")"
-        eggDropdown:Add(display)
-        shakeDropdown:Add(display)
-    end
-end)
+-- Cantidad a regalar
+jugadoresFolder:AddTextBox("Cantidad de Protein Eggs", function(txt) eggCount = tonumber(txt) or 0 end)
+jugadoresFolder:AddTextBox("Cantidad de Tropical Shakes", function(txt) shakeCount = tonumber(txt) or 0 end)
 
--- Textbox cantidad
-jugadoresFolder:AddTextBox("Cantidad Protein Eggs", function(text)
-    eggCount = tonumber(text) or 0
-end)
-
-jugadoresFolder:AddTextBox("Cantidad Tropical Shakes", function(text)
-    shakeCount = tonumber(text) or 0
-end)
-
--- Botón regalar Protein Egg
+-- Botones para regalar
 jugadoresFolder:AddButton("Regalar Protein Eggs", function()
-    if selectedEggPlayer and eggCount > 0 then
-        for i = 1, eggCount do
-            local egg = Players.LocalPlayer.consumablesFolder:FindFirstChild("Protein Egg")
-            if egg then
-                ReplicatedStorage.rEvents.giftRemote:InvokeServer("giftRequest", selectedEggPlayer, egg)
-                task.wait(0.15)
-            else
-                break
-            end
+    if not selectedEggPlayer or eggCount <= 0 then return end
+    for i = 1, eggCount do
+        local egg = game.Players.LocalPlayer.consumablesFolder:FindFirstChild("Protein Egg")
+        if egg then
+            game.ReplicatedStorage.rEvents.giftRemote:InvokeServer("giftRequest", selectedEggPlayer, egg)
+            task.wait(0.15)
+        else
+            break
         end
     end
 end)
 
--- Botón regalar Tropical Shake
 jugadoresFolder:AddButton("Regalar Tropical Shakes", function()
-    if selectedShakePlayer and shakeCount > 0 then
-        for i = 1, shakeCount do
-            local shake = Players.LocalPlayer.consumablesFolder:FindFirstChild("Tropical Shake")
-            if shake then
-                ReplicatedStorage.rEvents.giftRemote:InvokeServer("giftRequest", selectedShakePlayer, shake)
-                task.wait(0.15)
-            else
-                break
-            end
+    if not selectedShakePlayer or shakeCount <= 0 then return end
+    for i = 1, shakeCount do
+        local shake = game.Players.LocalPlayer.consumablesFolder:FindFirstChild("Tropical Shake")
+        if shake then
+            game.ReplicatedStorage.rEvents.giftRemote:InvokeServer("giftRequest", selectedShakePlayer, shake)
+            task.wait(0.15)
+        else
+            break
         end
     end
 end)
 
--- Actualizar contador de items
-local function updateItemCount()
-    local protein = 0
+-- Contador automático de items
+local function updateCounts()
+    local eggs = 0
     local shakes = 0
     pcall(function()
-        for _, item in pairs(Players.LocalPlayer.consumablesFolder:GetChildren()) do
-            if item.Name == "Protein Egg" then
-                protein = protein + 1
-            elseif item.Name == "Tropical Shake" then
-                shakes = shakes + 1
+        for _, item in pairs(game.Players.LocalPlayer.consumablesFolder:GetChildren()) do
+            if item.Name == "Protein Egg" then eggs += 1
+            elseif item.Name == "Tropical Shake" then shakes += 1
             end
         end
     end)
-    proteinEggLabel.Text
+    proteinEggLabel.Text = "Protein Eggs: " .. eggs
+    tropicalShakeLabel.Text = "Tropical Shakes: " .. shakes
+end
+task.spawn(function()
+    while task.wait(1) do updateCounts() end
+end)
+updateCounts()
+
+-- ==================== LIMPIAR INVENTARIO (Auto-consumir) ====================
+jugadoresFolder:AddLabel("Limpiar Inventario", true)
+
+local consumibles = {"Tropical Shake","Energy Shake","Protein Bar","TOUGH Bar","Protein Shake","ULTRA Shake","Energy Bar"}
+local eating = false
+
+jugadoresFolder:AddSwitch("Auto-consumir todo", function(bool)
+    eating = bool
+end)
+
+task.spawn(function()
+    while true do
+        if eating then
+            for _, nombre in ipairs(consumibles) do
+                local tool = game.Players.LocalPlayer.Character:FindFirstChild(nombre) or game.Players.LocalPlayer.Backpack:FindFirstChild(nombre)
+                if tool then
+                    pcall(function()
+                        game.Players.LocalPlayer.muscleEvent:FireServer(nombre:gsub(" ", ""), tool)
+                    end)
+                end
+            end
+            task.wait(0.35)
+        else
+            task.wait(0.5)
+        end
+    end
+end)
+
+-- ==================== ESTADÍSTICAS DE JUGADORES ====================
+jugadoresFolder:AddLabel("Ver Stats de Jugadores", true)
+
+local selectedStatsPlayer = ""
+local playerStatsDropdown = jugadoresFolder:AddDropdown("Seleccionar jugador", function(text)
+    local name = text:match("%((@.*)%)")
+    selectedStatsPlayer = name and name:sub(3) or ""
+end)
+
+-- Refrescar lista de jugadores también aquí
+game.Players.PlayerAdded:Connect(function() task.wait(0.5); refreshPlayers(); playerStatsDropdown:Clear(); refreshPlayers() end)
+game.Players.PlayerRemoving:Connect(function() task.wait(0.5); refreshPlayers(); playerStatsDropdown:Clear(); refreshPlayers() end)
+refreshPlayers()
+
+-- Labels de stats
+local labels = {}
+for i = 1, 12 do labels[i] = jugadoresFolder:AddLabel("") end
+
+local function format(num)
+    if num >= 1e12 then return string.format("%.2fT", num/1e12)
+    elseif num >= 1e9 then return string.format("%.2fB", num/1e9)
+    elseif num >= 1e6 then return string.format("%.2fM", num/1e6)
+    elseif num >= 1e3 then return string.format("%.2fK", num/1e3)
+    else return tostring(num) end
+end
+
+task.spawn(function()
+    while task.wait(0.6) do
+        if selectedStatsPlayer ~= "" then
+            local plr = game.Players:FindFirstChild(selectedStatsPlayer)
+            if plr then
+                local ls = plr.leaderstats
+                labels[1].Text  = "Strength: " .. (ls and format(ls.Strength.Value) or "N/A")
+                labels[2].Text  = "Rebirths: " .. (ls and format(ls.Rebirths.Value) or "N/A")
+                labels[3].Text  = "Kills: " .. (ls and format(ls.Kills.Value) or "N/A")
+                labels[4].Text  = "Gems: " .. format(plr:FindFirstChild("Gems") and plr.Gems.Value or 0)
+                labels[5].Text  = "Agility: " .. format(plr:FindFirstChild("Agility") and plr.Agility.Value or 0)
+                labels[6].Text  = "Durability: " .. format(plr.Durability.Value)
+                labels[7].Text  = "Muscle King Time: " .. format(plr:FindFirstChild("muscleKingTime") and plr.muscleKingTime.Value or 0)
+                labels[8].Text  = "Tamaño: " .. (plr:FindFirstChild("customSize") and plr.customSize.Value or "N/A")
+                labels[9].Text  = "Velocidad: " .. (plr:FindFirstChild("customSpeed") and plr.customSpeed.Value or "N/A")
+                labels[10].Text = "Evil Karma: " .. format(plr:FindFirstChild("evilKarma") and plr.evilKarma.Value or 0)
+                labels[11].Text = "Good Karma: " .. format(plr:FindFirstChild("goodKarma") and plr.goodKarma.Value or 0)
+                labels[12].Text = "Mapa: " .. (plr:FindFirstChild("currentMap") and plr.currentMap.Value or "Desconocido")
+            end
+        end
+    end
+end)
 
 local noteTab = window:AddTab("Note")
 
