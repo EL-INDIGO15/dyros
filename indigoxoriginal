@@ -2457,11 +2457,6 @@ teleportTab:AddButton("Brawl Regular", function()
     })
 end)
 
-
-                
-    end
-end)
-
 local noteTab = window:AddTab("Note")
 
 -- Add a decorative header with centered text
