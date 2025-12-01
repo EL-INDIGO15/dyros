@@ -1607,23 +1607,7 @@ for pack = 1, 8 do
 end)
 
 
-local statsJugadores = window:AddFolder("Stats jugadores")
 
-local SelectPlayerName = ""
-
-local PlayerDrop = statsJugadores:AddDropdown("Select Player", function(Value)
-    SelectPlayerName = Value:match("| (.+)")
-    previousValues = {}
-end)
-
-local Playerslist = {}
-for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
-    local displayName = Plr.DisplayName .. " | " .. Plr.Name
-    table.insert(Playerslist, displayName)
-end
-for _, AddPlr in ipairs(Playerslist) do
-    PlayerDrop:Add(AddPlr)
-end
 
 local function FormatNumberWithCommas(number)
     local formatted = tostring(number):reverse():gsub("(%d%d%d)", "%1,"):reverse()
@@ -1644,6 +1628,25 @@ local function FormatDisplay(value)
     local normal = FormatNumberWithCommas(value)
     local abbreviated = FormatAbbreviated(value)
     return "[ " .. normal .. " | " .. abbreviated .. " ]"
+end
+
+
+local statsJugadores = window:AddFolder("Stats jugadores")
+
+local SelectPlayerName = ""
+
+local PlayerDrop = statsJugadores:AddDropdown("Select Player", function(Value)
+    SelectPlayerName = Value:match("| (.+)")
+    previousValues = {}
+end)
+
+local Playerslist = {}
+for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+    local displayName = Plr.DisplayName .. " | " .. Plr.Name
+    table.insert(Playerslist, displayName)
+end
+for _, AddPlr in ipairs(Playerslist) do
+    PlayerDrop:Add(AddPlr)
 end
 
 local previousValues = {}
