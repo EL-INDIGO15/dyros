@@ -12,7 +12,7 @@ local window = library:AddWindow("Toxic Paid V3 Cracked By ZTX| Bienvenido " .. 
     can_resize = false,
 })
 
-local AutoFarm = window:AddTab("Farm OP")
+local AutoFarm = window:AddTab("Farm++")
 AutoFarm:Show()
 
 
@@ -20,7 +20,7 @@ AutoFarm:Show()
 getgenv()._AutoRepFarmEnabled = false  
 
 -- Switch en la librería
-AutoFarm:AddSwitch("Fuerza OP (Usar si tu ping es menor que 250 ms)", function(state)
+AutoFarm:AddSwitch("Fuerza OP", function(state)
     getgenv()._AutoRepFarmEnabled = state
     warn("[Auto Rep Farm] Estado cambiado a:", state and "ON" or "OFF")
 end)
@@ -3367,4 +3367,5 @@ Credits:AddLabel("Tiktok:Dyros🍪")
 Credits:AddLabel("script publico")
 Credits:AddLabel("Dyros on top")
 Credits:AddLabel("gracias por usar HadesHub ❤️")
+
 
