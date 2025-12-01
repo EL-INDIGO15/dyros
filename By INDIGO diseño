@@ -1447,12 +1447,11 @@ end)
 
 
 
-
-local estadísticas = estadistica:AddTab("Stats jugadores")
+local statsJugadores = estadistica:AddFolder("Stats jugadores")
 
 local SelectPlayerName = ""
 
-local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
+local PlayerDrop = statsJugadores:AddDropdown("Select Player", function(Value)
     SelectPlayerName = Value:match("| (.+)")
     previousValues = {}
 end)
@@ -1489,14 +1488,14 @@ end
 
 local previousValues = {}
 
-local Update = estadisticas:AddLabel("")
-local Update1 = estadisticas:AddLabel("")
-local Update2 = estadisticas:AddLabel("")
-local Update3 = estadisticas:AddLabel("")
-local Update4 = estadisticas:AddLabel("")
-local Update5 = estadisticas:AddLabel("")
-local Update6 = estadisticas:AddLabel("")
-local Update9 = estadisticas:AddLabel("")
+local Update = statsJugadores:AddLabel("")
+local Update1 = statsJugadores:AddLabel("")
+local Update2 = statsJugadores:AddLabel("")
+local Update3 = statsJugadores:AddLabel("")
+local Update4 = statsJugadores:AddLabel("")
+local Update5 = statsJugadores:AddLabel("")
+local Update6 = statsJugadores:AddLabel("")
+local Update9 = statsJugadores:AddLabel("")
 local Update10 = estadisticas:AddLabel("")
 local Update11 = estadisticas:AddLabel("")
 local Update12 = estadisticas:AddLabel("")
@@ -1555,18 +1554,18 @@ task.spawn(function()
     end
 end)
 
-estadisticas:AddLabel("————————————————————————————")
-estadisticas:AddLabel("Advanced Stats:").TextSize = 24
+statsJugadores:AddLabel("————————————————————————————")
+statsJugadores:AddLabel("Advanced Stats:").TextSize = 24
 
-local enemyHealthLabel = estadisticas:AddLabel("Enemy Health: N/A")
+local enemyHealthLabel = statsJugadores:AddLabel("Enemy Health: N/A")
 enemyHealthLabel.TextSize = 20
 enemyHealthLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-local playerDamageLabel = estadisticas:AddLabel("Your Damage: N/A")
+local playerDamageLabel = statsJugadores:AddLabel("Your Damage: N/A")
 playerDamageLabel.TextSize = 20
 playerDamageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-local hitsToKillLabel = estadisticas:AddLabel("Hits to Kill: N/A")
+local hitsToKillLabel = statsJugadores:AddLabel("Hits to Kill: N/A")
 hitsToKillLabel.TextSize = 20
 hitsToKillLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 
