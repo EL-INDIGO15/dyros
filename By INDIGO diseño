@@ -307,7 +307,7 @@ AutoFarm:AddSwitch("Hide All Frames", function(bool)
 end)
 
 
-AutoFarm:AddSwitch("Anti Lag (Baja Graficos)", function()
+AutoFarm:AddSwitch("Anti Lag", function()
     for _, v in pairs(game:GetDescendants()) do
         if v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then
             v.Enabled = false
@@ -347,7 +347,7 @@ AutoFarm:AddSwitch("Anti Lag (Baja Graficos)", function()
 end)
 
 
-AutoFarm:AddSwitch("Anti Lag (Full Black)", function(State)
+AutoFarm:AddSwitch("Full antilag", function(State)
     local lighting = game:GetService("Lighting")
     if State then
         for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
@@ -606,7 +606,7 @@ AutoFarm:AddSwitch("Auto Spin", function(state)
     end
 end)
 
-AutoFarm:AddButton("Jungle Squat", function()
+RebirthFolder:AddSwitch Squat", function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         char:SetPrimaryPartCFrame(CFrame.new(-8374.25586, 34.5933418, 2932.44995))
