@@ -778,7 +778,7 @@ RebirthFolder:AddButton("Jungle Lift", function()
     print("[Jungle Lift] Teletransport ejecutado correctamente.")
 end)
 
-AutoFarm:AddLabel("Farm Sin Packs")
+
 
 local autoEquipToolsFolder = AutoFarm:AddFolder("Auto Tools")
 
