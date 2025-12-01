@@ -6,7 +6,7 @@ local player = game.Players.LocalPlayer
 local displayName = player.DisplayName or player.Name
 
 -- VENTANA PRINCIPAL
-local window = library:AddWindow("HadesHub|Bienvenid@" .. displayName, {
+local window = library:AddWindow("HadesHub|Bienvenid@ " .. displayName❤️, {
     main_color = Color3.fromRGB(220, 20, 60),
     min_size = Vector2.new(600, 820),
     can_resize = false,
