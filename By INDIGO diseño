@@ -1447,7 +1447,7 @@ end)
 
 
 
-local statsJugadores = estadistica:AddFolder("Stats jugadores")
+local statsJugadores = window:AddFolder("Stats jugadores")
 
 local SelectPlayerName = ""
 
