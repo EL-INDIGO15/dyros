@@ -261,7 +261,7 @@ end
 
 
 
--- 2️⃣ Switch: Eat Egg (30 Min)
+-- 2️⃣ Switch: Eat Egg
 local autoEatEnabled = false
 local function eatProteinEggNew()
     local player = game.Players.LocalPlayer
@@ -291,7 +291,7 @@ task.spawn(function()
     end
 end)
 
-AutoFarm:AddSwitch("Eat Egg (30 Min)", function(state)
+AutoFarm:AddSwitch("Eat Egg", function(state)
     autoEatEnabled = state
     print(state and "[AutoEgg] Activado." or "[AutoEgg] Desactivado.")
 end)
@@ -444,7 +444,7 @@ AutoFarm:AddSwitch("Anti AFK", function(state)
         uselesslabelone.Position = UDim2.new(0.3,0,0,0)
         uselesslabelone.Size = UDim2.new(0,95,0,24)
         uselesslabelone.Font = Enum.Font.SourceSans
-        uselesslabelone.Text = "Anti Afk V2 BY MVX_DeathKillerX"
+        uselesslabelone.Text = "Anti Afk"
         uselesslabelone.TextColor3 = Color3.fromRGB(255,255,255)
         uselesslabelone.TextSize = 14
 
@@ -606,23 +606,7 @@ AutoFarm:AddSwitch("Auto Spin", function(state)
     end
 end)
 
-RebirthFolder:AddSwitch Squat", function()
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        char:SetPrimaryPartCFrame(CFrame.new(-8374.25586, 34.5933418, 2932.44995))
 
-        local machine = workspace:FindFirstChild("machinesFolder")
-        if machine and machine:FindFirstChild("Jungle Squat") then
-            local seat = machine["Jungle Squat"]:FindFirstChild("interactSeat")
-            if seat then
-                game:GetService("ReplicatedStorage").rEvents.machineInteractRemote:InvokeServer("useMachine", seat)
-            end
-        end
-        print("[Jungle Squat] Acción ejecutada.")
-    else
-        warn("[Jungle Squat] Personaje no encontrado o no tiene HumanoidRootPart.")
-    end
-end)
 
 
 local RebirthFolder = AutoFarm:AddFolder("Rebirth")
