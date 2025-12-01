@@ -7,7 +7,7 @@ local displayName = player.DisplayName or player.Name
 
 -- VENTANA PRINCIPAL
 local window = library:AddWindow("Toxic Paid V3 Cracked By ZTX| Bienvenido " .. displayName, {
-    main_color = Color3.fromRGB(34, 56, 34),
+    main_color = Color3.fromRGB(220, 20, 60),
     min_size = Vector2.new(600, 820),
     can_resize = false,
 })
@@ -3367,3 +3367,4 @@ Credits:AddLabel("Tiktok:Dyros🍪")
 Credits:AddLabel("script publico")
 Credits:AddLabel("Dyros on top")
 Credits:AddLabel("gracias por usar HadesHub ❤️")
+
