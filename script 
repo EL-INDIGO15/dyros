@@ -1,1 +1,45 @@
-print("helloooo")
+-- HADES HUB v9 - FUEGO ANIMADO DE FONDO (transparente + épico)
+-- Llamas rojas suaves que se mueven – perfecto para leer encima
+
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/SadOz8/Library/refs/heads/main/Library.txt"))()
+
+-- FUEGO ANIMADO TRANSPARENTE (GIF → convertido a ImageLabel con loop)
+local FIRE_GIF = "http://i.imgur.com/8Q3Zb3b.gif"   -- Llamas rojas suaves y transparentes (loop perfecto)
+
+local window_data, window = library:AddWindow("HadesHub", {
+    main_color = Color3.fromRGB(220, 20, 60),     -- Rojo Hades
+    min_size = Vector2.new(380, 520),
+    toggle_key = Enum.KeyCode.Insert,
+    can_resize = true,
+    background = FIRE_GIF                         -- FUEGO ANIMADO AQUÍ
+})
+
+-- Overlay oscuro suave para que el texto se lea perfecto
+-- (la librería no lo tiene nativo, así que lo añadimos manualmente)
+spawn(function()
+    wait(1)  -- Esperamos a que la ventana se cree
+    local overlay = Instance.new("Frame")
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.Position = UDim2.new(0, 0, 0, 0)
+    overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    overlay.BackgroundTransparency = 0.55  -- 55% transparente (ideal para fuego)
+    overlay.ZIndex = 0
+    overlay.Parent = window_data.main_frame  -- Se pone debajo de todo el contenido
+end)
+
+-- Tabs vacías (listas para que agregues lo que quieras)
+local main = window_data:AddTab("Main")
+local scripts = window_data:AddTab("Scripts")
+local settings = window_data:AddTab("Settings")
+
+main:AddLabel("HadesHub v9")
+main:AddLabel("Fuego del Inframundo activo")
+
+-- Notificación con estilo
+game.StarterGui:SetCore("SendNotification", {
+    Title = "HadesHub v9";
+    Text = "Fuego animado + overlay transparente activado";
+    Duration = 5;
+})
+
+print("HadesHub v9 - Fuego animado de fondo cargado")
