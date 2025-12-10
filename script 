@@ -1,197 +1,29 @@
--- HadesHub v4 - FUNCIONA EN PC Y CELULAR (Delta, Arceus X, Codex, Hydrogen, etc.)
--- Aparece automáticamente al ejecutar
--- Rojo, movible, minimizable, con animación
+-- HadesHub v5 - Usando SadOz8 Library (Roja, Pequeña, Vacía)
+-- Aparece al ejecutar - Compatible PC/Celular (Delta, Arceus X, etc.)
 
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/SadOz8/Library/refs/heads/main/Library.txt"))()
 
-local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+-- Crear ventana roja pequeña
+local window_data, window = library:AddWindow("HadesHub", {
+    main_color = Color3.fromRGB(220, 20, 60),  -- Rojo Hades 🔥
+    min_size = Vector2.new(300, 200),  -- Mínimo pequeño
+    toggle_key = Enum.KeyCode.Insert,  -- INSERT para abrir/cerrar
+    can_resize = true,  -- Redimensionable
+    tween_time = 0.3  -- Animación suave
+})
 
--- Crear ScreenGui
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "HadesHubV4"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = PlayerGui
+-- Tab principal (vacía por ahora)
+local tab_data, tab = window_data:AddTab("Home")
 
--- Frame principal (ROJO HADES)
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 750, 0, 550)
-MainFrame.Position = UDim2.new(0.5, -375, 0.5, -275)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.BorderSizePixel = 0
-MainFrame.ClipsDescendants = true
-MainFrame.Visible = true  -- ¡AHORA SÍ SE VE AL INICIAR!
-MainFrame.Parent = ScreenGui
-
--- Esquina redondeada
-local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0, 16)
-Corner.Parent = MainFrame
-
--- Borde rojo brillante
-local Stroke = Instance.new("UIStroke")
-Stroke.Color = Color3.fromRGB(220, 20, 60)  -- Rojo Hades intenso
-Stroke.Thickness = 4
-Stroke.Parent = MainFrame
-
--- Barra superior (drag + botones)
-local TitleBar = Instance.new("Frame")
-TitleBar.Size = UDim2.new(1, 0, 0, 50)
-TitleBar.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
-TitleBar.BorderSizePixel = 0
-TitleBar.Parent = MainFrame
-
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 16)
-TitleCorner.Parent = TitleBar
-
--- Título
-local Title = Instance.new("TextLabel")
-Title.Text = "HadesHub"
-Title.Size = UDim2.new(0, 200, 1, 0)
-Title.Position = UDim2.new(0, 15, 0, 0)
-Title.BackgroundTransparency = 1
-Title.TextColor3 = Color3.new(1,1,1)
-Title.Font = Enum.Font.GothamBlack
-Title.TextSize = 22
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = TitleBar
-
--- Botón Minimizar
-local MinBtn = Instance.new("TextButton")
-MinBtn.Text = "−"
-MinBtn.Size = UDim2.new(0, 45, 0, 45)
-MinBtn.Position = UDim2.new(1, -90, 0, 2)
-MinBtn.BackgroundTransparency = 1
-MinBtn.TextColor3 = Color3.new(1,1,1)
-MinBtn.Font = Enum.Font.GothamBold
-MinBtn.TextSize = 28
-MinBtn.Parent = TitleBar
-
--- Botón Cerrar
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Text = "×"
-CloseBtn.Size = UDim2.new(0, 45, 0, 45)
-CloseBtn.Position = UDim2.new(1, -45, 0, 2)
-CloseBtn.BackgroundTransparency = 1
-CloseBtn.TextColor3 = Color3.new(1,1,1)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 24
-CloseBtn.Parent = TitleBar
-
--- Contenido
-local Content = Instance.new("ScrollingFrame")
-Content.Size = UDim2.new(1, -20, 1, -70)
-Content.Position = UDim2.new(0, 10, 0, 60)
-Content.BackgroundTransparency = 1
-Content.ScrollBarThickness = 8
-Content.ScrollBarImageColor3 = Color3.fromRGB(220, 20, 60)
-Content.CanvasSize = UDim2.new(0, 0, 0, 800)
-Content.Parent = MainFrame
-
-local Layout = Instance.new("UIListLayout")
-Layout.Padding = UDim.new(0, 12)
-Layout.Parent = Content
-
--- DRAG (funciona en PC y celular)
-local dragging = false
-local dragInput, dragStart, startPos
-
-TitleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-TitleBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        if dragging then
-            local delta = input.Position - dragStart
-            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end
-end)
-
--- Minimizar
-local minimized = false
-MinBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    if minimized then
-        TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 300, 0, 50)}):Play()
-        Content.Visible = false
-        MinBtn.Text = "↑"
-    else
-        TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 750, 0, 550)}):Play()
-        Content.Visible = true
-        MinBtn.Text = "−"
-    end
-end)
-
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
--- Función crear botón rojo
-local function AddButton(name, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -20, 0, 60)
-    btn.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
-    btn.Text = name
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 18
-    btn.Parent = Content
-    
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 12)
-    btnCorner.Parent = btn
-    
-    btn.MouseButton1Click:Connect(callback)
-    
-    -- Hover effect
-    btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(255, 50, 90) end)
-    btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(220, 20, 60) end)
-end
-
--- Botones de ejemplo (funcionan en todos los juegos)
-AddButton("Speed Hack x10", function()
-    Player.Character.Humanoid.WalkSpeed = 160
-end)
-
-AddButton("Infinite Jump", function()
-    game:GetService("UserInputService").JumpRequest:connect(function()
-        Player.Character.Humanoid:ChangeState("Jumping")
-    end)
-end)
-
-AddButton("Fly Hack (E)", function()
-    loadstring(game:HttpGet("https://pastebin.com/raw/L1cYvzvE"))()
-end)
-
-AddButton("Infinite Yield Admin", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-end)
-
-AddButton("Noclip (Hold E)", function()
-    loadstring(game:HttpGet("https://pastebin.com/raw/vc7y6z8K"))()
-end)
+-- ¡Listo! Agrega elementos así:
+-- tab_data:AddButton("Speed Hack", function() print("¡Activado!") end)
+-- tab_data:AddSlider("Velocidad", function(value) print(value) end, {min = 16, max = 100})
 
 -- Notificación
 game.StarterGui:SetCore("SendNotification", {
-    Title = "HadesHub v4";
-    Text = "GUI Cargada! Arrastra desde arriba";
-    Duration = 6;
+    Title = "HadesHub v5";
+    Text = "GUI Roja Pequeña Cargada! (SadOz8 Lib)";
+    Duration = 4;
 })
 
-print("HadesHub v4 cargado - PC y Celular")
+print("HadesHub v5 - Roja y Minimalista 🔥")
