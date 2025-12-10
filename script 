@@ -1,114 +1,105 @@
-import tkinter as tk
-from tkinter import ttk
-import keyboard  # pip install keyboard
+-- // HadesHub Delta Edition - 2025 \\
+-- Creador: tú (y yo ayudándote jaja)
+-- Tecla: Insert
 
-# ==================== CONFIGURACIÓN ====================
-root = tk.Tk()
-root.title("HadesHub")
-root.geometry("700x500")
-root.configure(bg="#1e1e1e")
-root.overrideredirect(True)  # Sin bordes de Windows
-root.attributes("-topmost", True)  # Siempre encima
-root.attributes("-alpha", 0.98)   # Ligera transparencia (opcional)
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("HadesHub Delta", "DarkTheme")
 
-# Variables globales
-open_gui = True
-drag_start_x = 0
-drag_start_y = 0
+-- Variables
+local Player = game.Players.LocalPlayer
+local Char = Player.Character or Player.Character:Wait()
+local Humanoid = Char:WaitForChild("Humanoid")
 
-# ==================== BARRA SUPERIOR (DRAG + BOTONES) ====================
-title_bar = tk.Frame(root, bg="#c41e3a", height=35)  # Rojo Hades
-title_bar.pack(fill="x")
-title_bar.pack_propagate(False)
+-- == PESTAÑA PRINCIPAL ==
+local Main = Window:NewTab("Main", "Main Features")
+local MainSection = Main:NewSection("Universal Cheats")
 
-# Título
-tk.Label(title_bar, text="HadesHub", bg="#c41e3a", fg="white", font=("Montserrat", 11, "bold")).pack(side="left", padx=12, pady=6)
+MainSection:NewButton("Speed x4", "Velocidad insana", function()
+    Humanoid.WalkSpeed = 80
+    print("Speed x4 activado")
+end)
 
-# Botones derecha
-def minimizar():
-    content_frame.pack_forget()
-    root.geometry("300x35")
+MainSection:NewButton("JumpPower 200", "Salta como loco", function()
+    Humanoid.JumpPower = 200
+end)
 
-def abrir_cerrar():
-    global open_gui
-    if open_gui:
-        root.geometry("700x500")
-        content_frame.pack(fill="both", expand=True, padx=10, pady=(45, 10))
-    else:
-        root.geometry("300x35")
-    open_gui = not open_gui
+MainSection:NewToggle("Infinite Jump", "Salta en el aire todo el tiempo", false, function(state)
+    _G.InfJump = state
+    if state then
+        game:GetService("UserInputService").JumpRequest:Connect(function()
+            if _G.InfJump then
+                Humanoid:ChangeState("Jumping")
+            end
+        end)
+    end
+end)
 
-tk.Button(title_bar, text="─", bg="#c41e3a", fg="white", bd=0, font=("Arial", 14), command=minimizar,
-          activebackground="#a0172e").place(x=630, y=3)
-tk.Button(title_bar, text="✕", bg="#c41e3a", fg="white", bd=0, font=("Arial", 12, "bold"), command=root.quit,
-          activebackground="#a0172e").place(x=670, y=3)
+MainSection:NewButton("Fly (F)", "Vuela con la tecla F", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/BatuKhan1/UniversalFlyScript/main/fly.lua"))()
+end)
 
-# Drag ventana
-def start_drag(event):
-    global drag_start_x, drag_start_y
-    drag_start_x = event.x
-    drag_start_y = event.y
+MainSection:NewButton("Noclip (N)", "Pasa a través de paredes", function()
+    _G.Noclip = false
+    game:GetService("RunService").Stepped:Connect(function()
+        if _G.Noclip then
+            for _, v in pairs(Char:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                end
+            end
+        end
+    end)
+    game:GetService("UserInputService").InputBegan:Connect(function(key)
+        if key.KeyCode == Enum.KeyCode.N then
+            _G.Noclip = not _G.Noclip
+            print("Noclip: "..tostring(_G.Noclip))
+        end
+    end)
+end)
 
-def drag(event):
-    x = root.winfo_x() + (event.x - drag_start_x)
-    y = root.winfo_y() + (event.y - drag_start_y)
-    root.geometry(f"+{x}+{y}")
+-- == PESTAÑA SCRIPTS ==
+local Scripts = Window:NewTab("Scripts", "Script Hub")
+local ScriptsSection = Scripts:NewSection("Popular Scripts")
 
-title_bar.bind("<ButtonPress-1>", start_drag)
-title_bar.bind("<B1-Motion>", drag)
+ScriptsSection:NewButton("Infinite Yield", "El admin más famoso", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
 
-# ==================== CONTENIDO PRINCIPAL ====================
-content_frame = tk.Frame(root, bg="#1e1e1e")
-content_frame.pack(fill="both", expand=True, padx=10, pady=(45, 10))
+ScriptsSection:NewButton("Owl Hub", "Universal (30+ juegos)", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CriShoux/OwlHub/master/OwlHub.txt"))()
+end)
 
-# Notebook (pestañas)
-notebook = ttk.Style()
-notebook.theme_use("clam")
-notebook.configure("TNotebook", background="#1e1e1e", borderwidth=0)
-notebook.configure("TNotebook.Tab", background="#2d2d2d", foreground="white", padding=[15, 8])
-notebook.map("TNotebook.Tab", background=[("selected", "#c41e3a")])
+ScriptsSection:NewButton("Dark Hub", "Muchos juegos soportados", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Rain-Design/DarkHub/master/DarkHub", true))()
+end)
 
-tabs = ttk.Notebook(content_frame)
-tabs.pack(fill="both", expand=True)
+ScriptsSection:NewButton("V.G Hub", "Más de 100 juegos", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Vynixius/main/Loader.lua"))()
+end)
 
-# Pestañas listas para usar
-tab1 = tk.Frame(tabs, bg="#1e1e1e")
-tab2 = tk.Frame(tabs, bg="#1e1e1e")
-tab3 = tk.Frame(tabs, bg="#1e1e1e")
+-- == PESTAÑA SETTINGS ==
+local Settings = Window:NewTab("Settings", "Configuración")
+local SettingsSection = Settings:NewSection("HadesHub Delta v1")
 
-tabs.add(tab1, text="Main")
-tabs.add(tab2, text="Scripts")
-tabs.add(tab3, text="Settings")
+SettingsSection:NewKeybind("Toggle GUI", "Abrir/Cerrar GUI", Enum.KeyCode.Insert, function()
+    Library:ToggleUI()
+end)
 
-# ==================== EJEMPLO DE BOTONES (TAB MAIN) ====================
-def ejemplo_speed():
-    print("Speed hack activado!")  # Aquí pones tu script de Roblox
-    # Ejemplo real: game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100
+SettingsSection:NewButton("Rejoin", "Volver al mismo servidor", function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, Player)
+end)
 
-tk.Button(tab1, text="Speed x2", bg="#2d2d2d", fg="#00ff00", font=("Consolas", 11, "bold"), relief="flat",
-          command=ejemplo_speed).pack(pady=8, padx=20, fill="x")
+SettingsSection:NewButton("Server Hop", "Cambiar de servidor", function()
+    local servers = game.HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
+    local list = game:GetService("HttpService"):JSONDecode(servers)
+    for _, v in pairs(list.data) do
+        if v.playing < v.maxPlayers and v.id ~= game.JobId then
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, v.id)
+            break
+        end
+    end
+end)
 
-tk.Button(tab1, text="Infinite Jump", bg="#2d2d2d", fg="#00ff00", font=("Consolas", 11, "bold"), relief="flat").pack(pady=8, padx=20, fill="x")
-tk.Button(tab1, text="Fly Hack", bg="#2d2d2d", fg="#00ff00", font=("Consolas", 11, "bold"), relief="flat").pack(pady=8, padx=20, fill="x")
-tk.Button(tab1, text="Noclip", bg="#2d2d2d", fg="#ff0080", font=("Consolas", 11, "bold"), relief="flat").pack(pady=8, padx=20, fill="x")
-
-# ==================== OPEN/CLOSE CON TECLA INSERT ====================
-def toggle_gui():
-    if root.winfo_viewable():
-        root.withdraw()
-    else:
-        root.deiconify()
-        root.lift()
-
-keyboard.add_hotkey("insert", toggle_gui)
-
-# Centrar al iniciar
-root.withdraw()
-root.update_idletasks()
-x = (root.winfo_screenwidth() // 2) - (root.winfo_width() // 2)
-y = (root.winfo_screenheight() // 2) - (root.winfo_height() // 2)
-root.geometry(f"+{x}+{y}")
-root.deiconify()
-
-# ==================== INICIAR GUI ====================
-root.mainloop()
+-- Notificación al cargar
+Library:Notify("HadesHub Delta cargado correctamente!", 5)
+print("HadesHub Delta by tú + Grok - 2025")
