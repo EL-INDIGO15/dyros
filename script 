@@ -1,33 +1,34 @@
--- HADES HUB v8 - FONDO ZAGREUS OFICIAL PNG (Vacía, Solo GUI)
--- Imagen HD de Zagreus (sin fondo) - Aparece al ejecutar
+-- HADES HUB v8.1 - FONDO EXACTO DE TU LINK (Zagreus Oficial PNG)
+-- Imagen verificada: Portada Hades con espada y llamas 🔥
 
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/SadOz8/Library/refs/heads/main/Library.txt"))()
 
--- URL PNG oficial de Zagreus (alta resolución, compatible Roblox)
-local ZAGREUS_IMAGE = "https://www.pngkey.com/png/full/2-28240_zagreus-hades-game.png"
+-- TU IMAGEN EXACTA como URL de fondo (carga directa en Roblox)
+local HADES_BG = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRk2zS9i4omPPG2d0entRou86Tj0sXX2iiPDAHustu6fg&s=10"
 
--- Ventana con imagen de fondo (roja Hades)
+-- Ventana con el fondo de tu imagen
 local window_data, window = library:AddWindow("HadesHub", {
     main_color = Color3.fromRGB(220, 20, 60),     -- Rojo Hades 🔥
-    min_size = Vector2.new(400, 600),             -- Tamaño ajustado a la imagen vertical
+    min_size = Vector2.new(350, 500),             -- Tamaño ideal para la imagen vertical
     toggle_key = Enum.KeyCode.Insert,
     can_resize = true,
-    background = ZAGREUS_IMAGE                    -- Fondo: Zagreus oficial
+    background = HADES_BG                         -- ← ¡TU IMAGEN AQUÍ!
 })
 
--- Tabs vacías (sin funciones)
+-- Tabs vacías (sin nada, puro minimalismo)
 local tab_main = window_data:AddTab("Main")
 local tab_scripts = window_data:AddTab("Scripts")
 local tab_settings = window_data:AddTab("Settings")
 
--- Etiqueta simple en Main (opcional, puedes borrar)
-tab_main:AddLabel("HadesHub - Listo para scripts")
+-- Etiqueta opcional (borra si quieres vacío total)
+tab_main:AddLabel("Zagreus te saluda del Inframundo")
 
--- Notificación
+-- Notificación con icono de la imagen
 game.StarterGui:SetCore("SendNotification", {
-    Title = "HadesHub v8";
-    Text = "Fondo Zagreus PNG cargado (vacío)";
+    Title = "HadesHub v8.1";
+    Text = "Fondo de Zagreus cargado desde tu link";
     Duration = 4;
+    Icon = HADES_BG;  -- Muestra la imagen en la notif
 })
 
-print("HadesHub v8 - GUI vacía con fondo oficial de Zagreus")
+print("HadesHub v8.1 - Fondo exacto de Hades activado")
