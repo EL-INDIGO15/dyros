@@ -1,105 +1,269 @@
--- // HadesHub Delta Edition - 2025 \\
--- Creador: tú (y yo ayudándote jaja)
--- Tecla: Insert
+-- HadesHub v3 - GUI Custom 100% Roja, Movible y Minimizable (Estilo Delta + Hades)
+-- Tecla: INSERT para Abrir/Cerrar
+-- Creado para Delta Executor - 2025 🔥
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("HadesHub Delta", "DarkTheme")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
 
--- Variables
-local Player = game.Players.LocalPlayer
-local Char = Player.Character or Player.Character:Wait()
-local Humanoid = Char:WaitForChild("Humanoid")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- == PESTAÑA PRINCIPAL ==
-local Main = Window:NewTab("Main", "Main Features")
-local MainSection = Main:NewSection("Universal Cheats")
+-- Crear ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "HadesHub"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-MainSection:NewButton("Speed x4", "Velocidad insana", function()
-    Humanoid.WalkSpeed = 80
-    print("Speed x4 activado")
+-- Variables globales
+local MainFrame = nil
+local ContentFrame = nil
+local Minimized = false
+local Dragging = false
+local DragStart = nil
+local StartPos = nil
+local Visible = true
+
+-- Función para crear esquinas redondeadas
+local function CreateCorner(parent, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius or 12)
+    corner.Parent = parent
+    return corner
+end
+
+-- Función para crear gradiente
+local function CreateGradient(parent, color1, color2)
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, color1),
+        ColorSequenceKeypoint.new(1, color2)
+    }
+    gradient.Rotation = 45
+    gradient.Parent = parent
+    return gradient
+end
+
+-- Crear Frame Principal (Rojo Hades)
+MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)  -- Fondo oscuro
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -400, 0.5, -300)
+MainFrame.Size = UDim2.new(0, 800, 0, 600)
+MainFrame.ClipsDescendants = true
+CreateCorner(MainFrame, 16)
+
+-- Borde rojo exterior
+local Border = Instance.new("Frame")
+Border.Name = "Border"
+Border.Parent = MainFrame
+Border.BackgroundColor3 = Color3.fromRGB(196, 30, 58)  -- Rojo Hades #C41E3A
+Border.BorderSizePixel = 0
+Border.Position = UDim2.new(0, -2, 0, -2)
+Border.Size = UDim2.new(1, 4, 1, 4)
+CreateCorner(Border, 18)
+
+-- Barra Superior Roja (Draggable)
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Parent = MainFrame
+TitleBar.BackgroundColor3 = Color3.fromRGB(196, 30, 58)
+TitleBar.BorderSizePixel = 0
+TitleBar.Size = UDim2.new(1, 0, 0, 50)
+CreateCorner(TitleBar, 0)  -- Sin curva arriba
+
+CreateGradient(TitleBar, Color3.fromRGB(255, 50, 80), Color3.fromRGB(196, 30, 58))
+
+-- Título HadesHub
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "Title"
+TitleLabel.Parent = TitleBar
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 20, 0, 0)
+TitleLabel.Size = UDim2.new(0, 200, 1, 0)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "HadesHub"
+TitleLabel.TextColor3 = Color3.new(1,1,1)
+TitleLabel.TextSize = 18
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Botón Minimizar
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Name = "Minimize"
+MinimizeBtn.Parent = TitleBar
+MinimizeBtn.BackgroundTransparency = 1
+MinimizeBtn.Position = UDim2.new(1, -80, 0, 0)
+MinimizeBtn.Size = UDim2.new(0, 40, 1, 0)
+MinimizeBtn.Font = Enum.Font.Gotham
+MinimizeBtn.Text = "─"
+MinimizeBtn.TextColor3 = Color3.new(1,1,1)
+MinimizeBtn.TextSize = 20
+
+-- Botón Cerrar
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Name = "Close"
+CloseBtn.Parent = TitleBar
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Position = UDim2.new(1, -40, 0, 0)
+CloseBtn.Size = UDim2.new(0, 40, 1, 0)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.new(1,1,1)
+CloseBtn.TextSize = 18
+
+-- Frame de Contenido
+ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "Content"
+ContentFrame.Parent = MainFrame
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Position = UDim2.new(0, 0, 0, 50)
+ContentFrame.Size = UDim2.new(1, 0, 1, -50)
+ContentFrame.ClipsDescendants = true
+
+-- ScrollFrame para contenido
+local Scroll = Instance.new("ScrollingFrame")
+Scroll.Parent = ContentFrame
+Scroll.BackgroundTransparency = 1
+Scroll.Position = UDim2.new(0, 20, 0, 20)
+Scroll.Size = UDim2.new(1, -40, 1, -40)
+Scroll.ScrollBarThickness = 6
+Scroll.ScrollBarImageColor3 = Color3.fromRGB(196, 30, 58)
+Scroll.CanvasSize = UDim2.new(0, 0, 0, 2000)  -- Ajustar dinámicamente
+
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Parent = Scroll
+ListLayout.Padding = UDim.new(0, 10)
+ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- FUNCIÓN MINIMIZAR
+local function ToggleMinimize()
+    Minimized = not Minimized
+    if Minimized then
+        MainFrame:TweenSize(UDim2.new(0, 300, 0, 50), "Out", "Quad", 0.3, true)
+        ContentFrame.Visible = false
+        MinimizeBtn.Text = "□"
+    else
+        MainFrame:TweenSize(UDim2.new(0, 800, 0, 600), "Out", "Quad", 0.3, true)
+        ContentFrame.Visible = true
+        MinimizeBtn.Text = "─"
+    end
+end
+
+MinimizeBtn.MouseButton1Click:Connect(ToggleMinimize)
+
+-- FUNCIÓN CERRAR
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
 end)
 
-MainSection:NewButton("JumpPower 200", "Salta como loco", function()
-    Humanoid.JumpPower = 200
-end)
-
-MainSection:NewToggle("Infinite Jump", "Salta en el aire todo el tiempo", false, function(state)
-    _G.InfJump = state
-    if state then
-        game:GetService("UserInputService").JumpRequest:Connect(function()
-            if _G.InfJump then
-                Humanoid:ChangeState("Jumping")
-            end
-        end)
+-- DRAG (Movible desde TitleBar)
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = true
+        DragStart = input.Position
+        StartPos = MainFrame.Position
     end
 end)
 
-MainSection:NewButton("Fly (F)", "Vuela con la tecla F", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/BatuKhan1/UniversalFlyScript/main/fly.lua"))()
+TitleBar.InputChanged:Connect(function(input)
+    if Dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - DragStart
+        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + delta.X, StartPos.Y.Scale, StartPos.Y.Offset + delta.Y)
+    end
 end)
 
-MainSection:NewButton("Noclip (N)", "Pasa a través de paredes", function()
-    _G.Noclip = false
-    game:GetService("RunService").Stepped:Connect(function()
-        if _G.Noclip then
-            for _, v in pairs(Char:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.CanCollide = false
-                end
-            end
-        end
-    end)
-    game:GetService("UserInputService").InputBegan:Connect(function(key)
-        if key.KeyCode == Enum.KeyCode.N then
-            _G.Noclip = not _G.Noclip
-            print("Noclip: "..tostring(_G.Noclip))
-        end
-    end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = false
+    end
 end)
 
--- == PESTAÑA SCRIPTS ==
-local Scripts = Window:NewTab("Scripts", "Script Hub")
-local ScriptsSection = Scripts:NewSection("Popular Scripts")
+-- TOGGLE VISIBILITY CON INSERT
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Insert then
+        Visible = not Visible
+        MainFrame.Visible = Visible
+        if Visible and Minimized then ToggleMinimize() end  -- Restaurar si estaba min
+    end
+end)
 
-ScriptsSection:NewButton("Infinite Yield", "El admin más famoso", function()
+-- EJEMPLO BOTONES ROJOS (Agrega más aquí)
+local function CreateButton(text, callback)
+    local Btn = Instance.new("TextButton")
+    Btn.Parent = Scroll
+    Btn.BackgroundColor3 = Color3.fromRGB(196, 30, 58)
+    Btn.BorderSizePixel = 0
+    Btn.Size = UDim2.new(1, -20, 0, 50)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.Text = text
+    Btn.TextColor3 = Color3.new(1,1,1)
+    Btn.TextSize = 16
+    CreateCorner(Btn, 10)
+    CreateGradient(Btn, Color3.fromRGB(255, 50, 80), Color3.fromRGB(196, 30, 58))
+    
+    Btn.MouseButton1Click:Connect(callback)
+    Btn.MouseEnter:Connect(function() Btn.Size = UDim2.new(1, -20, 0, 55) end)
+    Btn.MouseLeave:Connect(function() Btn.Size = UDim2.new(1, -20, 0, 50) end)
+    
+    -- Ajustar CanvasSize
+    Scroll.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 50)
+    ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Scroll.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 50)
+    end)
+    
+    return Btn
+end
+
+-- Botones de ejemplo (Universal Roblox)
+local Humanoid = Player.Character and Player.Character:FindFirstChild("Humanoid")
+
+CreateButton("Speed x16", function()
+    if Humanoid then Humanoid.WalkSpeed = 100 end
+end)
+
+CreateButton("Jump Power 200", function()
+    if Humanoid then Humanoid.JumpPower = 200 end
+end)
+
+CreateButton("Infinite Yield (Admin)", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
 end)
 
-ScriptsSection:NewButton("Owl Hub", "Universal (30+ juegos)", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/CriShoux/OwlHub/master/OwlHub.txt"))()
+CreateButton("Fly Hack", function()
+    loadstring(game:HttpGet("https://pastebin.com/raw/9Kmhe7C3"))()
 end)
 
-ScriptsSection:NewButton("Dark Hub", "Muchos juegos soportados", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Rain-Design/DarkHub/master/DarkHub", true))()
+CreateButton("Noclip", function()
+    local noclip = false
+    local conn
+    conn = RunService.Stepped:Connect(function()
+        if noclip then
+            for _, part in pairs(Player.Character:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
+        end
+    end)
+    Player:GetMouse().KeyDown:Connect(function(key)
+        if key == "n" then noclip = not noclip end
+    end)
 end)
 
-ScriptsSection:NewButton("V.G Hub", "Más de 100 juegos", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Vynixius/main/Loader.lua"))()
-end)
-
--- == PESTAÑA SETTINGS ==
-local Settings = Window:NewTab("Settings", "Configuración")
-local SettingsSection = Settings:NewSection("HadesHub Delta v1")
-
-SettingsSection:NewKeybind("Toggle GUI", "Abrir/Cerrar GUI", Enum.KeyCode.Insert, function()
-    Library:ToggleUI()
-end)
-
-SettingsSection:NewButton("Rejoin", "Volver al mismo servidor", function()
+CreateButton("Rejoin Server", function()
     game:GetService("TeleportService"):Teleport(game.PlaceId, Player)
 end)
 
-SettingsSection:NewButton("Server Hop", "Cambiar de servidor", function()
-    local servers = game.HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
-    local list = game:GetService("HttpService"):JSONDecode(servers)
-    for _, v in pairs(list.data) do
-        if v.playing < v.maxPlayers and v.id ~= game.JobId then
-            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, v.id)
-            break
-        end
-    end
-end)
+-- Inicializar minimizado? No, abierta
+MainFrame.Visible = false  -- Empieza oculta, Insert para abrir
 
--- Notificación al cargar
-Library:Notify("HadesHub Delta cargado correctamente!", 5)
-print("HadesHub Delta by tú + Grok - 2025")
+print("HadesHub cargado! Presiona INSERT 🔥")
+game.StarterGui:SetCore("SendNotification", {
+    Title = "HadesHub";
+    Text = "Cargado! Presiona INSERT";
+    Duration = 5;
+})
