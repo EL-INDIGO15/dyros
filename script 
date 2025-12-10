@@ -1,87 +1,114 @@
 import tkinter as tk
 from tkinter import ttk
+import keyboard  # pip install keyboard
 
-# Crear la ventana principal
+# ==================== CONFIGURACIÓN ====================
 root = tk.Tk()
 root.title("HadesHub")
-root.geometry("400x300")  # Tamaño inicial
-root.configure(bg="#8B0000")  # Rojo oscuro elegante (puedes cambiarlo a "red" si quieres más fuerte)
-root.overrideredirect(True)  # Quita los bordes normales de Windows para un look más "hub"
+root.geometry("700x500")
+root.configure(bg="#1e1e1e")
+root.overrideredirect(True)  # Sin bordes de Windows
+root.attributes("-topmost", True)  # Siempre encima
+root.attributes("-alpha", 0.98)   # Ligera transparencia (opcional)
 
-# Variables para mover la ventana
-moviendo = False
-x_inicial = 0
-y_inicial = 0
+# Variables globales
+open_gui = True
+drag_start_x = 0
+drag_start_y = 0
 
-# Frame superior (barra de título personalizada)
-title_bar = tk.Frame(root, bg="#FF0000", relief="flat", bd=0, height=30)
-title_bar.pack(fill="x", side="top")
+# ==================== BARRA SUPERIOR (DRAG + BOTONES) ====================
+title_bar = tk.Frame(root, bg="#c41e3a", height=35)  # Rojo Hades
+title_bar.pack(fill="x")
+title_bar.pack_propagate(False)
 
-# Título "HadesHub"
-label_title = tk.Label(title_bar, text="HadesHub", bg="#FF0000", fg="white", font=("Segoe UI", 10, "bold"))
-label_title.pack(side="left", padx=10, pady=5)
+# Título
+tk.Label(title_bar, text="HadesHub", bg="#c41e3a", fg="white", font=("Montserrat", 11, "bold")).pack(side="left", padx=12, pady=6)
 
-# Botón de minimizar
-minimized = False
+# Botones derecha
 def minimizar():
-    global minimized
-    if not minimized:
-        root.geometry("200x30")  # Solo se ve la barra de título
-        content_frame.pack_forget()
-        minimized = True
+    content_frame.pack_forget()
+    root.geometry("300x35")
+
+def abrir_cerrar():
+    global open_gui
+    if open_gui:
+        root.geometry("700x500")
+        content_frame.pack(fill="both", expand=True, padx=10, pady=(45, 10))
     else:
-        root.geometry("400x300")
-        content_frame.pack(fill="both", expand=True, padx=10, pady=10)
-        minimized = False
+        root.geometry("300x35")
+    open_gui = not open_gui
 
-btn_minimizar = tk.Button(title_bar, text="─", bg="#FF0000", fg="white", bd=0, font=("Arial", 12),
-                          command=minimizar, activebackground="#CC0000", cursor="hand2")
-btn_minimizar.pack(side="right", padx=5)
+tk.Button(title_bar, text="─", bg="#c41e3a", fg="white", bd=0, font=("Arial", 14), command=minimizar,
+          activebackground="#a0172e").place(x=630, y=3)
+tk.Button(title_bar, text="✕", bg="#c41e3a", fg="white", bd=0, font=("Arial", 12, "bold"), command=root.quit,
+          activebackground="#a0172e").place(x=670, y=3)
 
-# Botón cerrar
-def cerrar():
-    root.quit()
+# Drag ventana
+def start_drag(event):
+    global drag_start_x, drag_start_y
+    drag_start_x = event.x
+    drag_start_y = event.y
 
-btn_cerrar = tk.Button(title_bar, text="✕", bg="#FF0000", fg="white", bd=0, font=("Arial", 10, "bold"),
-                       command=cerrar, activebackground="#CC0000", cursor="hand2")
-btn_cerrar.pack(side="right", padx=5)
+def drag(event):
+    x = root.winfo_x() + (event.x - drag_start_x)
+    y = root.winfo_y() + (event.y - drag_start_y)
+    root.geometry(f"+{x}+{y}")
 
-# Funciones para mover la ventana
-def empezar_movimiento(event):
-    global moviendo, x_inicial, y_inicial
-    moviendo = True
-    x_inicial = event.x
-    y_inicial = event.y
+title_bar.bind("<ButtonPress-1>", start_drag)
+title_bar.bind("<B1-Motion>", drag)
 
-def mover_ventana(event):
-    if moviendo:
-        x = root.winfo_x() + (event.x - x_inicial)
-        y = root.winfo_y() + (event.y - y_inicial)
-        root.geometry(f"+{x}+{y}")
+# ==================== CONTENIDO PRINCIPAL ====================
+content_frame = tk.Frame(root, bg="#1e1e1e")
+content_frame.pack(fill="both", expand=True, padx=10, pady=(45, 10))
 
-def detener_movimiento(event):
-    global moviendo
-    moviendo = False
+# Notebook (pestañas)
+notebook = ttk.Style()
+notebook.theme_use("clam")
+notebook.configure("TNotebook", background="#1e1e1e", borderwidth=0)
+notebook.configure("TNotebook.Tab", background="#2d2d2d", foreground="white", padding=[15, 8])
+notebook.map("TNotebook.Tab", background=[("selected", "#c41e3a")])
 
-# Hacer que la barra de título sea arrastrable
-title_bar.bind("<Button-1>", empezar_movimiento)
-title_bar.bind("<B1-Motion>", mover_ventana)
-title_bar.bind("<ButtonRelease-1>", detener_movimiento)
+tabs = ttk.Notebook(content_frame)
+tabs.pack(fill="both", expand=True)
 
-# Contenido principal (aquí puedes agregar tus botones, tabs, etc.)
-content_frame = tk.Frame(root, bg="#8B0000")
-content_frame.pack(fill="both", expand=True, padx=10, pady=10)
+# Pestañas listas para usar
+tab1 = tk.Frame(tabs, bg="#1e1e1e")
+tab2 = tk.Frame(tabs, bg="#1e1e1e")
+tab3 = tk.Frame(tabs, bg="#1e1e1e")
 
-# Ejemplo de etiqueta dentro del hub
-label_bienvenida = tk.Label(content_frame, text="¡Bienvenido a HadesHub!", bg="#8B0000", fg="white",
-                            font=("Arial", 14, "bold"))
-label_bienvenida.pack(pady=50)
+tabs.add(tab1, text="Main")
+tabs.add(tab2, text="Scripts")
+tabs.add(tab3, text="Settings")
 
-# Centrar la ventana al iniciar
+# ==================== EJEMPLO DE BOTONES (TAB MAIN) ====================
+def ejemplo_speed():
+    print("Speed hack activado!")  # Aquí pones tu script de Roblox
+    # Ejemplo real: game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100
+
+tk.Button(tab1, text="Speed x2", bg="#2d2d2d", fg="#00ff00", font=("Consolas", 11, "bold"), relief="flat",
+          command=ejemplo_speed).pack(pady=8, padx=20, fill="x")
+
+tk.Button(tab1, text="Infinite Jump", bg="#2d2d2d", fg="#00ff00", font=("Consolas", 11, "bold"), relief="flat").pack(pady=8, padx=20, fill="x")
+tk.Button(tab1, text="Fly Hack", bg="#2d2d2d", fg="#00ff00", font=("Consolas", 11, "bold"), relief="flat").pack(pady=8, padx=20, fill="x")
+tk.Button(tab1, text="Noclip", bg="#2d2d2d", fg="#ff0080", font=("Consolas", 11, "bold"), relief="flat").pack(pady=8, padx=20, fill="x")
+
+# ==================== OPEN/CLOSE CON TECLA INSERT ====================
+def toggle_gui():
+    if root.winfo_viewable():
+        root.withdraw()
+    else:
+        root.deiconify()
+        root.lift()
+
+keyboard.add_hotkey("insert", toggle_gui)
+
+# Centrar al iniciar
+root.withdraw()
 root.update_idletasks()
 x = (root.winfo_screenwidth() // 2) - (root.winfo_width() // 2)
 y = (root.winfo_screenheight() // 2) - (root.winfo_height() // 2)
 root.geometry(f"+{x}+{y}")
+root.deiconify()
 
-# Iniciar el loop
+# ==================== INICIAR GUI ====================
 root.mainloop()
