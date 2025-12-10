@@ -1,269 +1,197 @@
--- HadesHub v3 - GUI Custom 100% Roja, Movible y Minimizable (Estilo Delta + Hades)
--- Tecla: INSERT para Abrir/Cerrar
--- Creado para Delta Executor - 2025 🔥
+-- HadesHub v4 - FUNCIONA EN PC Y CELULAR (Delta, Arceus X, Codex, Hydrogen, etc.)
+-- Aparece automáticamente al ejecutar
+-- Rojo, movible, minimizable, con animación
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 -- Crear ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "HadesHub"
-ScreenGui.Parent = PlayerGui
+ScreenGui.Name = "HadesHubV4"
 ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = PlayerGui
 
--- Variables globales
-local MainFrame = nil
-local ContentFrame = nil
-local Minimized = false
-local Dragging = false
-local DragStart = nil
-local StartPos = nil
-local Visible = true
-
--- Función para crear esquinas redondeadas
-local function CreateCorner(parent, radius)
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, radius or 12)
-    corner.Parent = parent
-    return corner
-end
-
--- Función para crear gradiente
-local function CreateGradient(parent, color1, color2)
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, color1),
-        ColorSequenceKeypoint.new(1, color2)
-    }
-    gradient.Rotation = 45
-    gradient.Parent = parent
-    return gradient
-end
-
--- Crear Frame Principal (Rojo Hades)
-MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)  -- Fondo oscuro
+-- Frame principal (ROJO HADES)
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 750, 0, 550)
+MainFrame.Position = UDim2.new(0.5, -375, 0.5, -275)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.5, -400, 0.5, -300)
-MainFrame.Size = UDim2.new(0, 800, 0, 600)
 MainFrame.ClipsDescendants = true
-CreateCorner(MainFrame, 16)
+MainFrame.Visible = true  -- ¡AHORA SÍ SE VE AL INICIAR!
+MainFrame.Parent = ScreenGui
 
--- Borde rojo exterior
-local Border = Instance.new("Frame")
-Border.Name = "Border"
-Border.Parent = MainFrame
-Border.BackgroundColor3 = Color3.fromRGB(196, 30, 58)  -- Rojo Hades #C41E3A
-Border.BorderSizePixel = 0
-Border.Position = UDim2.new(0, -2, 0, -2)
-Border.Size = UDim2.new(1, 4, 1, 4)
-CreateCorner(Border, 18)
+-- Esquina redondeada
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 16)
+Corner.Parent = MainFrame
 
--- Barra Superior Roja (Draggable)
+-- Borde rojo brillante
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.fromRGB(220, 20, 60)  -- Rojo Hades intenso
+Stroke.Thickness = 4
+Stroke.Parent = MainFrame
+
+-- Barra superior (drag + botones)
 local TitleBar = Instance.new("Frame")
-TitleBar.Name = "TitleBar"
-TitleBar.Parent = MainFrame
-TitleBar.BackgroundColor3 = Color3.fromRGB(196, 30, 58)
-TitleBar.BorderSizePixel = 0
 TitleBar.Size = UDim2.new(1, 0, 0, 50)
-CreateCorner(TitleBar, 0)  -- Sin curva arriba
+TitleBar.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
 
-CreateGradient(TitleBar, Color3.fromRGB(255, 50, 80), Color3.fromRGB(196, 30, 58))
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 16)
+TitleCorner.Parent = TitleBar
 
--- Título HadesHub
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Name = "Title"
-TitleLabel.Parent = TitleBar
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Position = UDim2.new(0, 20, 0, 0)
-TitleLabel.Size = UDim2.new(0, 200, 1, 0)
-TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "HadesHub"
-TitleLabel.TextColor3 = Color3.new(1,1,1)
-TitleLabel.TextSize = 18
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Text = "HadesHub"
+Title.Size = UDim2.new(0, 200, 1, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.new(1,1,1)
+Title.Font = Enum.Font.GothamBlack
+Title.TextSize = 22
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TitleBar
 
 -- Botón Minimizar
-local MinimizeBtn = Instance.new("TextButton")
-MinimizeBtn.Name = "Minimize"
-MinimizeBtn.Parent = TitleBar
-MinimizeBtn.BackgroundTransparency = 1
-MinimizeBtn.Position = UDim2.new(1, -80, 0, 0)
-MinimizeBtn.Size = UDim2.new(0, 40, 1, 0)
-MinimizeBtn.Font = Enum.Font.Gotham
-MinimizeBtn.Text = "─"
-MinimizeBtn.TextColor3 = Color3.new(1,1,1)
-MinimizeBtn.TextSize = 20
+local MinBtn = Instance.new("TextButton")
+MinBtn.Text = "−"
+MinBtn.Size = UDim2.new(0, 45, 0, 45)
+MinBtn.Position = UDim2.new(1, -90, 0, 2)
+MinBtn.BackgroundTransparency = 1
+MinBtn.TextColor3 = Color3.new(1,1,1)
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.TextSize = 28
+MinBtn.Parent = TitleBar
 
 -- Botón Cerrar
 local CloseBtn = Instance.new("TextButton")
-CloseBtn.Name = "Close"
-CloseBtn.Parent = TitleBar
+CloseBtn.Text = "×"
+CloseBtn.Size = UDim2.new(0, 45, 0, 45)
+CloseBtn.Position = UDim2.new(1, -45, 0, 2)
 CloseBtn.BackgroundTransparency = 1
-CloseBtn.Position = UDim2.new(1, -40, 0, 0)
-CloseBtn.Size = UDim2.new(0, 40, 1, 0)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = Color3.new(1,1,1)
-CloseBtn.TextSize = 18
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 24
+CloseBtn.Parent = TitleBar
 
--- Frame de Contenido
-ContentFrame = Instance.new("Frame")
-ContentFrame.Name = "Content"
-ContentFrame.Parent = MainFrame
-ContentFrame.BackgroundTransparency = 1
-ContentFrame.Position = UDim2.new(0, 0, 0, 50)
-ContentFrame.Size = UDim2.new(1, 0, 1, -50)
-ContentFrame.ClipsDescendants = true
+-- Contenido
+local Content = Instance.new("ScrollingFrame")
+Content.Size = UDim2.new(1, -20, 1, -70)
+Content.Position = UDim2.new(0, 10, 0, 60)
+Content.BackgroundTransparency = 1
+Content.ScrollBarThickness = 8
+Content.ScrollBarImageColor3 = Color3.fromRGB(220, 20, 60)
+Content.CanvasSize = UDim2.new(0, 0, 0, 800)
+Content.Parent = MainFrame
 
--- ScrollFrame para contenido
-local Scroll = Instance.new("ScrollingFrame")
-Scroll.Parent = ContentFrame
-Scroll.BackgroundTransparency = 1
-Scroll.Position = UDim2.new(0, 20, 0, 20)
-Scroll.Size = UDim2.new(1, -40, 1, -40)
-Scroll.ScrollBarThickness = 6
-Scroll.ScrollBarImageColor3 = Color3.fromRGB(196, 30, 58)
-Scroll.CanvasSize = UDim2.new(0, 0, 0, 2000)  -- Ajustar dinámicamente
+local Layout = Instance.new("UIListLayout")
+Layout.Padding = UDim.new(0, 12)
+Layout.Parent = Content
 
-local ListLayout = Instance.new("UIListLayout")
-ListLayout.Parent = Scroll
-ListLayout.Padding = UDim.new(0, 10)
-ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+-- DRAG (funciona en PC y celular)
+local dragging = false
+local dragInput, dragStart, startPos
 
--- FUNCIÓN MINIMIZAR
-local function ToggleMinimize()
-    Minimized = not Minimized
-    if Minimized then
-        MainFrame:TweenSize(UDim2.new(0, 300, 0, 50), "Out", "Quad", 0.3, true)
-        ContentFrame.Visible = false
-        MinimizeBtn.Text = "□"
-    else
-        MainFrame:TweenSize(UDim2.new(0, 800, 0, 600), "Out", "Quad", 0.3, true)
-        ContentFrame.Visible = true
-        MinimizeBtn.Text = "─"
-    end
-end
-
-MinimizeBtn.MouseButton1Click:Connect(ToggleMinimize)
-
--- FUNCIÓN CERRAR
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
--- DRAG (Movible desde TitleBar)
 TitleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        Dragging = true
-        DragStart = input.Position
-        StartPos = MainFrame.Position
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
     end
 end)
 
 TitleBar.InputChanged:Connect(function(input)
-    if Dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - DragStart
-        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + delta.X, StartPos.Y.Scale, StartPos.Y.Offset + delta.Y)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if dragging then
+            local delta = input.Position - dragStart
+            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
     end
 end)
 
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        Dragging = false
+-- Minimizar
+local minimized = false
+MinBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 300, 0, 50)}):Play()
+        Content.Visible = false
+        MinBtn.Text = "↑"
+    else
+        TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 750, 0, 550)}):Play()
+        Content.Visible = true
+        MinBtn.Text = "−"
     end
 end)
 
--- TOGGLE VISIBILITY CON INSERT
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.Insert then
-        Visible = not Visible
-        MainFrame.Visible = Visible
-        if Visible and Minimized then ToggleMinimize() end  -- Restaurar si estaba min
-    end
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
 end)
 
--- EJEMPLO BOTONES ROJOS (Agrega más aquí)
-local function CreateButton(text, callback)
-    local Btn = Instance.new("TextButton")
-    Btn.Parent = Scroll
-    Btn.BackgroundColor3 = Color3.fromRGB(196, 30, 58)
-    Btn.BorderSizePixel = 0
-    Btn.Size = UDim2.new(1, -20, 0, 50)
-    Btn.Font = Enum.Font.GothamBold
-    Btn.Text = text
-    Btn.TextColor3 = Color3.new(1,1,1)
-    Btn.TextSize = 16
-    CreateCorner(Btn, 10)
-    CreateGradient(Btn, Color3.fromRGB(255, 50, 80), Color3.fromRGB(196, 30, 58))
+-- Función crear botón rojo
+local function AddButton(name, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 60)
+    btn.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+    btn.Text = name
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 18
+    btn.Parent = Content
     
-    Btn.MouseButton1Click:Connect(callback)
-    Btn.MouseEnter:Connect(function() Btn.Size = UDim2.new(1, -20, 0, 55) end)
-    Btn.MouseLeave:Connect(function() Btn.Size = UDim2.new(1, -20, 0, 50) end)
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 12)
+    btnCorner.Parent = btn
     
-    -- Ajustar CanvasSize
-    Scroll.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 50)
-    ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Scroll.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 50)
-    end)
+    btn.MouseButton1Click:Connect(callback)
     
-    return Btn
+    -- Hover effect
+    btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(255, 50, 90) end)
+    btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(220, 20, 60) end)
 end
 
--- Botones de ejemplo (Universal Roblox)
-local Humanoid = Player.Character and Player.Character:FindFirstChild("Humanoid")
-
-CreateButton("Speed x16", function()
-    if Humanoid then Humanoid.WalkSpeed = 100 end
+-- Botones de ejemplo (funcionan en todos los juegos)
+AddButton("Speed Hack x10", function()
+    Player.Character.Humanoid.WalkSpeed = 160
 end)
 
-CreateButton("Jump Power 200", function()
-    if Humanoid then Humanoid.JumpPower = 200 end
+AddButton("Infinite Jump", function()
+    game:GetService("UserInputService").JumpRequest:connect(function()
+        Player.Character.Humanoid:ChangeState("Jumping")
+    end)
 end)
 
-CreateButton("Infinite Yield (Admin)", function()
+AddButton("Fly Hack (E)", function()
+    loadstring(game:HttpGet("https://pastebin.com/raw/L1cYvzvE"))()
+end)
+
+AddButton("Infinite Yield Admin", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
 end)
 
-CreateButton("Fly Hack", function()
-    loadstring(game:HttpGet("https://pastebin.com/raw/9Kmhe7C3"))()
+AddButton("Noclip (Hold E)", function()
+    loadstring(game:HttpGet("https://pastebin.com/raw/vc7y6z8K"))()
 end)
 
-CreateButton("Noclip", function()
-    local noclip = false
-    local conn
-    conn = RunService.Stepped:Connect(function()
-        if noclip then
-            for _, part in pairs(Player.Character:GetDescendants()) do
-                if part:IsA("BasePart") then part.CanCollide = false end
-            end
-        end
-    end)
-    Player:GetMouse().KeyDown:Connect(function(key)
-        if key == "n" then noclip = not noclip end
-    end)
-end)
-
-CreateButton("Rejoin Server", function()
-    game:GetService("TeleportService"):Teleport(game.PlaceId, Player)
-end)
-
--- Inicializar minimizado? No, abierta
-MainFrame.Visible = false  -- Empieza oculta, Insert para abrir
-
-print("HadesHub cargado! Presiona INSERT 🔥")
+-- Notificación
 game.StarterGui:SetCore("SendNotification", {
-    Title = "HadesHub";
-    Text = "Cargado! Presiona INSERT";
-    Duration = 5;
+    Title = "HadesHub v4";
+    Text = "GUI Cargada! Arrastra desde arriba";
+    Duration = 6;
 })
+
+print("HadesHub v4 cargado - PC y Celular")
