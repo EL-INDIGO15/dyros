@@ -1,49 +1,33 @@
--- HADES HUB v7 - CON IMAGEN DE FONDO OFICIAL (ZAGREUS)
--- Ejecuta y verás la portada completa del juego como fondo 🔥
+-- HADES HUB v8 - FONDO ZAGREUS OFICIAL PNG (Vacía, Solo GUI)
+-- Imagen HD de Zagreus (sin fondo) - Aparece al ejecutar
 
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/SadOz8/Library/refs/heads/main/Library.txt"))()
 
--- URL directa de la imagen oficial de Hades (alta calidad, sin marcas)
-local HADES_IMAGE = "http://i.imgur.com/3b9vJ0K.png"  -- Portada oficial vertical perfecta
+-- URL PNG oficial de Zagreus (alta resolución, compatible Roblox)
+local ZAGREUS_IMAGE = "https://www.pngkey.com/png/full/2-28240_zagreus-hades-game.png"
 
--- Crear ventana con imagen de fondo
+-- Ventana con imagen de fondo (roja Hades)
 local window_data, window = library:AddWindow("HadesHub", {
-    main_color = Color3.fromRGB(220, 20, 60),     -- Rojo Hades
-    min_size = Vector2.new(420, 580),             -- Tamaño perfecto para la imagen
+    main_color = Color3.fromRGB(220, 20, 60),     -- Rojo Hades 🔥
+    min_size = Vector2.new(400, 600),             -- Tamaño ajustado a la imagen vertical
     toggle_key = Enum.KeyCode.Insert,
     can_resize = true,
-    background = HADES_IMAGE                      -- ← ¡FONDO DE IMAGEN AQUÍ!
+    background = ZAGREUS_IMAGE                    -- Fondo: Zagreus oficial
 })
 
--- Tabs
+-- Tabs vacías (sin funciones)
 local tab_main = window_data:AddTab("Main")
 local tab_scripts = window_data:AddTab("Scripts")
 local tab_settings = window_data:AddTab("Settings")
 
--- Transparencia suave del fondo para que se lea el texto
-tab_main:AddLabel("Bienvenido al Inframundo", Color3.fromRGB(255, 255, 255))
-tab_main:AddLabel("Zagreus te observa desde el fondo", Color3.fromRGB(255, 100, 100))
+-- Etiqueta simple en Main (opcional, puedes borrar)
+tab_main:AddLabel("HadesHub - Listo para scripts")
 
--- Ejemplos de botones (puedes borrar o agregar más)
-tab_main:AddButton("Infinite Yield", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-end)
-
-tab_main:AddButton("Speed x10", function()
-    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100
-end)
-
--- Consola roja con syntax highlighting
-local console_data, console = tab_scripts:AddConsole({y = 300, source = "Lua"})
-console:Log("HadesHub v7 cargado con fondo épico")
-console:Set("-- ¡Zagreus está listo para romper el juego!\nprint('Booyah!')")
-
--- Notificación épica
+-- Notificación
 game.StarterGui:SetCore("SendNotification", {
-    Title = "HadesHub v7";
-    Text = "Fondo de Zagreus activado 🔥";
-    Duration = 6;
-    Icon = HADES_IMAGE;
+    Title = "HadesHub v8";
+    Text = "Fondo Zagreus PNG cargado (vacío)";
+    Duration = 4;
 })
 
-print("HadesHub v7 - Fondo oficial de Hades cargado")
+print("HadesHub v8 - GUI vacía con fondo oficial de Zagreus")
