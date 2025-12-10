@@ -1,96 +1,179 @@
--- Speed Hub X Style GUI by Grok (2025)
---Rayfield)
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Speed Hub X Style GUI for Muscle Legends (Custom Kavo UI - No Rayfield)
+-- By Grok (2025) - Enfocado en Muscle Legends
 
-local Window = Rayfield:CreateWindow({
-    Name = "Speed Hub X",
-    LoadingTitle = "Speed Hub X",
-    LoadingSubtitle = "by TuNombre",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "SpeedHubX_Config",
-        FileName = "Config"
-    },
-    Discord = {
-        Enabled = true,
-        Invite = "abc123", -- pon tu código de discord aquí
-        RememberJoins = true
-    },
-    KeySystem = false -- pon en true si quieres key system
-})
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("Speed Hub X - Muscle Legends", "DarkTheme") -- Estilo oscuro neón como Speed Hub X
 
--- Tabs
-local Tab1 = Window:CreateTab("Main", 6026568198) -- icono de espada
-local Tab2 = Window:CreateTab("Visual", 6026568244) -- icono de ojo
-local Tab3 = Window:CreateTab("Misc", 6026568269) -- icono de ajustes
-local Tab4 = Window:CreateTab("Settings", 7734053495) -- icono de config
+-- Servicios
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+local UserInputService = game:GetService("UserInputService")
 
--- Ejemplo de cosas en la tab Main
-local Section = Tab1:CreateSection("Player Mods")
+local Player = Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
 
-local Slider = Tab1:CreateSlider({
-    Name = "WalkSpeed",
-    Range = {16, 500},
-    Increment = 1,
-    Suffix = "Speed",
-    CurrentValue = 16,
-    Flag = "WalkSpeed",
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-    end,
-})
+-- Variables para Muscle Legends
+local Farming = false
+local Rebirthing = false
+local AutoStats = false
+local InfiniteEnergy = false
+local AutoSpin = false
 
-local Slider2 = Tab1:CreateSlider({
-    Name = "JumpPower",
-    Range = {50, 300},
-    Increment = 1,
-    Suffix = "Power",
-    CurrentValue = 50,
-    Flag = "JumpPower",
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
-    end,
-})
-
-local Toggle = Tab1:CreateToggle({
-    Name = "Infinite Jump",
-    CurrentValue = false,
-    Flag = "InfJump",
-    Callback = function(Value)
-        _G.InfJump = Value
-        if Value then
-            local Player = game.Players.LocalPlayer
-            local UserInputService = game:GetService("UserInputService")
-
-            UserInputService.JumpRequest:Connect(function()
-                if _G.InfJump then
-                    Player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+-- Funciones para Muscle Legends
+local function AutoFarm()
+    if Farming then
+        spawn(function()
+            while Farming do
+                -- Auto entrenar en el gym más cercano (simula clicks en pesos)
+                for _, obj in pairs(workspace:GetChildren()) do
+                    if obj.Name:find("Weight") or obj.Name:find("Gym") then
+                        fireclickdetector(obj:FindFirstChildOfClass("ClickDetector"))
+                    end
                 end
-            end)
-        end
-    end,
-})
-
-local Button = Tab1:CreateButton({
-    Name = "Rejoin Server",
-    Callback = function()
-        game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
-    end,
-})
-
--- Puedes seguir agregando todo lo que quieras (ESP, Aimbot, Fly, etc.)
-
-Rayfield:Notify({
-    Title = "Speed Hub X Loaded",
-    Content = "Disfruta del hub crack :)",
-    Duration = 5,
-    Image = 4483362458,
-    Actions = {
-        Ignore = {
-            Name = "Okay!",
-            Callback = function()
-                print("Notificación cerrada")
+                wait(0.1)
             end
-        }
-    },
-})
+        end)
+    end
+end
+
+local function AutoRebirth()
+    if Rebirthing then
+        ReplicatedStorage.Remotes.Rebirth:FireServer() -- Remote para rebirth
+    end
+end
+
+local function AutoAssignStats()
+    if AutoStats then
+        -- Asigna stats a Strength prioritariamente
+        ReplicatedStorage.Remotes.AddPoints:FireServer("Strength", 100) -- Ajusta según max
+    end
+end
+
+local function InfiniteE()
+    if InfiniteEnergy then
+        Player.leaderstats.Energy.Value = 100 -- Hackea energy a max
+    end
+end
+
+local function AutoWheelSpin()
+    if AutoSpin then
+        ReplicatedStorage.Remotes.SpinWheel:FireServer() -- Spin fortune wheel
+    end
+end
+
+local function TeleportTo(pos)
+    Character.HumanoidRootPart.CFrame = CFrame.new(pos)
+end
+
+-- Tabs como en Speed Hub X
+local MainTab = Window:NewTab("Main Hub")
+local FarmTab = MainTab:NewSection("Auto Farm")
+local StatsTab = MainTab:NewSection("Stats & Boosts")
+local TeleTab = MainTab:NewSection("Teleports")
+local MiscTab = Window:NewTab("Misc"):NewSection("Extras")
+
+-- Main Features (Auto Farm)
+FarmTab:NewToggle("Auto Farm (Train Strength)", "Activa auto-entrenamiento", function(state)
+    Farming = state
+    AutoFarm()
+end)
+
+FarmTab:NewToggle("Auto Rebirth", "Rebirth automático al max", function(state)
+    Rebirthing = state
+    spawn(function()
+        while Rebirthing do
+            AutoRebirth()
+            wait(5) -- Cada 5 seg
+        end
+    end)
+end)
+
+FarmTab:NewToggle("Auto Spin Wheel", "Gira la rueda de la fortuna", function(state)
+    AutoSpin = state
+    spawn(function()
+        while AutoSpin do
+            AutoWheelSpin()
+            wait(2)
+        end
+    end)
+end)
+
+-- Stats
+StatsTab:NewToggle("Auto Stats (All to Strength)", "Asigna puntos a fuerza", function(state)
+    AutoStats = state
+    spawn(function()
+        while AutoStats do
+            AutoAssignStats()
+            wait(1)
+        end
+    end)
+end)
+
+StatsTab:NewSlider("WalkSpeed", "Velocidad de camina", 500, 16, function(s)
+    Humanoid.WalkSpeed = s
+end)
+
+StatsTab:NewToggle("Infinite Energy", "Energía infinita", function(state)
+    InfiniteEnergy = state
+    spawn(function()
+        while InfiniteEnergy do
+            InfiniteE()
+            wait(0.5)
+        end
+    end)
+end)
+
+-- Teleports (Gyms e Islands en Muscle Legends)
+TeleTab:NewButton("Teleport to Spawn", "Vuelve al spawn", function()
+    TeleportTo(Vector3.new(0, 10, 0))
+end)
+
+TeleTab:NewButton("Teleport to Gym 1", "Gym inicial", function()
+    TeleportTo(Vector3.new(50, 5, 50)) -- Coords aproximadas, ajusta si necesitas
+end)
+
+TeleTab:NewButton("Teleport to Volcano", "Volcán para farm avanzado", function()
+    TeleportTo(Vector3.new(200, 20, 100))
+end)
+
+TeleTab:NewButton("Teleport to Secret Island", "Isla secreta", function()
+    TeleportTo(Vector3.new(-100, 10, -50))
+end)
+
+-- Misc
+MiscTab:NewToggle("Infinite Jump", "Salta infinito", function(state)
+    _G.InfJump = state
+    UserInputService.JumpRequest:Connect(function()
+        if _G.InfJump then
+            Humanoid:ChangeState("Jumping")
+        end
+    end)
+end)
+
+MiscTab:NewButton("Rejoin Server", "Reunirse al server", function()
+    TeleportService:Teleport(game.PlaceId, Player)
+end)
+
+MiscTab:NewButton("Server Hop", "Cambiar de server", function()
+    -- Código simple para hop (usa un loop para encontrar players)
+    local Servers = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
+    for _, v in pairs(Servers.data) do
+        if v.playing < v.maxPlayers and v.id ~= game.JobId then
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id)
+            break
+        end
+    end
+end)
+
+-- Notificación de carga como en Speed Hub X
+Library:Notify("Speed Hub X Loaded! 💪", 5)
+
+-- Tema neón custom (morado como Speed Hub X)
+Library:SetTheme("DarkTheme")
+-- Para más custom: Library:ToggleUI() para minimizar, etc.
+
+print("¡Speed Hub X para Muscle Legends cargado! Usa la GUI para farmear como un pro 😈")
