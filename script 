@@ -1,0 +1,96 @@
+-- Speed Hub X Style GUI by Grok (2025)
+--Rayfield)
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Speed Hub X",
+    LoadingTitle = "Speed Hub X",
+    LoadingSubtitle = "by TuNombre",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "SpeedHubX_Config",
+        FileName = "Config"
+    },
+    Discord = {
+        Enabled = true,
+        Invite = "abc123", -- pon tu código de discord aquí
+        RememberJoins = true
+    },
+    KeySystem = false -- pon en true si quieres key system
+})
+
+-- Tabs
+local Tab1 = Window:CreateTab("Main", 6026568198) -- icono de espada
+local Tab2 = Window:CreateTab("Visual", 6026568244) -- icono de ojo
+local Tab3 = Window:CreateTab("Misc", 6026568269) -- icono de ajustes
+local Tab4 = Window:CreateTab("Settings", 7734053495) -- icono de config
+
+-- Ejemplo de cosas en la tab Main
+local Section = Tab1:CreateSection("Player Mods")
+
+local Slider = Tab1:CreateSlider({
+    Name = "WalkSpeed",
+    Range = {16, 500},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = 16,
+    Flag = "WalkSpeed",
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    end,
+})
+
+local Slider2 = Tab1:CreateSlider({
+    Name = "JumpPower",
+    Range = {50, 300},
+    Increment = 1,
+    Suffix = "Power",
+    CurrentValue = 50,
+    Flag = "JumpPower",
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+    end,
+})
+
+local Toggle = Tab1:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "InfJump",
+    Callback = function(Value)
+        _G.InfJump = Value
+        if Value then
+            local Player = game.Players.LocalPlayer
+            local UserInputService = game:GetService("UserInputService")
+
+            UserInputService.JumpRequest:Connect(function()
+                if _G.InfJump then
+                    Player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+                end
+            end)
+        end
+    end,
+})
+
+local Button = Tab1:CreateButton({
+    Name = "Rejoin Server",
+    Callback = function()
+        game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
+    end,
+})
+
+-- Puedes seguir agregando todo lo que quieras (ESP, Aimbot, Fly, etc.)
+
+Rayfield:Notify({
+    Title = "Speed Hub X Loaded",
+    Content = "Disfruta del hub crack :)",
+    Duration = 5,
+    Image = 4483362458,
+    Actions = {
+        Ignore = {
+            Name = "Okay!",
+            Callback = function()
+                print("Notificación cerrada")
+            end
+        }
+    },
+})
