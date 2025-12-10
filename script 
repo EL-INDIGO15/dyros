@@ -1,179 +1,87 @@
--- Speed Hub X Style GUI for Muscle Legends (Custom Kavo UI - No Rayfield)
--- By Grok (2025) - Enfocado en Muscle Legends
+import tkinter as tk
+from tkinter import ttk
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Speed Hub X - Muscle Legends", "DarkTheme") -- Estilo oscuro neón como Speed Hub X
+# Crear la ventana principal
+root = tk.Tk()
+root.title("HadesHub")
+root.geometry("400x300")  # Tamaño inicial
+root.configure(bg="#8B0000")  # Rojo oscuro elegante (puedes cambiarlo a "red" si quieres más fuerte)
+root.overrideredirect(True)  # Quita los bordes normales de Windows para un look más "hub"
 
--- Servicios
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local TeleportService = game:GetService("TeleportService")
-local UserInputService = game:GetService("UserInputService")
+# Variables para mover la ventana
+moviendo = False
+x_inicial = 0
+y_inicial = 0
 
-local Player = Players.LocalPlayer
-local Character = Player.Character or Player.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
+# Frame superior (barra de título personalizada)
+title_bar = tk.Frame(root, bg="#FF0000", relief="flat", bd=0, height=30)
+title_bar.pack(fill="x", side="top")
 
--- Variables para Muscle Legends
-local Farming = false
-local Rebirthing = false
-local AutoStats = false
-local InfiniteEnergy = false
-local AutoSpin = false
+# Título "HadesHub"
+label_title = tk.Label(title_bar, text="HadesHub", bg="#FF0000", fg="white", font=("Segoe UI", 10, "bold"))
+label_title.pack(side="left", padx=10, pady=5)
 
--- Funciones para Muscle Legends
-local function AutoFarm()
-    if Farming then
-        spawn(function()
-            while Farming do
-                -- Auto entrenar en el gym más cercano (simula clicks en pesos)
-                for _, obj in pairs(workspace:GetChildren()) do
-                    if obj.Name:find("Weight") or obj.Name:find("Gym") then
-                        fireclickdetector(obj:FindFirstChildOfClass("ClickDetector"))
-                    end
-                end
-                wait(0.1)
-            end
-        end)
-    end
-end
+# Botón de minimizar
+minimized = False
+def minimizar():
+    global minimized
+    if not minimized:
+        root.geometry("200x30")  # Solo se ve la barra de título
+        content_frame.pack_forget()
+        minimized = True
+    else:
+        root.geometry("400x300")
+        content_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        minimized = False
 
-local function AutoRebirth()
-    if Rebirthing then
-        ReplicatedStorage.Remotes.Rebirth:FireServer() -- Remote para rebirth
-    end
-end
+btn_minimizar = tk.Button(title_bar, text="─", bg="#FF0000", fg="white", bd=0, font=("Arial", 12),
+                          command=minimizar, activebackground="#CC0000", cursor="hand2")
+btn_minimizar.pack(side="right", padx=5)
 
-local function AutoAssignStats()
-    if AutoStats then
-        -- Asigna stats a Strength prioritariamente
-        ReplicatedStorage.Remotes.AddPoints:FireServer("Strength", 100) -- Ajusta según max
-    end
-end
+# Botón cerrar
+def cerrar():
+    root.quit()
 
-local function InfiniteE()
-    if InfiniteEnergy then
-        Player.leaderstats.Energy.Value = 100 -- Hackea energy a max
-    end
-end
+btn_cerrar = tk.Button(title_bar, text="✕", bg="#FF0000", fg="white", bd=0, font=("Arial", 10, "bold"),
+                       command=cerrar, activebackground="#CC0000", cursor="hand2")
+btn_cerrar.pack(side="right", padx=5)
 
-local function AutoWheelSpin()
-    if AutoSpin then
-        ReplicatedStorage.Remotes.SpinWheel:FireServer() -- Spin fortune wheel
-    end
-end
+# Funciones para mover la ventana
+def empezar_movimiento(event):
+    global moviendo, x_inicial, y_inicial
+    moviendo = True
+    x_inicial = event.x
+    y_inicial = event.y
 
-local function TeleportTo(pos)
-    Character.HumanoidRootPart.CFrame = CFrame.new(pos)
-end
+def mover_ventana(event):
+    if moviendo:
+        x = root.winfo_x() + (event.x - x_inicial)
+        y = root.winfo_y() + (event.y - y_inicial)
+        root.geometry(f"+{x}+{y}")
 
--- Tabs como en Speed Hub X
-local MainTab = Window:NewTab("Main Hub")
-local FarmTab = MainTab:NewSection("Auto Farm")
-local StatsTab = MainTab:NewSection("Stats & Boosts")
-local TeleTab = MainTab:NewSection("Teleports")
-local MiscTab = Window:NewTab("Misc"):NewSection("Extras")
+def detener_movimiento(event):
+    global moviendo
+    moviendo = False
 
--- Main Features (Auto Farm)
-FarmTab:NewToggle("Auto Farm (Train Strength)", "Activa auto-entrenamiento", function(state)
-    Farming = state
-    AutoFarm()
-end)
+# Hacer que la barra de título sea arrastrable
+title_bar.bind("<Button-1>", empezar_movimiento)
+title_bar.bind("<B1-Motion>", mover_ventana)
+title_bar.bind("<ButtonRelease-1>", detener_movimiento)
 
-FarmTab:NewToggle("Auto Rebirth", "Rebirth automático al max", function(state)
-    Rebirthing = state
-    spawn(function()
-        while Rebirthing do
-            AutoRebirth()
-            wait(5) -- Cada 5 seg
-        end
-    end)
-end)
+# Contenido principal (aquí puedes agregar tus botones, tabs, etc.)
+content_frame = tk.Frame(root, bg="#8B0000")
+content_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-FarmTab:NewToggle("Auto Spin Wheel", "Gira la rueda de la fortuna", function(state)
-    AutoSpin = state
-    spawn(function()
-        while AutoSpin do
-            AutoWheelSpin()
-            wait(2)
-        end
-    end)
-end)
+# Ejemplo de etiqueta dentro del hub
+label_bienvenida = tk.Label(content_frame, text="¡Bienvenido a HadesHub!", bg="#8B0000", fg="white",
+                            font=("Arial", 14, "bold"))
+label_bienvenida.pack(pady=50)
 
--- Stats
-StatsTab:NewToggle("Auto Stats (All to Strength)", "Asigna puntos a fuerza", function(state)
-    AutoStats = state
-    spawn(function()
-        while AutoStats do
-            AutoAssignStats()
-            wait(1)
-        end
-    end)
-end)
+# Centrar la ventana al iniciar
+root.update_idletasks()
+x = (root.winfo_screenwidth() // 2) - (root.winfo_width() // 2)
+y = (root.winfo_screenheight() // 2) - (root.winfo_height() // 2)
+root.geometry(f"+{x}+{y}")
 
-StatsTab:NewSlider("WalkSpeed", "Velocidad de camina", 500, 16, function(s)
-    Humanoid.WalkSpeed = s
-end)
-
-StatsTab:NewToggle("Infinite Energy", "Energía infinita", function(state)
-    InfiniteEnergy = state
-    spawn(function()
-        while InfiniteEnergy do
-            InfiniteE()
-            wait(0.5)
-        end
-    end)
-end)
-
--- Teleports (Gyms e Islands en Muscle Legends)
-TeleTab:NewButton("Teleport to Spawn", "Vuelve al spawn", function()
-    TeleportTo(Vector3.new(0, 10, 0))
-end)
-
-TeleTab:NewButton("Teleport to Gym 1", "Gym inicial", function()
-    TeleportTo(Vector3.new(50, 5, 50)) -- Coords aproximadas, ajusta si necesitas
-end)
-
-TeleTab:NewButton("Teleport to Volcano", "Volcán para farm avanzado", function()
-    TeleportTo(Vector3.new(200, 20, 100))
-end)
-
-TeleTab:NewButton("Teleport to Secret Island", "Isla secreta", function()
-    TeleportTo(Vector3.new(-100, 10, -50))
-end)
-
--- Misc
-MiscTab:NewToggle("Infinite Jump", "Salta infinito", function(state)
-    _G.InfJump = state
-    UserInputService.JumpRequest:Connect(function()
-        if _G.InfJump then
-            Humanoid:ChangeState("Jumping")
-        end
-    end)
-end)
-
-MiscTab:NewButton("Rejoin Server", "Reunirse al server", function()
-    TeleportService:Teleport(game.PlaceId, Player)
-end)
-
-MiscTab:NewButton("Server Hop", "Cambiar de server", function()
-    -- Código simple para hop (usa un loop para encontrar players)
-    local Servers = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
-    for _, v in pairs(Servers.data) do
-        if v.playing < v.maxPlayers and v.id ~= game.JobId then
-            TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id)
-            break
-        end
-    end
-end)
-
--- Notificación de carga como en Speed Hub X
-Library:Notify("Speed Hub X Loaded! 💪", 5)
-
--- Tema neón custom (morado como Speed Hub X)
-Library:SetTheme("DarkTheme")
--- Para más custom: Library:ToggleUI() para minimizar, etc.
-
-print("¡Speed Hub X para Muscle Legends cargado! Usa la GUI para farmear como un pro 😈")
+# Iniciar el loop
+root.mainloop()
