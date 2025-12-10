@@ -1,7 +1,7 @@
 -- HADES HUB v9 - FUEGO ANIMADO DE FONDO (transparente + épico)
 -- Llamas rojas suaves que se mueven – perfecto para leer encima
 
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/EL-INDIGO15/dyros/refs/heads/main/libreria"))()
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/CAXAP26BKyCH/library/refs/heads/main/Uilibrary"))()
 
 -- FUEGO ANIMADO TRANSPARENTE (GIF → convertido a ImageLabel con loop)
 local FIRE_GIF = "http://i.imgur.com/8Q3Zb3b.gif"   -- Llamas rojas suaves y transparentes (loop perfecto)
