@@ -1897,3 +1897,6 @@ task.spawn(function()
         end
     end
 end)
+
+-- Main Tab
+local mainTab = window:AddTab("Main")
