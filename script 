@@ -496,21 +496,6 @@ RebirthFolder:AddButton("Anti Lag", function()
         Duration = 5 
     }) 
 end) 
-RebirthFolder:AddButton("Spin Auto", function(state) 
-    _G.AutoSpinWheel = state 
-
-    if state then 
-        spawn(function() 
-            while _G.AutoSpinWheel and task.wait(0.1) do 
-                game:GetService("ReplicatedStorage").rEvents.openFortuneWheelRemote:InvokeServer( 
-                    "openFortuneWheel", 
-                    game:GetService("ReplicatedStorage").fortuneWheelChances["Fortune Wheel"] 
-                ) 
-            end 
-        end) 
-    end 
-end) 
-
 
 RebirthFolder:AddButton("Jungle Lift", function() 
     local player = game.Players.LocalPlayer 
@@ -765,4 +750,305 @@ autoEquipToolsFolder:AddSwitch("Fast Tools", function(Value)
     end 
 end) 
 
+local folder = AutoFarm:AddFolder("Rock Farming") 
 
+-- ⚡ NUEVO AUTO PUNCH (versión rápida) 
+local function gettool() 
+    local player = game.Players.LocalPlayer 
+    local char = player.Character 
+    if not char then return end 
+
+    local backpack = player:FindFirstChild("Backpack") 
+    if not backpack then return end 
+
+    local punch = backpack:FindFirstChild("Punch") 
+    if punch and char:FindFirstChildOfClass("Humanoid") then 
+        char:FindFirstChildOfClass("Humanoid"):EquipTool(punch) 
+    end 
+
+    task.spawn(function() 
+        for _ = 1, 5 do -- cantidad de golpes por ciclo 
+            player.muscleEvent:FireServer("punch", "leftHand") 
+            player.muscleEvent:FireServer("punch", "rightHand") 
+            task.wait() 
+        end 
+    end) 
+end 
+
+-- ⚙️ Función general para crear auto farms más limpios 
+local function createRockSwitch(name, durability) 
+    return folder:AddSwitch("Farm " .. name, function(bool) 
+        selectrock = name 
+        getgenv().autoFarm = bool 
+
+        if bool then 
+            task.spawn(function() 
+                while getgenv().autoFarm do 
+                    task.wait(0.001) -- velocidad del bucle principal 
+                    local player = game.Players.LocalPlayer 
+                    if player and player.Durability.Value >= durability then 
+                        for _, v in pairs(workspace.machinesFolder:GetDescendants()) do 
+                            if v.Name == "neededDurability" and v.Value == durability then 
+                                local char = player.Character 
+                                if char and char:FindFirstChild("LeftHand") and char:FindFirstChild("RightHand") then 
+                                    firetouchinterest(v.Parent.Rock, char.RightHand, 0) 
+                                    firetouchinterest(v.Parent.Rock, char.RightHand, 1) 
+                                    firetouchinterest(v.Parent.Rock, char.LeftHand, 0) 
+                                    firetouchinterest(v.Parent.Rock, char.LeftHand, 1) 
+                                    gettool() 
+                                end 
+                            end 
+                        end 
+                    end 
+                end 
+            end) 
+        end 
+    end) 
+end 
+
+-- 🪨 Lista de rocas (mismo orden original) 
+createRockSwitch("Tiny Island Rock", 0) 
+createRockSwitch("Starter Island Rock", 100) 
+createRockSwitch("Legend Beach Rock", 5000) 
+createRockSwitch("Frost Gym Rock", 150000) 
+createRockSwitch("Mythical Gym Rock", 400000) 
+createRockSwitch("Eternal Gym Rock", 750000) 
+createRockSwitch("Legend Gym Rock", 1000000) 
+createRockSwitch("Muscle King Gym Rock", 5000000) 
+createRockSwitch("Ancient Jungle Rock", 10000000) 
+
+-- 🧠 Variables globales (se mantienen iguales) 
+getgenv().StarterIslandBenchPress = false 
+getgenv().StarterIslandSquat = false 
+getgenv().StarterIslandDeadlift = false 
+getgenv().StarterIslandPullUp = false 
+getgenv().StarterIslandBoulder = false 
+
+getgenv().LegendBeachBenchPress = false 
+getgenv().LegendBeachSquat = false 
+getgenv().LegendBeachDeadlift = false 
+getgenv().LegendBeachPullUp = false 
+getgenv().LegendBeachBoulder = false 
+
+getgenv().FrostGymBenchPress = false 
+getgenv().FrostGymSquat = false 
+getgenv().FrostGymDeadlift = false 
+getgenv().FrostGymPullUp = false 
+getgenv().FrostGymBoulder = false 
+
+getgenv().MythicalGymBenchPress = false 
+getgenv().MythicalGymSquat = false 
+getgenv().MythicalGymDeadlift = false 
+getgenv().MythicalGymPullUp = false 
+getgenv().MythicalGymBoulder = false 
+
+getgenv().EternalGymBenchPress = false 
+getgenv().EternalGymSquat = false 
+getgenv().EternalGymDeadlift = false 
+getgenv().EternalGymPullUp = false 
+getgenv().EternalGymBoulder = false 
+
+getgenv().LegendGymBenchPress = false 
+getgenv().LegendGymSquat = false 
+getgenv().LegendGymDeadlift = false 
+getgenv().LegendGymPullUp = false 
+getgenv().LegendGymBoulder = false 
+
+getgenv().MuscleKingGymBenchPress = false 
+getgenv().MuscleKingGymSquat = false 
+getgenv().MuscleKingGymDeadlift = false 
+getgenv().MuscleKingGymPullUp = false 
+getgenv().MuscleKingGymBoulder = false 
+
+getgenv().JungleGymBenchPress = false 
+getgenv().JungleGymSquat = false 
+getgenv().JungleGymDeadlift = false 
+getgenv().JungleGymPullUp = false 
+getgenv().JungleGymBoulder = false 
+
+local positions = { 
+    StarterIsland = { 
+        BenchPress = CFrame.new(-17.0609932, 3.31417918, -2.48164988), 
+        Squat = CFrame.new(-48.8711243, 3.31417918, -11.8831778), 
+        Deadlift = CFrame.new(-48.8711243, 3.31417918, -11.8831778), 
+        PullUp = CFrame.new(-33.3047485, 3.31417918, -11.8831778), 
+        Boulder = CFrame.new(-33.3047485, 3.31417918, -11.8831778) 
+    }, 
+    LegendBeach = { 
+        BenchPress = CFrame.new(470.334656, 3.31417966, -321.053925), 
+        Squat = CFrame.new(470.334656, 3.31417966, -321.053925), 
+        Deadlift = CFrame.new(470.334656, 3.31417966, -321.053925), 
+        PullUp = CFrame.new(470.334656, 3.31417966, -321.053925), 
+        Boulder = CFrame.new(470.334656, 3.31417966, -321.053925) 
+}, 
+    FrostGym = { 
+        BenchPress = CFrame.new(-3013.24194, 39.2158546, -335.036926), 
+        Squat = CFrame.new(-2933.47998, 29.6399612, -579.946045), 
+        Deadlift = CFrame.new(-2933.47998, 29.6399612, -579.946045), 
+        PullUp = CFrame.new(-2933.47998, 29.6399612, -579.946045), 
+        Boulder = CFrame.new(-2933.47998, 29.6399612, -579.946045) 
+    }, 
+    MythicalGym = { 
+        BenchPress = CFrame.new(2371.7356, 39.2158546, 1246.31555), 
+        Squat = CFrame.new(2489.21484, 3.67686629, 849.051025), 
+        Deadlift = CFrame.new(2489.21484, 3.67686629, 849.051025), 
+        PullUp = CFrame.new(2489.21484, 3.67686629, 849.051025), 
+        Boulder = CFrame.new(2489.21484, 3.67686629, 849.051025) 
+    }, 
+    EternalGym = { 
+        BenchPress = CFrame.new(-7176.19141, 45.394104, -1106.31421), 
+        Squat = CFrame.new(-7176.19141, 45.394104, -1106.31421), 
+        Deadlift = CFrame.new(-7176.19141, 45.394104, -1106.31421), 
+        PullUp = CFrame.new(-7176.19141, 45.394104, -1106.31421), 
+        Boulder = CFrame.new(-7176.19141, 45.394104, -1106.31421) 
+    }, 
+    LegendGym = { 
+        BenchPress = CFrame.new(4111.91748, 1020.46674, -3799.97217), 
+        Squat = CFrame.new(4304.99023, 987.829956, -4124.2334), 
+        Deadlift = CFrame.new(4304.99023, 987.829956, -4124.2334), 
+        PullUp = CFrame.new(4304.99023, 987.829956, -4124.2334), 
+        Boulder = CFrame.new(4304.99023, 987.829956, -4124.2334) 
+    }, 
+    MuscleKingGym = { 
+        BenchPress = CFrame.new(-8590.06152, 46.0167427, -6043.34717), 
+        Squat = CFrame.new(-8940.12402, 13.1642084, -5699.13477), 
+        Deadlift = CFrame.new(-8940.12402, 13.1642084, -5699.13477), 
+        PullUp = CFrame.new(-8940.12402, 13.1642084, -5699.13477), 
+        Boulder = CFrame.new(-8940.12402, 13.1642084, -5699.13477) 
+    }, 
+    JungleGym = { 
+        BenchPress = CFrame.new(-8173, 64, 1898), 
+        Squat = CFrame.new(-8352, 34, 2878), 
+        Deadlift = CFrame.new(-8352, 34, 2878), 
+        PullUp = CFrame.new(-8666, 34, 2070), 
+        Boulder = CFrame.new(-8621, 34, 2684) 
+    } 
+} 
+
+function teleportLoop(key) 
+    task.spawn(function() 
+        while getgenv()[key] do 
+            local parts = {} 
+            for loc, workouts in pairs(positions) do 
+                for workout, cf in pairs(workouts) do 
+                    if key == loc .. workout then 
+                        table.insert(parts, cf) 
+                    end 
+                end 
+            end 
+            if #parts > 0 then 
+                local char = game.Players.LocalPlayer.Character 
+                if char and char:FindFirstChild("HumanoidRootPart") then 
+                    char.HumanoidRootPart.CFrame = parts[1] 
+                end 
+            end 
+            task.wait(0.1) 
+        end 
+    end) 
+end 
+
+
+local rebirthsFolder = AutoFarm:AddFolder("Rebirths") 
+
+-- Target rebirth input - direct text input 
+rebirthsFolder:AddTextBox("Rebirth Target", function(text) 
+    local newValue = tonumber(text) 
+    if newValue and newValue > 0 then 
+        targetRebirthValue = newValue 
+        updateStats() -- Call the stats update function 
+
+        game:GetService("StarterGui"):SetCore("SendNotification", { 
+            Title = "Objetivo Actualizado", 
+            Text = "Nuevo objetivo: " .. tostring(targetRebirthValue) .. " renacimientos", 
+            Duration = 0 
+        }) 
+    else 
+        game:GetService("StarterGui"):SetCore("SendNotification", { 
+            Title = "Entrada InvÃ¡lida", 
+            Text = "Por favor ingresa un nÃºmero vÃ¡lido mayor que 0", 
+            Duration = 0 
+        }) 
+    end 
+end) 
+
+-- Create toggle switches 
+local infiniteSwitch -- Forward declaration 
+
+local targetSwitch = rebirthsFolder:AddSwitch("Auto Rebirth Target", function(bool) 
+    _G.targetRebirthActive = bool 
+
+    if bool then 
+        -- Turn off infinite rebirth if it's on 
+        if _G.infiniteRebirthActive and infiniteSwitch then 
+            infiniteSwitch:Set(false) 
+            _G.infiniteRebirthActive = false 
+        end 
+
+        -- Start target rebirth loop 
+        spawn(function() 
+            while _G.targetRebirthActive and wait(0.1) do 
+                local currentRebirths = game.Players.LocalPlayer.leaderstats.Rebirths.Value 
+
+                if currentRebirths >= targetRebirthValue then 
+                    targetSwitch:Set(false) 
+                    _G.targetRebirthActive = false 
+
+                    game:GetService("StarterGui"):SetCore("SendNotification", { 
+                        Title = "Â¡Objetivo Alcanzado!", 
+                        Text = "Has alcanzado " .. tostring(targetRebirthValue) .. " renacimientos", 
+                        Duration = 5 
+                    }) 
+
+                    break 
+                end 
+
+                game:GetService("ReplicatedStorage").rEvents.rebirthRemote:InvokeServer("rebirthRequest") 
+            end 
+        end) 
+    end 
+end, "Renacimiento automÃ¡tico hasta alcanzar el objetivo") 
+
+infiniteSwitch = rebirthsFolder:AddSwitch("Auto Rebirth (Infinite)", function(bool) 
+    _G.infiniteRebirthActive = bool 
+
+    if bool then 
+        -- Turn off target rebirth if it's on 
+        if _G.targetRebirthActive and targetSwitch then 
+            targetSwitch:Set(false) 
+            _G.targetRebirthActive = false 
+        end 
+
+        -- Start infinite rebirth loop 
+        spawn(function() 
+            while _G.infiniteRebirthActive and wait(0.1) do 
+                game:GetService("ReplicatedStorage").rEvents.rebirthRemote:InvokeServer("rebirthRequest") 
+            end 
+        end) 
+    end 
+end, "Renacimiento continuo sin parar") 
+
+local sizeSwitch = rebirthsFolder:AddSwitch("Auto Size 1", function(bool) 
+    _G.autoSizeActive = bool 
+
+    if bool then 
+        spawn(function() 
+            while _G.autoSizeActive and wait() do 
+                game:GetService("ReplicatedStorage").rEvents.changeSpeedSizeRemote:InvokeServer("changeSize", 1) 
+            end 
+        end) 
+    end 
+end, "Establece el tamaÃ±o del personaje a 1 continuamente") 
+
+local teleportSwitch = rebirthsFolder:AddSwitch("Auto Teleport to Muscle King", function(bool) 
+    _G.teleportActive = bool 
+
+    if bool then 
+        spawn(function() 
+            while _G.teleportActive and wait() do 
+                if game.Players.LocalPlayer.Character then 
+                    game.Players.LocalPlayer.Character:MoveTo(Vector3.new(-8646, 17, -5738)) 
+                end 
+            end 
+        end) 
+    end 
+end, "Teletransporte continuo al Rey MÃºsculo") 
