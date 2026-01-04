@@ -518,7 +518,7 @@ end)
 local autoEquipToolsFolder = AutoFarm:AddFolder("Auto Tools") 
 
 
-autoEquipToolsFolder:AddSwitch("Fuerza OP", function(state) 
+autoEquipToolsFolder:AddSwitch("Auto fuerza", function(state) 
     getgenv()._AutoRepFarmEnabled = state 
     warn("[Auto Rep Farm] Estado cambiado a:", state and "ON" or "OFF") 
 end) 
