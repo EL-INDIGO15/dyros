@@ -5,12 +5,44 @@ local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/EL-IN
 local player = game.Players.LocalPlayer
 local displayName = player.DisplayName or player.Name
 
--- VENTANA PRINCIPAL
-local window = library:AddWindow("HadesHub|Bienvenid@ " .. displayName, {
-    main_color = Color3.fromRGB(220, 20, 60),
+-- OPCIONES DE LA VENTANA (separadas para poder cambiar el color después)
+local options = {
+    main_color = Color3.fromRGB(220, 20, 60),  -- Color inicial (rojo original)
     min_size = Vector2.new(600, 820),
     can_resize = false,
-})
+}
+
+-- VENTANA PRINCIPAL
+local window = library:AddWindow("HadesHub|Bienvenid@ " .. displayName, options)
+
+-- LISTA DE COLORES PARA LA ANIMACIÓN (rojos + naranja + amarillo)
+local colores = {
+    Color3.fromRGB(220, 20, 60),   -- Rojo original (Crimson)
+    Color3.fromRGB(255, 102, 102), -- Rojo claro
+    Color3.fromRGB(255, 0, 0),     -- Rojo fuerte / puro
+    Color3.fromRGB(255, 140, 0),   -- Naranja oscuro (Dark Orange)
+    Color3.fromRGB(255, 165, 0),   -- Naranja normal
+    Color3.fromRGB(255, 215, 0),   -- Amarillo dorado
+    Color3.fromRGB(255, 255, 0),   -- Amarillo puro
+}
+
+-- ANIMACIÓN DE COLOR (cambia suavemente entre todos los colores)
+task.spawn(function()
+    local indice = 1
+    while true do
+        local colorActual = colores[indice]
+        local colorSiguiente = colores[indice % #colores + 1]
+
+        -- Transición suave entre color actual y siguiente (50 pasos)
+        for i = 0, 50 do
+            local alpha = i / 50
+            options.main_color = colorActual:Lerp(colorSiguiente, alpha)
+            task.wait(0.05)  -- Velocidad de la animación (ajusta si quieres más rápido/lento)
+        end
+
+        indice = indice % #colores + 1  -- Pasa al siguiente color
+    end
+end)
 
 local AutoFarm = window:AddTab("Farm++")
 AutoFarm:Show()
