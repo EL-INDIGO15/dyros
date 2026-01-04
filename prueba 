@@ -836,7 +836,7 @@ godDamageActive = state
     end
 end)
 
-Killer:AddButton("Combo NaN", function()
+Killer:AddButton("NaN", function()
     local args = {"changeSize", 0/0}
     game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote"):InvokeServer(unpack(args))
 end)
@@ -849,7 +849,7 @@ local urls = {
 }
 
 -- âš¡ BotÃ³n que ejecuta todos los scripts remotos
-Killer:AddButton("Touch Me!", function()
+Killer:AddButton("pegar muerto", function()
     for _, url in ipairs(urls) do
         spawn(function()
             local success, response = pcall(function()
