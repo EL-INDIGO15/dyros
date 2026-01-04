@@ -375,7 +375,9 @@ AutoFarm:AddSwitch("Anti AFK", function(state)
     end 
 end) 
 
-AutoFarm:AddSwitch("jump infinite", function(state)
+local Jumps = window:AddTab("Jumps") 
+
+Jumps:AddSwitch("jump infinite", function(state)
 -- INFINITE JUMP GUI (Mobile)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
