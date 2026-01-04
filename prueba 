@@ -394,7 +394,9 @@ Killer:AddSwitch("View Player", function(bool)
     end)
 end)
 
-local button = Killer:AddButton("Remove Punch Anim", function()
+local Punch = window:AddTab("Punch")
+
+local button = Punch:AddButton("Remove Punch Anim", function()
     local blockedAnimations = {
         ["rbxassetid://3638729053"] = true,
         ["rbxassetid://3638767427"] = true,
@@ -583,11 +585,11 @@ function RecoveryPunch()
     end
 end
 
-Killer:AddButton("Recover Punch Anim", function()
+Punch:AddButton("Recover Punch Anim", function()
     RecoveryPunch()
 end)
 
-Killer:AddSwitch("Auto Equip Punch", function(state)
+Punch:AddSwitch("Auto Equip Punch", function(state)
         autoEquipPunch = state
         task.spawn(function()
                 while autoEquipPunch do
@@ -600,7 +602,7 @@ Killer:AddSwitch("Auto Equip Punch", function(state)
         end)
 end)
 
-Killer:AddSwitch("Auto Punch [without animation ]", function(state)
+Punch:AddSwitch("Auto Punch [without animation ]", function(state)
         autoPunchNoAnim = state
         task.spawn(function()
                 while autoPunchNoAnim do
@@ -619,7 +621,7 @@ Killer:AddSwitch("Auto Punch [without animation ]", function(state)
         end)
 end)
 
-Killer:AddSwitch("Auto Punch", function(state)
+Punch:AddSwitch("Auto Punch", function(state)
         _G.fastHitActive = state
         if state then
                 task.spawn(function()
@@ -651,7 +653,7 @@ Killer:AddSwitch("Auto Punch", function(state)
         end
 end)
 
-Killer:AddSwitch("Fast punch", function(state)
+Punch:AddSwitch("Fast punch", function(state)
         _G.autoPunchActive = state
         if state then
                 task.spawn(function()
@@ -686,7 +688,7 @@ end)
 
 
 local godModeToggle = false
-Killer:AddSwitch("Good mode", function(State)
+Killer:AddSwitch("Good mode(pelea)", function(State)
     godModeToggle = State
     if State then
         task.spawn(function()
@@ -810,7 +812,7 @@ end)
 
 local godDamageActive = false
 
-Killer:AddSwitch("auto slams", function(state)
+Punch:AddSwitch("auto slams", function(state)
 
 godDamageActive = state
     if state then
@@ -836,7 +838,7 @@ godDamageActive = state
     end
 end)
 
-Killer:AddButton("NaN", function()
+Punch:AddButton("NaN", function()
     local args = {"changeSize", 0/0}
     game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote"):InvokeServer(unpack(args))
 end)
@@ -849,7 +851,7 @@ local urls = {
 }
 
 -- âš¡ BotÃ³n que ejecuta todos los scripts remotos
-Killer:AddButton("pegar muerto", function()
+Punch:AddButton("pegar muerto", function()
     for _, url in ipairs(urls) do
         spawn(function()
             local success, response = pcall(function()
