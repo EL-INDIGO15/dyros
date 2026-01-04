@@ -936,3 +936,5 @@ end)
 for _, option in ipairs(timeOptions) do
     timeDropdown:Add(option)
 end
+
+local matar = window:AddTab("Kill avanzado")
