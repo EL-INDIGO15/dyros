@@ -377,7 +377,7 @@ end)
 
 local Jumps = window:AddTab("Jumps") 
 
-Jumps:AddSwitch("jump infinite", function(state)
+Jumps:AddSwitch("Jumps infinitos")
 -- INFINITE JUMP GUI (Mobile)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -387,8 +387,8 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
 player.CharacterAdded:Connect(function(char)
-        character = char
-        humanoid = char:WaitForChild("Humanoid")
+	character = char
+	humanoid = char:WaitForChild("Humanoid")
 end)
 
 local infiniteJump = false
@@ -414,7 +414,7 @@ statusLabel.Position = UDim2.new(0, 5, 0, 10)
 statusLabel.BackgroundTransparency = 1
 statusLabel.TextColor3 = Color3.new(1,1,1)
 statusLabel.TextScaled = true
-statusLabel.Text = "jump infinite: OFF"
+statusLabel.Text = "Salto infinito: OFF"
 
 -- Botón toggle
 local toggleButton = Instance.new("TextButton", frame)
@@ -436,37 +436,37 @@ closeButton.Text = "X"
 
 -- Función salto infinito
 local function enableJump()
-        jumpConnection = UserInputService.JumpRequest:Connect(function()
-                if humanoid then
-                        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-        end)
+	jumpConnection = UserInputService.JumpRequest:Connect(function()
+		if humanoid then
+			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		end
+	end)
 end
 
 local function disableJump()
-        if jumpConnection then
-                jumpConnection:Disconnect()
-                jumpConnection = nil
-        end
+	if jumpConnection then
+		jumpConnection:Disconnect()
+		jumpConnection = nil
+	end
 end
 
 -- Toggle
 toggleButton.MouseButton1Click:Connect(function()
-        infiniteJump = not infiniteJump
+	infiniteJump = not infiniteJump
 
-        if infiniteJump then
-                statusLabel.Text = "Salto infinito: ON"
-                toggleButton.Text = "Desactivar"
-                enableJump()
-        else
-                statusLabel.Text = "Salto infinito: OFF"
-                toggleButton.Text = "Activar"
-                disableJump()
-        end
+	if infiniteJump then
+		statusLabel.Text = "Salto infinito: ON"
+		toggleButton.Text = "Desactivar"
+		enableJump()
+	else
+		statusLabel.Text = "Salto infinito: OFF"
+		toggleButton.Text = "Activar"
+		disableJump()
+	end
 end)
 
 -- Cerrar GUI
 closeButton.MouseButton1Click:Connect(function()
-        disableJump()
-        gui:Destroy()
+	disableJump()
+	gui:Destroy()
 end)
