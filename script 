@@ -12,4 +12,4 @@ local window = library:AddWindow("HadesHub|Bienvenid@ " .. displayName, {
     can_resize = false, 
 }) 
 
-local AutoFarm = window:AddTab("Farm++") 
+local AutoFarm = window:AddTab("Main+") 
