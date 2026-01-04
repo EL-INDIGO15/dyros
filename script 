@@ -13,3 +13,4 @@ local window = library:AddWindow("HadesHub|Bienvenid@ " .. displayName, {
 }) 
 
 local AutoFarm = window:AddTab("Main+") 
+
