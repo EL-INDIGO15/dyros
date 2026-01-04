@@ -2872,3 +2872,12 @@ Killer:AddSwitch("Anti Lag", function()
 end) 
 
 
+local Credits = window:AddTab("Credits") 
+
+Credits:AddLabel("HadesHub") 
+Credits:AddLabel("Script Done By Dyros") 
+Credits:AddLabel("Tiktok:Dyros🍪") 
+Credits:AddLabel("script publico") 
+Credits:AddLabel("Dyros on top") 
+Credits:AddLabel("gracias por usar HadesHub ❤️") 
+
