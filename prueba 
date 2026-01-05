@@ -1,9 +1,9 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "99 Noches en el Bosque - Teletransportar",
-   LoadingTitle = "Cargando GUI...",
-   LoadingSubtitle = "Por Grok",
+   Name = "HadesHub (Spawn)",
+   LoadingTitle = "99 noches en el bosque",
+   LoadingSubtitle = "By Dyros",
    ConfigurationSaving = {
       Enabled = false,
       FolderName = "99NochesBosque",
