@@ -1,1247 +1,146 @@
--- CARGA DE LIBRERÍA 
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/EL-INDIGO15/dyros/refs/heads/main/libreria"))() 
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- OBTENER NOMBRE DEL JUGADOR 
-local player = game.Players.LocalPlayer 
-local displayName = player.DisplayName or player.Name 
+local Window = Rayfield:CreateWindow({
+   Name = "99 Noches en el Bosque - Teletransportar",
+   LoadingTitle = "Cargando GUI...",
+   LoadingSubtitle = "Por Grok",
+   ConfigurationSaving = {
+      Enabled = false,
+      FolderName = "99NochesBosque",
+      FileName = "config"
+   },
+   KeySystem = false
+})
 
--- OPCIONES DE LA VENTANA (separadas para poder cambiar el color después)
-local options = {
-    main_color = Color3.fromRGB(220, 20, 60),  -- Color inicial (rojo original)
-    min_size = Vector2.new(600, 820),
-    can_resize = false,
-}
-
--- VENTANA PRINCIPAL
-local window = library:AddWindow("HadesHub|Bienvenid@ " .. displayName, options)
-
--- LISTA DE COLORES PARA LA ANIMACIÓN (rojos + naranja + amarillo)
-local colores = {
-    Color3.fromRGB(220, 20, 60),   -- Rojo original (Crimson)
-    Color3.fromRGB(255, 102, 102), -- Rojo claro
-    Color3.fromRGB(255, 0, 0),     -- Rojo fuerte / puro
-    Color3.fromRGB(255, 140, 0),   -- Naranja oscuro (Dark Orange)
-    Color3.fromRGB(255, 165, 0),   -- Naranja normal
-    Color3.fromRGB(255, 215, 0),   -- Amarillo dorado
-    Color3.fromRGB(255, 255, 0),   -- Amarillo puro
-}
-
--- ANIMACIÓN DE COLOR (cambia suavemente entre todos los colores)
-task.spawn(function()
-    local indice = 1
-    while true do
-        local colorActual = colores[indice]
-        local colorSiguiente = colores[indice % #colores + 1]
-
-        -- Transición suave entre color actual y siguiente (50 pasos)
-        for i = 0, 50 do
-            local alpha = i / 50
-            options.main_color = colorActual:Lerp(colorSiguiente, alpha)
-            task.wait(0.05)  -- Velocidad de la animación (ajusta si quieres más rápido/lento)
-        end
-
-        indice = indice % #colores + 1  -- Pasa al siguiente color
-    end
-end) 
-
-local Killer = window:AddTab("Kill")
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local playerWhitelist = {}
-local targetPlayerNames = {}
-local autoGoodKarma = false
-local autoBadKarma = false
-local autoKill = false
-local killTarget = false
-local spying = false
-local autoEquipPunch = false
-local autoPunchNoAnim = false
-local targetDropdownItems = {}
-local availableTargets = {}
-
-local titleLabel = Killer:AddLabel("Select damage or durability pet")
-titleLabel.TextSize = 18
-titleLabel.Font = Enum.Font.Merriweather 
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-
-local dropdown = Killer:AddDropdown("Select Pet", function(text)
-    local petsFolder = game.Players.LocalPlayer.petsFolder
-    for _, folder in pairs(petsFolder:GetChildren()) do
-        if folder:IsA("Folder") then
-            for _, pet in pairs(folder:GetChildren()) do
-                game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("unequipPet", pet)
-            end
-        end
-    end
-    task.wait(0.2)
-
-    local petName = text
-    local petsToEquip = {}
-
-    for _, pet in pairs(game.Players.LocalPlayer.petsFolder.Unique:GetChildren()) do
-        if pet.Name == petName then
-            table.insert(petsToEquip, pet)
-        end
-    end
-
-    local maxPets = 8
-    local equippedCount = math.min(#petsToEquip, maxPets)
-
-    for i = 1, equippedCount do
-        game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("equipPet", petsToEquip[i])
-        task.wait(0.1)
-    end
-end)
-
-local Wild_Wizard = dropdown:Add("Wild Wizard")
-local Powerful_Monster = dropdown:Add("Mighty Monster")
-
-
-Killer:AddSwitch("Auto Good Karma", function(bool)
-    autoGoodKarma = bool
-    task.spawn(function()
-        while autoGoodKarma do
-            local playerChar = LocalPlayer.Character
-            local rightHand = playerChar and playerChar:FindFirstChild("RightHand")
-            local leftHand = playerChar and playerChar:FindFirstChild("LeftHand")
-            if playerChar and rightHand and leftHand then
-                for _, target in ipairs(Players:GetPlayers()) do
-                    if target ~= LocalPlayer then
-                        local evilKarma = target:FindFirstChild("evilKarma")
-                        local goodKarma = target:FindFirstChild("goodKarma")
-                        if evilKarma and goodKarma and evilKarma:IsA("IntValue") and goodKarma:IsA("IntValue") and evilKarma.Value > goodKarma.Value then
-                            local rootPart = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-                            if rootPart then
-                                firetouchinterest(rightHand, rootPart, 1)
-                                firetouchinterest(leftHand, rootPart, 1)
-                                firetouchinterest(rightHand, rootPart, 0)
-                                firetouchinterest(leftHand, rootPart, 0)
-                            end
-                        end
-                    end
-                end
-            end
-            task.wait(0.01)
-        end
-    end)
-end)
-
-Killer:AddSwitch("Auto Bad Karma", function(bool)
-    autoBadKarma = bool
-    task.spawn(function()
-        while autoBadKarma do
-            local playerChar = LocalPlayer.Character
-            local rightHand = playerChar and playerChar:FindFirstChild("RightHand")
-            local leftHand = playerChar and playerChar:FindFirstChild("LeftHand")
-            if playerChar and rightHand and leftHand then
-                for _, target in ipairs(Players:GetPlayers()) do
-                    if target ~= LocalPlayer then
-                        local evilKarma = target:FindFirstChild("evilKarma")
-                        local goodKarma = target:FindFirstChild("goodKarma")
-                        if evilKarma and goodKarma and evilKarma:IsA("IntValue") and goodKarma:IsA("IntValue") and goodKarma.Value > evilKarma.Value then
-                            local rootPart = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-                            if rootPart then
-                                firetouchinterest(rightHand, rootPart, 1)
-                                firetouchinterest(leftHand, rootPart, 1)
-                                firetouchinterest(rightHand, rootPart, 0)
-                                firetouchinterest(leftHand, rootPart, 0)
-                            end
-                        end
-                    end
-                end
-            end
-            task.wait(0.01)
-        end
-    end)
-end)
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local friendWhitelistActive = false
-
-Killer:AddSwitch("Auto Whitelist Friends", function(state)
-    friendWhitelistActive = state
-
-    if state then
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and LocalPlayer:IsFriendsWith(player.UserId) then
-                playerWhitelist[player.Name] = true
-            end
-        end
-
-        Players.PlayerAdded:Connect(function(player)
-            if friendWhitelistActive and player ~= LocalPlayer and LocalPlayer:IsFriendsWith(player.UserId) then
-                playerWhitelist[player.Name] = true
-            end
-        end)
-    else
-        for name in pairs(playerWhitelist) do
-            local friend = Players:FindFirstChild(name)
-            if friend and LocalPlayer:IsFriendsWith(friend.UserId) then
-                playerWhitelist[name] = nil
-            end
-        end
-    end
-end)
-
-Killer:AddTextBox("Whitelist", function(text)
-    local target = Players:FindFirstChild(text)
-    if target then
-        playerWhitelist[target.Name] = true
-    end
-end)
-
-Killer:AddTextBox("UnWhitelist", function(text)
-    local target = Players:FindFirstChild(text)
-    if target then
-        playerWhitelist[target.Name] = nil
-    end
-end)
-
-Killer:AddSwitch("Auto Kill", function(bool)
-    autoKill = bool
-
-    task.spawn(function()
-        while autoKill do
-            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-            local rightHand = character:FindFirstChild("RightHand")
-            local leftHand = character:FindFirstChild("LeftHand")
-
-            local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
-            if punch and not character:FindFirstChild("Punch") then
-                punch.Parent = character
-            end
-
-            if rightHand and leftHand then
-                for _, target in ipairs(Players:GetPlayers()) do
-                    if target ~= LocalPlayer and not playerWhitelist[target.Name] then
-                        local targetChar = target.Character
-                        local rootPart = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
-                        if rootPart then
-                            pcall(function()
-                                firetouchinterest(rightHand, rootPart, 1)
-                                firetouchinterest(leftHand, rootPart, 1)
-                                firetouchinterest(rightHand, rootPart, 0)
-                                firetouchinterest(leftHand, rootPart, 0)
-                            end)
-                        end
-                    end
-                end
-            end
-
-            task.wait(0.05)
-        end
-    end)
-end)
-
-local targetDropdownItems = {}
-local targetPlayerNames = {}
-local selectedTarget = nil
-
--- Dropdown con DisplayName
-local targetDropdown = Killer:AddDropdown("Select Target", function(displayName)
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player.DisplayName == displayName then
-            if not table.find(targetPlayerNames, player.Name) then
-                table.insert(targetPlayerNames, player.Name) -- usamos Name internamente
-            end
-            selectedTarget = player.Name
-            break
-        end
-    end
-end)
-
--- Botón para remover el target seleccionado (solo lista interna)
-Killer:AddButton("Remove Selected Target", function()
-    if selectedTarget then
-        for i, v in ipairs(targetPlayerNames) do
-            if v == selectedTarget then
-                table.remove(targetPlayerNames, i)
-                break
-            end
-        end
-        selectedTarget = nil
-    end
-end)
-
--- Inicializar con jugadores actuales
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        targetDropdown:Add(player.DisplayName)
-        targetDropdownItems[player.Name] = player.DisplayName
-    end
+local ItemsFolder = workspace:FindFirstChild("Items")
+if not ItemsFolder then
+   Rayfield:Notify({
+      Title = "Error",
+      Content = "No se encontró la carpeta 'Items' en workspace.",
+      Duration = 8,
+   })
+   return
 end
 
--- Cuando entra alguien nuevo
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        targetDropdown:Add(player.DisplayName)
-        targetDropdownItems[player.Name] = player.DisplayName
-    end
-end)
-
--- Cuando se va alguien
-Players.PlayerRemoving:Connect(function(player)
-    if targetDropdownItems[player.Name] then
-        targetDropdownItems[player.Name] = nil
-        targetDropdown:Clear()
-        for _, displayName in pairs(targetDropdownItems) do
-            targetDropdown:Add(displayName)
-        end
-    end
-
-    for i = #targetPlayerNames, 1, -1 do
-        if targetPlayerNames[i] == player.Name then
-            table.remove(targetPlayerNames, i)
-        end
-    end
-end)
-
--- Switch de kill con soporte DisplayName
-Killer:AddSwitch("Start Kill Target", function(state)
-    killTarget = state
-
-    task.spawn(function()
-        while killTarget do
-            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-
-            local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
-            if punch and not character:FindFirstChild("Punch") then
-                punch.Parent = character
-            end
-
-            local rightHand = character:FindFirstChild("RightHand")
-            local leftHand = character:FindFirstChild("LeftHand")
-
-            if rightHand and leftHand then
-                for _, name in ipairs(targetPlayerNames) do
-                    local target = Players:FindFirstChild(name)
-                    if target and target ~= LocalPlayer and target.Character then
-                        local rootPart = target.Character:FindFirstChild("HumanoidRootPart")
-                        local humanoid = target.Character:FindFirstChild("Humanoid")
-                        if rootPart and humanoid and humanoid.Health > 0 then
-                            pcall(function()
-                                firetouchinterest(rightHand, rootPart, 1)
-                                firetouchinterest(leftHand, rootPart, 1)
-                                firetouchinterest(rightHand, rootPart, 0)
-                                firetouchinterest(leftHand, rootPart, 0)
-                            end)
-                        end
-                    end
-                end
-            end
-
-            task.wait(0.05)
-        end
-    end)
-end)
-
-local spyTargetDropdownItems = {}
-local targetPlayerName = nil
-
-local spyTargetDropdown = Killer:AddDropdown("Select View Target", function(displayName)
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player.DisplayName == displayName then
-            targetPlayerName = player.Name
-            break
-        end
-    end
-end)
-
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        spyTargetDropdown:Add(player.DisplayName)
-        spyTargetDropdownItems[player.Name] = player.DisplayName
-    end
+local Player = game.Players.LocalPlayer
+local function getHRP()
+   local Char = Player.Character
+   if Char then
+      return Char:FindFirstChild("HumanoidRootPart")
+   end
 end
 
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        spyTargetDropdown:Add(player.DisplayName)
-        spyTargetDropdownItems[player.Name] = player.DisplayName
-    end
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    if player ~= LocalPlayer then
-        spyTargetDropdownItems[player.Name] = nil
-        spyTargetDropdown:Clear()
-        for _, displayName in pairs(spyTargetDropdownItems) do
-            spyTargetDropdown:Add(displayName)
-        end
-    end
-end)
-
-Killer:AddSwitch("View Player", function(bool)
-    spying = bool
-    if not spying then
-        local cam = workspace.CurrentCamera
-        cam.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") or LocalPlayer
-        return
-    end
-    task.spawn(function()
-        while spying do
-            local target = Players:FindFirstChild(targetPlayerName)
-            if target and target ~= LocalPlayer then
-                local humanoid = target.Character and target.Character:FindFirstChild("Humanoid")
-                if humanoid then
-                    workspace.CurrentCamera.CameraSubject = humanoid
-                end
-            end
-            task.wait(0.1)
-        end
-    end)
-end)
-
-local Punch = window:AddTab("Punch")
-
-local button = Punch:AddButton("Remove Punch Anim", function()
-    local blockedAnimations = {
-        ["rbxassetid://3638729053"] = true,
-        ["rbxassetid://3638767427"] = true,
-    }
-
-    local function setupAnimationBlocking()
-        local char = game.Players.LocalPlayer.Character
-        if not char or not char:FindFirstChild("Humanoid") then return end
-
-        local humanoid = char:FindFirstChild("Humanoid")
-
-        for _, track in pairs(humanoid:GetPlayingAnimationTracks()) do
-            if track.Animation then
-                local animId = track.Animation.AnimationId
-                local animName = track.Name:lower()
-
-                if blockedAnimations[animId] or
-                    animName:match("punch") or
-                    animName:match("attack") or
-                    animName:match("right") then
-                    track:Stop()
-                end
-            end
-        end
-
-        if not _G.AnimBlockConnection then
-            local connection = humanoid.AnimationPlayed:Connect(function(track)
-                if track.Animation then
-
-local animId = track.Animation.AnimationId
-                    local animName = track.Name:lower()
-
-                    if blockedAnimations[animId] or
-                        animName:match("punch") or
-                        animName:match("attack") or
-                        animName:match("right") then
-                        track:Stop()
-                    end
-                end
-            end)
-
-            _G.AnimBlockConnection = connection
-        end
-    end
-
-    setupAnimationBlocking()
-
-    local function overrideToolActivation()
-        local function processTool(tool)
-            if tool and (tool.Name == "Punch" or tool.Name:match("Attack") or tool.Name:match("Right")) then
-                if not tool:GetAttribute("ActivatedOverride") then
-                    tool:SetAttribute("ActivatedOverride", true)
-
-                    local connection = tool.Activated:Connect(function()
-                        task.wait(0.05)
-
-                        local char = game.Players.LocalPlayer.Character
-                        if char and char:FindFirstChild("Humanoid") then
-                            for _, track in pairs(char.Humanoid:GetPlayingAnimationTracks()) do
-                                if track.Animation then
-                                    local animId = track.Animation.AnimationId
-                                    local animName = track.Name:lower()
-
-                                    if blockedAnimations[animId] or
-                                        animName:match("punch") or
-                                        animName:match("attack") or
-                                        animName:match("right") then
-                                        track:Stop()
-                                    end
-                                end
-                            end
-                        end
-                    end)
-
-                    if not _G.ToolConnections then
-                        _G.ToolConnections = {}
-                    end
-                    _G.ToolConnections[tool] = connection
-                end
-            end
-        end
-
-        for _, tool in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-            processTool(tool)
-        end
-
-        local char = game.Players.LocalPlayer.Character
-        if char then
-            for _, tool in pairs(char:GetChildren()) do
-                if tool:IsA("Tool") then
-                    processTool(tool)
-                end
-            end
-        end
-
-        if not _G.BackpackAddedConnection then
-            _G.BackpackAddedConnection = game.Players.LocalPlayer.Backpack.ChildAdded:Connect(function(child)
-                if child:IsA("Tool") then
-                    task.wait(0.1)
-                    processTool(child)
-                end
-            end)
-        end
-
-        if not _G.CharacterToolAddedConnection and char then
-            _G.CharacterToolAddedConnection = char.ChildAdded:Connect(function(child)
-                if child:IsA("Tool") then
-                    task.wait(0.1)
-                    processTool(child)
-                end
-            end)
-        end
-    end
-
-    overrideToolActivation()
-
-    if not _G.AnimMonitorConnection then
-        _G.AnimMonitorConnection = game:GetService("RunService").Heartbeat:Connect(function()
-            if tick() % 0.5 < 0.01 then
-                local char = game.Players.LocalPlayer.Character
-                if char and char:FindFirstChild("Humanoid") then
-                    for _, track in pairs(char.Humanoid:GetPlayingAnimationTracks()) do
-                        if track.Animation then
-                            local animId = track.Animation.AnimationId
-                            local animName = track.Name:lower()
-
-                            if blockedAnimations[animId] or
-                                animName:match("punch") or
-                                animName:match("attack") or
-                                animName:match("right") then
-                                track:Stop()
-                            end
-                        end
-                    end
-                end
-            end
-        end)
-    end
-
-    if not _G.CharacterAddedConnection then
-        _G.CharacterAddedConnection = game.Players.LocalPlayer.CharacterAdded:Connect(function(newChar)
-            task.wait(1)
-            setupAnimationBlocking()
-            overrideToolActivation()
-
-            if _G.CharacterToolAddedConnection then
-                _G.CharacterToolAddedConnection:Disconnect()
-            end
-
-            _G.CharacterToolAddedConnection = newChar.ChildAdded:Connect(function(child)
-                if child:IsA("Tool") then
-                    task.wait(0.1)
-                    processTool(child)
-                end
-            end)
-        end)
-    end
-end)
-
-function RecoveryPunch()
-    if _G.AnimBlockConnection then
-        _G.AnimBlockConnection:Disconnect()
-        _G.AnimBlockConnection = nil
-    end
-    if _G.AnimMonitorConnection then
-        _G.AnimMonitorConnection:Disconnect()
-        _G.AnimMonitorConnection = nil
-    end
-    if _G.ToolConnections then
-        for _, conn in pairs(_G.ToolConnections) do
-            if conn then conn:Disconnect() end
-        end
-        _G.ToolConnections = nil
-    end
-    if _G.BackpackAddedConnection then
-        _G.BackpackAddedConnection:Disconnect()
-        _G.BackpackAddedConnection = nil
-    end
-    if _G.CharacterToolAddedConnection then
-        _G.CharacterToolAddedConnection:Disconnect()
-        _G.CharacterToolAddedConnection = nil
-    end
-    if _G.CharacterAddedConnection then
-        _G.CharacterAddedConnection:Disconnect()
-        _G.CharacterAddedConnection = nil
-    end
+local function bringItems(itemNames, categoryName)
+   local hrp = getHRP()
+   if not hrp then
+      Rayfield:Notify({Title = categoryName, Content = "Personaje no encontrado.", Duration = 3})
+      return 0
+   end
+   
+   local count = 0
+   local index = 1
+   for _, item in pairs(ItemsFolder:GetDescendants()) do
+      if item:IsA("Model") and table.find(itemNames, item.Name) then
+         pcall(function()
+            local offsetX = ((index - 1) % 6 - 3) * 4
+            local offsetZ = math.floor((index - 1) / 6) * 4 + 5
+            item:PivotTo(hrp.CFrame * CFrame.new(offsetX, 3, offsetZ))
+            index = index + 1
+            count = count + 1
+         end)
+      end
+   end
+   return count
 end
 
-Punch:AddButton("Recover Punch Anim", function()
-    RecoveryPunch()
-end)
-
-Punch:AddSwitch("Auto Equip Punch", function(state)
-        autoEquipPunch = state
-        task.spawn(function()
-                while autoEquipPunch do
-                        local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
-                        if punch then
-                                punch.Parent = LocalPlayer.Character
-                        end
-                        task.wait(0.1)
-                end
-        end)
-end)
-
-Punch:AddSwitch("Auto Punch [without animation ]", function(state)
-        autoPunchNoAnim = state
-        task.spawn(function()
-                while autoPunchNoAnim do
-                        local punch = LocalPlayer.Backpack:FindFirstChild("Punch") or LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Punch")
-                        if punch then
-                                if punch.Parent ~= LocalPlayer.Character then
-                                        punch.Parent = LocalPlayer.Character
-                                end
-                                LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                                LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-                        else
-                                autoPunchNoAnim = false
-                        end
-                        task.wait(0.01)
-                end
-        end)
-end)
-
-Punch:AddSwitch("Auto Punch", function(state)
-        _G.fastHitActive = state
-        if state then
-                task.spawn(function()
-                        while _G.fastHitActive do
-                                local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
-                                if punch then
-                                        punch.Parent = LocalPlayer.Character
-                                        if punch:FindFirstChild("attackTime") then
-                                                punch.attackTime.Value = 0
-                                        end
-                                end
-                                task.wait(0.1)
-                        end
-                end)
-                task.spawn(function()
-                        while _G.fastHitActive do
-                                local punch = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Punch")
-                                if punch then
-                                        punch:Activate()
-                                end
-                                task.wait(0.1)
-                        end
-                end)
-        else
-                local punch = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Punch")
-                if punch then
-                        punch.Parent = LocalPlayer.Backpack
-                end
-        end
-end)
-
-Punch:AddSwitch("Fast punch", function(state)
-        _G.autoPunchActive = state
-        if state then
-                task.spawn(function()
-                        while _G.autoPunchActive do
-                                local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
-                                if punch then
-                                        punch.Parent = LocalPlayer.Character
-                                        if punch:FindFirstChild("attackTime") then
-                                                punch.attackTime.Value = 0
-                                        end
-                                end
-                                task.wait()
-                        end
-                end)
-                task.spawn(function()
-                        while _G.autoPunchActive do
-                                local punch = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Punch")
-                                if punch then
-                                        punch:Activate()
-                                end
-                                task.wait()
-                        end
-                end)
-        else
-                local punch = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Punch")
-                if punch then
-                        punch.Parent = LocalPlayer.Backpack
-                end
-        end
-end)
-
-
-
-local godModeToggle = false
-Killer:AddSwitch("Good mode(pelea)", function(State)
-    godModeToggle = State
-    if State then
-        task.spawn(function()
-            while godModeToggle do
-                game:GetService("ReplicatedStorage").rEvents.brawlEvent:FireServer("joinBrawl")
-                task.wait()
-            end
-        end)
-    end
-end)
--- 📌 Teleport / Follow System (versión auto-follow desde Dropdown)
-
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local following = false
-local followTarget = nil
-
--- 📌 Función: TP detrás del jugador
-local function followPlayer(targetPlayer)
-    local myChar = LocalPlayer.Character
-    local targetChar = targetPlayer.Character
-
-    if not (myChar and targetChar) then return end
-    local myHRP = myChar:FindFirstChild("HumanoidRootPart")
-    local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-
-    if myHRP and targetHRP then
-        local followPos = targetHRP.Position - (targetHRP.CFrame.LookVector * 3)
-        myHRP.CFrame = CFrame.new(followPos, targetHRP.Position)
-    end
-end
-
--- 📌 Dropdown dinámico de jugadores
-local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
-    if selectedDisplayName and selectedDisplayName ~= "" then
-        -- Buscar jugador por DisplayName
-        local target = nil
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr.DisplayName == selectedDisplayName then
-                target = plr
-                break
-            end
-        end
-
-        if target then
-            followTarget = target.Name -- Guardamos Name real para seguir
-            following = true
-            print("✅ Started following:", target.Name)
-
-            -- TP inmediato
-            followPlayer(target)
-        end
-    end
-end)
-
--- 📌 Inicializar lista con DisplayNames
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        followDropdown:Add(player.DisplayName)
-    end
-end
-
--- 📌 Actualizar lista cuando entren jugadores
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        followDropdown:Add(player.DisplayName)
-    end
-end)
-
--- 📌 Actualizar lista cuando se vayan jugadores
-Players.PlayerRemoving:Connect(function(player)
-    -- Limpiamos y agregamos de nuevo
-    followDropdown:Clear()
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer then
-            followDropdown:Add(plr.DisplayName)
-        end
-    end
-
-    -- Dejar de seguir si se fue
-    if followTarget == player.Name then
-        followTarget = nil
-        following = false
-    end
-end)
-
--- 📌 Botón para dejar de seguir
-Killer:AddButton("Dejar de Seguir", function()
-    following = false
-    followTarget = nil
-    print("⛔ Stopped following")
-end)
-
--- 📌 Loop de seguimiento automático
-task.spawn(function()
-    while task.wait(0.01) do
-        if following and followTarget then
-            local target = Players:FindFirstChild(followTarget)
-            if target then
-                followPlayer(target)
-            else
-                following = false
-                followTarget = nil
-            end
-        end
-    end
-end)
-
--- 📌 Reintentar cuando respawnees
-LocalPlayer.CharacterAdded:Connect(function()
-    task.wait(1)
-    if following and followTarget then
-        local target = Players:FindFirstChild(followTarget)
-        if target then
-            followPlayer(target)
-        end
-    end
-end)
-
-local godDamageActive = false
-
-Punch:AddSwitch("auto slams", function(state)
-
-godDamageActive = state
-    if state then
-        task.spawn(function()
-            while godDamageActive do
-                local player = LocalPlayer
-                local groundSlam = player.Backpack:FindFirstChild("Ground Slam") or (player.Character and player.Character:FindFirstChild("Ground Slam"))
-
-                if groundSlam then
-                    if groundSlam.Parent == player.Backpack then
-                        groundSlam.Parent = player.Character
-                    end
-                    if groundSlam:FindFirstChild("attackTime") then
-                        groundSlam.attackTime.Value = 0
-                    end
-                    player.muscleEvent:FireServer("slam")
-                    groundSlam:Activate()
-                end
-
-                task.wait(0.1)
-            end
-        end)
-    end
-end)
-
-Punch:AddButton("NaN", function()
-    local args = {"changeSize", 0/0}
-    game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote"):InvokeServer(unpack(args))
-end)
-local urls = {
-    "https://raw.githubusercontent.com/SadOz8/Stuffs/refs/heads/main/Crack",
-    "https://raw.githubusercontent.com/SadOz8/Stuffs/refs/heads/main/Crack2",
-    "https://raw.githubusercontent.com/SadOz8/Stuffs/refs/heads/main/Crack4",
-    "https://raw.githubusercontent.com/SadOz8/Stuffs/refs/heads/main/Crack5",
-    "https://raw.githubusercontent.com/SadOz8/Stuffs/refs/heads/main/Crack6"
-}
-
--- âš¡ BotÃ³n que ejecuta todos los scripts remotos
-Punch:AddButton("pegar muerto", function()
-    for _, url in ipairs(urls) do
-        spawn(function()
-            local success, response = pcall(function()
-                return game:HttpGet(url)
-            end)
-            if success and response then
-                local loadSuccess, err = pcall(function()
-                    loadstring(response)()
-                end)
-                if not loadSuccess then
-                    warn("[Pegar Muerto] Error ejecutando raw:", url, err)
-                end
-            else
-                warn("[Pegar Muerto] No se pudo cargar:", url)
-            end
-        end)
-    end
-end)
-
-
-
-local Lighting = game:GetService("Lighting")
-
--- Tabla para registrar los tiempos disponibles
-local timeOptions = {
-    "Morning",
-    "Noon",
-    "Afternoon",
-    "Sunset",
-    "Night",
-    "Midnight",
-    "Dawn",
-    "Early Morning"
-}
-
--- Dropdown
-local timeDropdown = Killer:AddDropdown("change time", function(selection)
-    -- Reset antes de aplicar
-    Lighting.Brightness = 2
-    Lighting.FogEnd = 100000
-    Lighting.Ambient = Color3.fromRGB(127,127,127)
-
-    if selection == "Morning" then
-        Lighting.ClockTime = 6
-        Lighting.Brightness = 2
-        Lighting.Ambient = Color3.fromRGB(200, 200, 255)
-    elseif selection == "Noon" then
-        Lighting.ClockTime = 12
-        Lighting.Brightness = 3
-        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-    elseif selection == "Afternoon" then
-        Lighting.ClockTime = 16
-        Lighting.Brightness = 2.5
-        Lighting.Ambient = Color3.fromRGB(255, 220, 180)
-    elseif selection == "Sunset" then
-        Lighting.ClockTime = 18
-        Lighting.Brightness = 2
-        Lighting.Ambient = Color3.fromRGB(255, 150, 100)
-        Lighting.FogEnd = 500
-    elseif selection == "Nigth" then
-        Lighting.ClockTime = 20
-        Lighting.Brightness = 1.5
-        Lighting.Ambient = Color3.fromRGB(100, 100, 150)
-        Lighting.FogEnd = 800
-    elseif selection == "Midnight" then
-        Lighting.ClockTime = 0
-        Lighting.Brightness = 1
-        Lighting.Ambient = Color3.fromRGB(50, 50, 100)
-        Lighting.FogEnd = 400
-    elseif selection == "Dawn" then
-        Lighting.ClockTime = 4
-        Lighting.Brightness = 1.8
-        Lighting.Ambient = Color3.fromRGB(180, 180, 220)
-    elseif selection == "Early Morning" then
-        Lighting.ClockTime = 2
-        Lighting.Brightness = 1.2
-        Lighting.Ambient = Color3.fromRGB(100, 120, 180)
-    end
-end)
-
--- Agregar opciones al dropdown dinámicamente
-for _, option in ipairs(timeOptions) do
-    timeDropdown:Add(option)
-end
-
-Killer:AddSwitch("Hide All Frames", function(bool) 
-    local rSto = game:GetService("ReplicatedStorage") 
-    for _, obj in pairs(rSto:GetChildren()) do 
-        if obj.Name:match("Frame$") then 
-            obj.Visible = not bool 
-        end 
-    end 
-end) 
-
-
-Killer:AddSwitch("Anti Lag", function() 
-    for _, v in pairs(game:GetDescendants()) do 
-        if v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then 
-            v.Enabled = false 
-        end 
-    end 
-
-    local lighting = game:GetService("Lighting") 
-    lighting.GlobalShadows = false 
-    lighting.FogEnd = 9e9 
-    lighting.Brightness = 0 
-
-    settings().Rendering.QualityLevel = 1 
-
-    for _, v in pairs(game:GetDescendants()) do 
-        if v:IsA("Decal") or v:IsA("Texture") then 
-            v.Transparency = 1 
-        elseif v:IsA("BasePart") and not v:IsA("MeshPart") then 
-            v.Material = Enum.Material.SmoothPlastic 
-            if v.Parent and (v.Parent:FindFirstChild("Humanoid") or v.Parent.Parent:FindFirstChild("Humanoid")) then 
-            else 
-                v.Reflectance = 0 
-            end 
-        end 
-    end 
-
-    for _, v in pairs(lighting:GetChildren()) do 
-        if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("DepthOfFieldEffect") then 
-            v.Enabled = false 
-        end 
-    end 
-
-    game:GetService("StarterGui"):SetCore("SendNotification", { 
-        Title = "anti lag activado", 
-        Text = "Full optimization applied!", 
-        Duration = 5 
-    }) 
-end) 
-
-
-killer:AddSwitch("Full antilag", function(State) 
-    local lighting = game:GetService("Lighting") 
-    if State then 
-        for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do 
-            if gui:IsA("ScreenGui") then gui:Destroy() end 
-        end 
-        for _, obj in pairs(workspace:GetDescendants()) do 
-            if obj:IsA("ParticleEmitter") or obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then 
-                obj:Destroy() 
-            end 
-        end 
-        for _, v in pairs(lighting:GetChildren()) do 
-            if v:IsA("Sky") then v:Destroy() end 
-        end 
-        local darkSky = Instance.new("Sky") 
-        darkSky.Name = "DarkSky" 
-darkSky.SkyboxBk = "rbxassetid://0" 
-        darkSky.SkyboxDn = "rbxassetid://0" 
-        darkSky.SkyboxFt = "rbxassetid://0" 
-        darkSky.SkyboxLf = "rbxassetid://0" 
-        darkSky.SkyboxRt = "rbxassetid://0" 
-        darkSky.SkyboxUp = "rbxassetid://0" 
-        darkSky.Parent = lighting 
-        lighting.Brightness = 0 
-        lighting.ClockTime = 0 
-        lighting.TimeOfDay = "00:00:00" 
-        lighting.OutdoorAmbient = Color3.new(0,0,0) 
-        lighting.Ambient = Color3.new(0,0,0) 
-        lighting.FogColor = Color3.new(0,0,0) 
-        lighting.FogEnd = 100 
-        task.spawn(function() 
-            while State do 
-                task.wait(5) 
-                if not lighting:FindFirstChild("DarkSky") then 
-                    darkSky:Clone().Parent = lighting 
-                end 
-            end 
-        end) 
-    end 
-end) 
-
-
-Killer:AddButton("AntiAFk", function() 
-    if state then 
-
-        if getgenv().AntiAfkExecuted and game.CoreGui:FindFirstChild("thisoneissocoldww") then 
-            getgenv().AntiAfkExecuted = false 
-            getgenv().zamanbaslaticisi = false 
-            game.CoreGui.thisoneissocoldww:Destroy() 
-        end 
-        getgenv().AntiAfkExecuted = true 
-
-        local thisoneissocoldww = Instance.new("ScreenGui") 
-        local madebybloodofbatus = Instance.new("Frame") 
-        local UICornerw = Instance.new("UICorner") 
-        local DestroyButton = Instance.new("TextButton") 
-        local uselesslabelone = Instance.new("TextLabel") 
-        local timerlabel = Instance.new("TextLabel") 
-        local uselesslabeltwo = Instance.new("TextLabel") 
-        local fpslabel = Instance.new("TextLabel") 
-        local uselesslabelthree = Instance.new("TextLabel") 
-        local pinglabel = Instance.new("TextLabel") 
-        local uselessframeone = Instance.new("Frame") 
-        local UICornerww = Instance.new("UICorner") 
-        local uselesslabelfour = Instance.new("TextLabel") 
-
-        thisoneissocoldww.Name = "thisoneissocoldww" 
-        thisoneissocoldww.Parent = game.CoreGui 
-        thisoneissocoldww.ZIndexBehavior = Enum.ZIndexBehavior.Sibling 
-
-        madebybloodofbatus.Name = "madebybloodofbatus" 
-        madebybloodofbatus.Parent = thisoneissocoldww 
-        madebybloodofbatus.BackgroundColor3 = Color3.fromRGB(30, 30, 30) 
-        madebybloodofbatus.Position = UDim2.new(0.085,0,0.13,0) 
-        madebybloodofbatus.Size = UDim2.new(0,225,0,96) 
-        UICornerw.Parent = madebybloodofbatus 
-
-        DestroyButton.Name = "DestroyButton" 
-        DestroyButton.Parent = madebybloodofbatus 
-        DestroyButton.BackgroundTransparency = 1 
-        DestroyButton.Position = UDim2.new(0.87,0,0.02,0) 
-        DestroyButton.Size = UDim2.new(0,27,0,15) 
-        DestroyButton.Font = Enum.Font.SourceSans 
-        DestroyButton.Text = "X" 
-        DestroyButton.TextColor3 = Color3.fromRGB(255,255,255) 
-        DestroyButton.TextSize = 14 
-        DestroyButton.MouseButton1Click:Connect(function() 
-            getgenv().AntiAfkExecuted = false 
-            wait(0.1) 
-            thisoneissocoldww:Destroy() 
-        end) 
-
-        uselesslabelone.Parent = madebybloodofbatus 
-        uselesslabelone.BackgroundTransparency = 1 
-        uselesslabelone.Position = UDim2.new(0.3,0,0,0) 
-        uselesslabelone.Size = UDim2.new(0,95,0,24) 
-        uselesslabelone.Font = Enum.Font.SourceSans 
-        uselesslabelone.Text = "Anti Afk" 
-        uselesslabelone.TextColor3 = Color3.fromRGB(255,255,255) 
-        uselesslabelone.TextSize = 14 
-
-        timerlabel.Parent = madebybloodofbatus 
-        timerlabel.BackgroundTransparency = 1 
-        timerlabel.Position = UDim2.new(0.65,0,0.68,0) 
-        timerlabel.Size = UDim2.new(0,60,0,24) 
-        timerlabel.Font = Enum.Font.SourceSans 
-        timerlabel.Text = "0:0:0" 
-        timerlabel.TextColor3 = Color3.fromRGB(255,255,255) 
-        timerlabel.TextSize = 14 
-
-        uselesslabeltwo.Parent = madebybloodofbatus 
-        uselesslabeltwo.BackgroundTransparency = 1 
-        uselesslabeltwo.Position = UDim2.new(0.03,0,0.37,0) 
-        uselesslabeltwo.Size = UDim2.new(0,29,0,24) 
-        uselesslabeltwo.Font = Enum.Font.SourceSans 
-        uselesslabeltwo.Text = "Ping: " 
-        uselesslabeltwo.TextColor3 = Color3.fromRGB(255,255,255) 
-        uselesslabeltwo.TextSize = 14 
-
-        fpslabel.Parent = madebybloodofbatus 
-        fpslabel.BackgroundTransparency = 1 
-        fpslabel.Position = UDim2.new(0.72,0,0.35,0) 
-        fpslabel.Size = UDim2.new(0,55,0,24) 
-        fpslabel.Font = Enum.Font.SourceSans 
-        fpslabel.Text = "0" 
-        fpslabel.TextColor3 = Color3.fromRGB(255,255,255) 
-        fpslabel.TextSize = 14 
-
-        uselesslabelthree.Parent = madebybloodofbatus 
-        uselesslabelthree.BackgroundTransparency = 1 
-        uselesslabelthree.Position = UDim2.new(0.5,0,0.35,0) 
-        uselesslabelthree.Size = UDim2.new(0,26,0,24) 
-        uselesslabelthree.Font = Enum.Font.SourceSans 
-        uselesslabelthree.Text = "Fps: " 
-        uselesslabelthree.TextColor3 = Color3.fromRGB(255,255,255) 
-        uselesslabelthree.TextSize = 14 
-
-        pinglabel.Parent = madebybloodofbatus 
-        pinglabel.BackgroundTransparency = 1 
-        pinglabel.Position = UDim2.new(0.2,0,0.37,0) 
-        pinglabel.Size = UDim2.new(0,55,0,24) 
-        pinglabel.Font = Enum.Font.SourceSans 
-        pinglabel.Text = "0" 
-        pinglabel.TextColor3 = Color3.fromRGB(255,255,255) 
-        pinglabel.TextSize = 14 
-        pinglabel.TextWrapped = true 
-
-        uselessframeone.Parent = madebybloodofbatus 
-        uselessframeone.BackgroundColor3 = Color3.fromRGB(255,255,255) 
-        uselessframeone.Position = UDim2.new(0.004,0,0.24,0) 
-        uselessframeone.Size = UDim2.new(0,224,0,5) 
-        UICornerww.CornerRadius = UDim.new(0,50) 
-        UICornerww.Parent = uselessframeone 
-
-        uselesslabelfour.Parent = madebybloodofbatus 
-        uselesslabelfour.BackgroundTransparency = 1 
-        uselesslabelfour.Position = UDim2.new(0.05,0,0.81,0) 
-        uselesslabelfour.Size = UDim2.new(0,95,0,12) 
-        uselesslabelfour.Font = Enum.Font.SourceSans 
-        uselesslabelfour.Text = "Anti-Afk Auto Enabled" 
-        uselesslabelfour.TextColor3 = Color3.fromRGB(255,255,255) 
-        uselesslabelfour.TextSize = 14 
-
-
-        local Drag = madebybloodofbatus 
-        local gsTween = game:GetService("TweenService") 
-        local UserInputService = game:GetService("UserInputService") 
-        local dragging, dragInput, dragStart, startPos 
-        local function update(input) 
-            local delta = input.Position - dragStart 
-            local dragTime = 0.04 
-            local SmoothDrag = {} 
-            SmoothDrag.Position = UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y) 
-            gsTween:Create(Drag,TweenInfo.new(dragTime,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),SmoothDrag):Play() 
-        end 
-        Drag.InputBegan:Connect(function(input) 
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
-                dragging = true 
-                dragStart = input.Position 
-                startPos = Drag.Position 
-                input.Changed:Connect(function() 
-                    if input.UserInputState == Enum.UserInputState.End then dragging = false end 
-                end) 
-            end 
-        end) 
-        Drag.InputChanged:Connect(function(input) 
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then 
-                dragInput = input 
-            end 
-        end) 
-        UserInputService.InputChanged:Connect(function(input) 
-            if input == dragInput and dragging then update(input) end 
-        end) 
-
-
-        local vu = game:GetService('VirtualUser') 
-        game.Players.LocalPlayer.Idled:Connect(function() 
-            vu:CaptureController() 
-            vu:ClickButton2(Vector2.new()) 
-        end) 
-
-
-        local RunService = game:GetService("RunService") 
-        local sec = tick() 
-        local FPS = {} 
-        RunService.RenderStepped:Connect(function() 
-            local fr = tick() 
-            for i=#FPS,1,-1 do FPS[i+1] = (FPS[i]>=fr-1) and FPS[i] or nil end 
-            FPS[1] = fr 
-            local fps = math.floor((tick()-sec>=1 and #FPS) or (#FPS/(tick()-sec))) 
-            fpslabel.Text = fps 
-        end) 
-
-        spawn(function() 
-            while getgenv().AntiAfkExecuted do 
-                wait(1) 
-                local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue())) 
-                pinglabel.Text = ping 
-            end 
-        end) 
-
-
-        local saniye, dakika, saat = 0,0,0 
-        getgenv().zamanbaslaticisi = true 
-        spawn(function() 
-            while getgenv().zamanbaslaticisi do 
-                saniye = saniye + 1 
-                wait(1) 
-                if saniye>=60 then saniye=0;dakika=dakika+1 end 
-                if dakika>=60 then dakika=0;saat=saat+1 end 
-                timerlabel.Text = saat..":"..dakika..":"..saniye 
-            end 
-        end) 
-    else 
-
-        getgenv().AntiAfkExecuted = false 
-        getgenv().zamanbaslaticisi = false 
-        if game.CoreGui:FindFirstChild("thisoneissocoldww") then 
-            game.CoreGui.thisoneissocoldww:Destroy() 
-        end 
-    end 
-end)
-
-Killer:AddButton("Lock position", function()
-    if Value then 
-        local currentPos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame 
-        getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function() 
-            if game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then 
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = currentPos 
-            end 
-        end) 
-    else 
-        if getgenv().posLock then 
-            getgenv().posLock:Disconnect() 
-            getgenv().posLock = nil 
-        end 
-    end 
-end)
+-- Pestaña principal (categorías)
+local Tab1 = Window:CreateTab("Categorías", 4483362458)
+
+Tab1:CreateButton({
+   Name = "🪵 Madera (Log, Sapling)",
+   Callback = function()
+      local cnt = bringItems({"Log", "Sapling"}, "Madera")
+      Rayfield:Notify({Title = "🪵 Madera", Content = cnt.." items traídos", Duration = 4})
+   end,
+})
+
+Tab1:CreateButton({
+   Name = "🔥 Combustibles",
+   Callback = function()
+      local cnt = bringItems({"Coal", "Chair", "Oil Barrel", "Fuel Canister"}, "Combustibles")
+      Rayfield:Notify({Title = "🔥 Combustibles", Content = cnt.." items traídos", Duration = 4})
+   end,
+})
+
+Tab1:CreateButton({
+   Name = "🍖 Comida",
+   Callback = function()
+      local cnt = bringItems({"Morsel", "Carrot", "Bunny Foot", "Steak"}, "Comida")
+      Rayfield:Notify({Title = "🍖 Comida", Content = cnt.." items traídos", Duration = 4})
+   end,
+})
+
+Tab1:CreateButton({
+   Name = "🔩 Metal",
+   Callback = function()
+      local cnt = bringItems({"Broken Fan", "Bolt", "Sheet Metal", "Old Radio", "Tyre"}, "Metal")
+      Rayfield:Notify({Title = "🔩 Metal", Content = cnt.." items traídos", Duration = 4})
+   end,
+})
+
+Tab1:CreateButton({
+   Name = "❤️ Curación",
+   Callback = function()
+      local cnt = bringItems({"Bandage", "Medkit"}, "Curación")
+      Rayfield:Notify({Title = "❤️ Curación", Content = cnt.." items traídos", Duration = 4})
+   end,
+})
+
+Tab1:CreateButton({
+   Name = "🌟 TRAER TODOS",
+   Callback = function()
+      local all = {"Log","Sapling","Coal","Chair","Oil Barrel","Fuel Canister","Morsel","Carrot","Bunny Foot","Steak","Broken Fan","Bolt","Sheet Metal","Old Radio","Tyre","Bandage","Medkit"}
+      local cnt = bringItems(all, "Todos")
+      Rayfield:Notify({Title = "🌟 Todos", Content = cnt.." items traídos", Duration = 5})
+   end,
+})
+
+-- Nueva pestaña: Items V2 (uno por uno)
+local Tab2 = Window:CreateTab("Items V2", 4483362458)
+
+Tab2:CreateSection("Madera")
+Tab2:CreateButton({Name = "Log", Callback = function() local c=bringItems({"Log"},"Log") Rayfield:Notify({Title="Log",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Sapling", Callback = function() local c=bringItems({"Sapling"},"Sapling") Rayfield:Notify({Title="Sapling",Content=c.." traídos"}) end})
+
+Tab2:CreateSection("Combustibles")
+Tab2:CreateButton({Name = "Coal", Callback = function() local c=bringItems({"Coal"},"Coal") Rayfield:Notify({Title="Coal",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Chair", Callback = function() local c=bringItems({"Chair"},"Chair") Rayfield:Notify({Title="Chair",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Oil Barrel", Callback = function() local c=bringItems({"Oil Barrel"},"Oil Barrel") Rayfield:Notify({Title="Oil Barrel",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Fuel Canister", Callback = function() local c=bringItems({"Fuel Canister"},"Fuel Canister") Rayfield:Notify({Title="Fuel Canister",Content=c.." traídos"}) end})
+
+Tab2:CreateSection("Comida")
+Tab2:CreateButton({Name = "Morsel", Callback = function() local c=bringItems({"Morsel"},"Morsel") Rayfield:Notify({Title="Morsel",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Carrot", Callback = function() local c=bringItems({"Carrot"},"Carrot") Rayfield:Notify({Title="Carrot",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Bunny Foot", Callback = function() local c=bringItems({"Bunny Foot"},"Bunny Foot") Rayfield:Notify({Title="Bunny Foot",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Steak", Callback = function() local c=bringItems({"Steak"},"Steak") Rayfield:Notify({Title="Steak",Content=c.." traídos"}) end})
+
+Tab2:CreateSection("Metal")
+Tab2:CreateButton({Name = "Broken Fan", Callback = function() local c=bringItems({"Broken Fan"},"Broken Fan") Rayfield:Notify({Title="Broken Fan",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Bolt", Callback = function() local c=bringItems({"Bolt"},"Bolt") Rayfield:Notify({Title="Bolt",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Sheet Metal", Callback = function() local c=bringItems({"Sheet Metal"},"Sheet Metal") Rayfield:Notify({Title="Sheet Metal",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Old Radio", Callback = function() local c=bringItems({"Old Radio"},"Old Radio") Rayfield:Notify({Title="Old Radio",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Tyre", Callback = function() local c=bringItems({"Tyre"},"Tyre") Rayfield:Notify({Title="Tyre",Content=c.." traídos"}) end})
+
+Tab2:CreateSection("Curación")
+Tab2:CreateButton({Name = "Bandage", Callback = function() local c=bringItems({"Bandage"},"Bandage") Rayfield:Notify({Title="Bandage",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Medkit", Callback = function() local c=bringItems({"Medkit"},"Medkit") Rayfield:Notify({Title="Medkit",Content=c.." traídos"}) end})
+
+Tab2:CreateSection("Extra")
+Tab2:CreateButton({
+   Name = "🔥 TRAER TODOS (V2)",
+   Callback = function()
+      local all = {"Log","Sapling","Coal","Chair","Oil Barrel","Fuel Canister","Morsel","Carrot","Bunny Foot","Steak","Broken Fan","Bolt","Sheet Metal","Old Radio","Tyre","Bandage","Medkit"}
+      local cnt = bringItems(all, "Todos V2")
+      Rayfield:Notify({Title = "🔥 Todos V2", Content = cnt.." items traídos", Duration = 5})
+   end,
+})
