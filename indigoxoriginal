@@ -738,61 +738,47 @@ end)
 local ItemsTab = window:AddTab("Spawn Items")
 
 -- Spawn Woods
-ItemsTab:AddSwitch({
-    Name = "Spawn Woods",
-    Callback = function()
+ItemsTab:AddSwitch({"Spawn Woods",function()
         for _, obj in pairs(Workspace.Items:GetChildren()) do
             if obj:IsA("Model") and obj.Name == "Log" and obj.PrimaryPart then
                 obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
                 DragItem(obj)
             end
         end
-    end
-})
+    end)
  
 -- Spawn Metals
-ItemsTab:AddSwitch({
-    Name = "Spawn Metals",
-    Callback = function()
+ItemsTab:AddSwitch("Spawn Metals",function()
         for _, obj in pairs(Workspace.Items:GetChildren()) do
             if obj:IsA("Model") and obj.Name == "Scrap" or obj.Name == "Metal") or obj.Name == "Scraps") or obj.Name == "Metals") and obj.PrimaryPart then
                 obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
                 DragItem(obj)
             end
         end
-    end
-})
+    end)
  
 -- Spawn Bandages/Medkits
-ItemsTab:AddSwitch({
-    Name = "Spawn Bandages/Medkits",
-    Callback = function()
+ItemsTab:AddSwitch("Spawn Bandages/Medkits",function()
         for _, obj in pairs(Workspace.Items:GetChildren()) do
             if obj:IsA("Model") and (obj.Name == "Medkit" or obj.Name == "Bandage") and obj.PrimaryPart then
                 obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
                 DragItem(obj)
             end
         end
-    end
-})
+    end)
  
 -- Spawn Fuels
-ItemsTab:AddSwitch({
-    Name = "Spawn Fuels",
-    Callback = function()
+ItemsTab:AddSwitch("Spawn Fuels",function()
         for _, obj in pairs(Workspace.Items:GetChildren()) do
             if obj:IsA("Model") and (obj.Name == "Petrol" or obj.Name == "Gas Can" or obj.Name == "Coal" or obj.Name == "Log" or obj.Name:match("Corpse")) and obj.PrimaryPart then
                 obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
                 DragItem(obj)
             end
         end
-    end
-})
+    end)
  
 -- Spawn Foods
-ItemsTab:AddSwitch({
-    Name = "Spawn Foods",
-    Callback = function()
+ItemsTab:AddSwitch("Spawn Foods",function()
         for _, obj in pairs(Workspace.Items:GetChildren()) do
             if obj:IsA("Model") and obj.Name:match("Food") or obj.Name == "Eat") and obj.PrimaryPart then
                 obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
@@ -800,4 +786,4 @@ ItemsTab:AddSwitch({
             end
         end
     end
-})
+end)
