@@ -734,3 +734,5 @@ Jumps:AddSwitch("Fly V3 (Cam Lock)", function(state)
 		StopFlyV3()
 	end
 end)
+
+local ItemsTab = window:AddTab("Spawn")
