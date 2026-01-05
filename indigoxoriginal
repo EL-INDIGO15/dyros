@@ -420,3 +420,67 @@ Jumps:AddSwitch("Salto infinito", function(state)
 		disableInfiniteJump()
 	end
 end)
+
+-- SERVICES
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+-- PLAYER
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+player.CharacterAdded:Connect(function(char)
+	character = char
+	humanoid = char:WaitForChild("Humanoid")
+	hrp = char:WaitForChild("HumanoidRootPart")
+end)
+
+-- VARIABLES
+local flyEnabled = false
+local flyConnection
+local bv, bg
+local speed = 45
+
+-- FUNCIONES
+local function startFly()
+	bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+	bv.Parent = hrp
+
+	bg = Instance.new("BodyGyro")
+	bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+	bg.Parent = hrp
+
+	flyConnection = RunService.RenderStepped:Connect(function()
+		if not flyEnabled then return end
+
+		local cam = workspace.CurrentCamera
+		local moveDir = humanoid.MoveDirection
+
+		bv.Velocity =
+			(cam.CFrame.LookVector * moveDir.Z +
+			cam.CFrame.RightVector * moveDir.X) * speed
+			+ Vector3.new(0, 10, 0)
+
+		bg.CFrame = cam.CFrame
+	end)
+end
+
+local function stopFly()
+	if flyConnection then flyConnection:Disconnect() end
+	if bv then bv:Destroy() end
+	if bg then bg:Destroy() end
+end
+
+-- SWITCH DEL HUB
+Jumps:AddSwitch("Fly (Celular)", function(state)
+	flyEnabled = state
+
+	if state then
+		startFly()
+	else
+		stopFly()
+	end
+end)
