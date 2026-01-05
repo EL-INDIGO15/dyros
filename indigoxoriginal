@@ -564,3 +564,87 @@ Jumps:AddSwitch("Fly V2", function(state)
 		StopFlyV3()
 	end
 end)
+
+-- ===== FLY V3 CAMERA LOCK =====
+
+-- SERVICES
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- PLAYER
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+player.CharacterAdded:Connect(function(char)
+	character = char
+	humanoid = char:WaitForChild("Humanoid")
+	hrp = char:WaitForChild("HumanoidRootPart")
+end)
+
+-- VARIABLES
+local FlyV3Enabled = false
+local flyConn
+local BV, BG
+local speed = 60
+local verticalSpeed = 35
+
+-- START FLY
+local function StartFlyV3()
+	BV = Instance.new("BodyVelocity")
+	BV.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+	BV.Velocity = Vector3.zero
+	BV.Parent = hrp
+
+	BG = Instance.new("BodyGyro")
+	BG.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+	BG.P = 1e5
+	BG.Parent = hrp
+
+	-- Camera lock estilo Fly V3
+	humanoid.AutoRotate = false
+	humanoid.PlatformStand = true
+
+	flyConn = RunService.RenderStepped:Connect(function()
+		if not FlyV3Enabled then return end
+
+		local cam = workspace.CurrentCamera
+		local moveDir = humanoid.MoveDirection
+		local velocity = Vector3.zero
+
+		-- Vuela EXACTAMENTE hacia donde apunta la cámara
+		if moveDir.Magnitude > 0 then
+			velocity =
+				cam.CFrame.LookVector * speed +
+				Vector3.new(0, verticalSpeed, 0)
+		else
+			-- Hover sin moverse
+			velocity = Vector3.new(0, 0, 0)
+		end
+
+		BV.Velocity = velocity
+		BG.CFrame = cam.CFrame
+	end)
+end
+
+-- STOP FLY
+local function StopFlyV3()
+	if flyConn then flyConn:Disconnect() end
+	if BV then BV:Destroy() end
+	if BG then BG:Destroy() end
+
+	humanoid.PlatformStand = false
+	humanoid.AutoRotate = true
+end
+
+-- SWITCH EN TU HUB
+Jumps:AddSwitch("Fly V3 (Cam Lock)", function(state)
+	FlyV3Enabled = state
+
+	if state then
+		StartFlyV3()
+	else
+		StopFlyV3()
+	end
+end)
