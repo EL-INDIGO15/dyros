@@ -375,7 +375,23 @@ AutoFarm:AddSwitch("Anti AFK", function(state)
     end 
 end) 
 
-local Jumps = window:AddTab("Jumps")
+AutoFarm:AddSwitch("Lock Position", function(Value) 
+    if Value then 
+        local currentPos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame 
+        getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function() 
+            if game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then 
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = currentPos 
+            end 
+        end) 
+    else 
+        if getgenv().posLock then 
+            getgenv().posLock:Disconnect() 
+            getgenv().posLock = nil 
+        end 
+    end 
+end) 
+
+local Jumps = window:AddTab("Player")
 
 -- SERVICES
 local Players = game:GetService("Players")
