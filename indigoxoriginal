@@ -673,8 +673,8 @@ end)
 local FlyV3Enabled = false
 local flyConn
 local BV, BG
-local speed = 60
-local verticalSpeed = 35
+local speed = 200
+local verticalSpeed = 100
 
 -- START FLY
 local function StartFlyV3()
@@ -735,31 +735,12 @@ Jumps:AddSwitch("Fly V3 (Cam Lock)", function(state)
 	end
 end)
 
-local ItemsTab = window:AddTab("Spawn")
-
--- Definiciones necesarias (pega esto si no lo tienes en tu script)
-local Workspace = game:GetService("Workspace")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
--- Debe existir esta función en tu script, si no, usa esta:
-local function DragItem(obj)
-    if not obj or not obj.PrimaryPart then return end
-    obj.PrimaryPart.Anchored = false
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if hrp then
-        obj.PrimaryPart.CFrame = hrp.CFrame
-    end
-end
-
--- ===== SPAWN ITEMS SYSTEM =====
 local ItemsTab = window:AddTab("Spawn Items")
 
 -- Spawn Woods
 ItemsTab:AddSwitch({
     Name = "Spawn Woods",
-    Callback = function(state)
-        if not state then return end
+    Callback = function()
         for _, obj in pairs(Workspace.Items:GetChildren()) do
             if obj:IsA("Model") and obj.Name == "Log" and obj.PrimaryPart then
                 obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
@@ -768,27 +749,24 @@ ItemsTab:AddSwitch({
         end
     end
 })
-
+ 
 -- Spawn Metals
 ItemsTab:AddSwitch({
     Name = "Spawn Metals",
-    Callback = function(state)
-        if not state then return end
+    Callback = function()
         for _, obj in pairs(Workspace.Items:GetChildren()) do
-            if obj:IsA("Model") and obj.PrimaryPart and 
-            (obj.Name == "Scrap" or obj.Name == "Metal" or obj.Name == "Scraps" or obj.Name == "Metals") then
+            if obj:IsA("Model") and obj.Name == "Scrap" or obj.Name == "Metal") or obj.Name == "Scraps") or obj.Name == "Metals") and obj.PrimaryPart then
                 obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
                 DragItem(obj)
             end
         end
     end
 })
-
+ 
 -- Spawn Bandages/Medkits
 ItemsTab:AddSwitch({
     Name = "Spawn Bandages/Medkits",
-    Callback = function(state)
-        if not state then return end
+    Callback = function()
         for _, obj in pairs(Workspace.Items:GetChildren()) do
             if obj:IsA("Model") and (obj.Name == "Medkit" or obj.Name == "Bandage") and obj.PrimaryPart then
                 obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
@@ -797,12 +775,11 @@ ItemsTab:AddSwitch({
         end
     end
 })
-
+ 
 -- Spawn Fuels
 ItemsTab:AddSwitch({
     Name = "Spawn Fuels",
-    Callback = function(state)
-        if not state then return end
+    Callback = function()
         for _, obj in pairs(Workspace.Items:GetChildren()) do
             if obj:IsA("Model") and (obj.Name == "Petrol" or obj.Name == "Gas Can" or obj.Name == "Coal" or obj.Name == "Log" or obj.Name:match("Corpse")) and obj.PrimaryPart then
                 obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
@@ -811,14 +788,13 @@ ItemsTab:AddSwitch({
         end
     end
 })
-
+ 
 -- Spawn Foods
 ItemsTab:AddSwitch({
     Name = "Spawn Foods",
-    Callback = function(state)
-        if not state then return end
+    Callback = function()
         for _, obj in pairs(Workspace.Items:GetChildren()) do
-            if obj:IsA("Model") and (obj.Name:match("Food") or obj.Name == "Eat") and obj.PrimaryPart then
+            if obj:IsA("Model") and obj.Name:match("Food") or obj.Name == "Eat") and obj.PrimaryPart then
                 obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
                 DragItem(obj)
             end
