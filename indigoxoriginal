@@ -375,6 +375,50 @@ AutoFarm:AddSwitch("Anti AFK", function(state)
     end 
 end) 
 
+-- ESP SYSTEM (PEGAR EN CUALQUIER PARTE ARRIBA DE LOS SWITCHES)
+local ESPEnabled = false
+local ESPs = {}
+
+-- ESP FUNCION
+local function CreateESP(obj)
+    if ESPs[obj] then return end
+    local Highlight = Instance.new("Highlight")
+    Highlight.Parent = obj
+    Highlight.FillColor = Color3.fromRGB(0, 255, 0)
+    Highlight.OutlineColor = Color3.fromRGB(255, 255, 0)
+    Highlight.FillTransparency = 0.5
+    Highlight.Adornee = obj
+    ESPs[obj] = Highlight
+end
+
+local function ToggleESP(state)
+    ESPEnabled = state
+    if state then
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if table.find(ItemTargets, obj.Name) or table.find(EnemyTargets, obj.Name) or obj.Name:find("Child") then
+                CreateESP(obj)
+            end
+        end
+        workspace.DescendantAdded:Connect(function(obj)
+            if table.find(ItemTargets, obj.Name) or table.find(EnemyTargets, obj.Name) or obj.Name:find("Child") then
+                task.wait(0.1)
+                CreateESP(obj)
+            end
+        end)
+    else
+        for _, esp in pairs(ESPs) do
+            if esp and esp.Parent then esp:Destroy() end
+        end
+        ESPs = {}
+    end
+end
+
+-- SWITCH PARA EL HUB
+AutoFarm:AddSwitch("ESP (Highlight)", function(state)
+    ToggleESP(state)
+    print(state and "[ESP] Activado" or "[ESP] Desactivado")
+end)
+
 AutoFarm:AddSwitch("Lock Position", function(Value) 
     if Value then 
         local currentPos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame 
@@ -690,3 +734,70 @@ Jumps:AddSwitch("Fly V3 (Cam Lock)", function(state)
 		StopFlyV3()
 	end
 end)
+
+local ItemsTab = window:AddTab("Spawn Items")
+
+-- Spawn Woods
+ItemsTab:AddSwitch({
+    Name = "Spawn Woods",
+    Callback = function()
+        for _, obj in pairs(Workspace.Items:GetChildren()) do
+            if obj:IsA("Model") and obj.Name == "Log" and obj.PrimaryPart then
+                obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                DragItem(obj)
+            end
+        end
+    end
+})
+ 
+-- Spawn Metals
+ItemsTab:AddSwitch({
+    Name = "Spawn Metals",
+    Callback = function()
+        for _, obj in pairs(Workspace.Items:GetChildren()) do
+            if obj:IsA("Model") and obj.Name == "Scrap" or obj.Name == "Metal") or obj.Name == "Scraps") or obj.Name == "Metals") and obj.PrimaryPart then
+                obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                DragItem(obj)
+            end
+        end
+    end
+})
+ 
+-- Spawn Bandages/Medkits
+ItemsTab:AddSwitch({
+    Name = "Spawn Bandages/Medkits",
+    Callback = function()
+        for _, obj in pairs(Workspace.Items:GetChildren()) do
+            if obj:IsA("Model") and (obj.Name == "Medkit" or obj.Name == "Bandage") and obj.PrimaryPart then
+                obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                DragItem(obj)
+            end
+        end
+    end
+})
+ 
+-- Spawn Fuels
+ItemsTab:AddSwitch({
+    Name = "Spawn Fuels",
+    Callback = function()
+        for _, obj in pairs(Workspace.Items:GetChildren()) do
+            if obj:IsA("Model") and (obj.Name == "Petrol" or obj.Name == "Gas Can" or obj.Name == "Coal" or obj.Name == "Log" or obj.Name:match("Corpse")) and obj.PrimaryPart then
+                obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                DragItem(obj)
+            end
+        end
+    end
+})
+ 
+-- Spawn Foods
+ItemsTab:AddSwitch({
+    Name = "Spawn Foods",
+    Callback = function()
+        for _, obj in pairs(Workspace.Items:GetChildren()) do
+            if obj:IsA("Model") and obj.Name:match("Food") or obj.Name == "Eat") and obj.PrimaryPart then
+                obj.PrimaryPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                DragItem(obj)
+            end
+        end
+    end
+})
