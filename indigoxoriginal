@@ -391,6 +391,32 @@ AutoFarm:AddSwitch("Lock Position", function(Value)
     end 
 end) 
 
+-- Add No-Clip toggle
+AutoFarm:AddSwitch("NoClip", function(bool)
+    _G.NoClip = bool
+
+    if bool then
+        local noclipLoop
+        noclipLoop = game:GetService("RunService").Stepped:Connect(function()
+            if _G.NoClip then
+                for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide then
+                        part.CanCollide = false
+                    end
+                end
+            else
+                noclipLoop:Disconnect()
+            end
+        end)
+
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "No-Clip Activado",
+            Text = "Ahora puedes atravesar objetos",
+            Duration = 0
+        })
+    end
+end)
+
 local Jumps = window:AddTab("Player")
 
 -- SERVICES
