@@ -375,13 +375,13 @@ AutoFarm:AddSwitch("Anti AFK", function(state)
     end 
 end) 
 
-local Jumps = window:AddTab("Jumps") 
+local Jumps = window:AddTab("Jumps")
 
-Jumps:AddSwitch("Jumps infinitos")
--- INFINITE JUMP GUI (Mobile)
+-- SERVICES
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
+-- PLAYER
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
@@ -391,70 +391,32 @@ player.CharacterAdded:Connect(function(char)
 	humanoid = char:WaitForChild("Humanoid")
 end)
 
+-- VARIABLES
 local infiniteJump = false
 local jumpConnection
-local gui = Instance.new("ScreenGui")
-gui.Parent = player.PlayerGui
-gui.ResetOnSpawn = false
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 220, 0, 120)
-frame.Position = UDim2.new(0.5, -110, 0.5, -60)
-frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-local statusLabel = Instance.new("TextLabel", frame)
-statusLabel.Size = UDim2.new(1, -10, 0, 40)
-statusLabel.Position = UDim2.new(0, 5, 0, 10)
-statusLabel.BackgroundTransparency = 1
-statusLabel.TextColor3 = Color3.new(1,1,1)
-statusLabel.TextScaled = true
-statusLabel.Text = "Salto infinito: OFF"
-local toggleButton = Instance.new("TextButton", frame)
-toggleButton.Size = UDim2.new(1, -20, 0, 35)
-toggleButton.Position = UDim2.new(0, 10, 0, 60)
-toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-toggleButton.TextColor3 = Color3.new(1,1,1)
-toggleButton.TextScaled = true
-toggleButton.Text = "Activar"
-local closeButton = Instance.new("TextButton", frame)
-closeButton.Size = UDim2.new(0, 30, 0, 30)
-closeButton.Position = UDim2.new(1, -35, 0, 5)
-closeButton.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
-closeButton.TextColor3 = Color3.new(1,1,1)
-closeButton.TextScaled = true
-closeButton.Text = "X"
-local function enableJump()
+local function enableInfiniteJump()
 	jumpConnection = UserInputService.JumpRequest:Connect(function()
-		if humanoid then
+		if infiniteJump and humanoid then
 			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 		end
 	end)
 end
 
-local function disableJump()
+local function disableInfiniteJump()
 	if jumpConnection then
 		jumpConnection:Disconnect()
 		jumpConnection = nil
 	end
 end
 
-toggleButton.MouseButton1Click:Connect(function()
-	infiniteJump = not infiniteJump
+-- SWITCH EN EL HUB
+Jumps:AddSwitch("Salto infinito", function(state)
+	infiniteJump = state
 
-	if infiniteJump then
-		statusLabel.Text = "Salto infinito: ON"
-		toggleButton.Text = "Desactivar"
-		enableJump()
+	if state then
+		enableInfiniteJump()
 	else
-		statusLabel.Text = "Salto infinito: OFF"
-		toggleButton.Text = "Activar"
-		disableJump()
+		disableInfiniteJump()
 	end
-end)
-
-closeButton.MouseButton1Click:Connect(function()
-	disableJump()
-	gui:Destroy()
 end)
