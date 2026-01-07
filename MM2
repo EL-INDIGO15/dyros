@@ -51,10 +51,14 @@ local noclipLoop
 local espHighlights = {}
 local murderer = nil
 local sheriff = nil
-local aimbotEnabled = false
-local aimbotConn
 
--- Encontrar Murderer (Knife)
+-- Variables para aimbot (Cazador)
+local aimbotInocentesEnabled = false
+local aimbotSheriffEnabled = false
+local aimbotInocentesConn
+local aimbotSheriffConn
+
+-- Encontrar Murderer
 local function findMurderer()
     for _, plr in pairs(Players:GetPlayers()) do
         if plr ~= player and plr.Character then
@@ -68,7 +72,7 @@ local function findMurderer()
     return nil
 end
 
--- Encontrar Sheriff (Gun/Revolver)
+-- Encontrar Sheriff
 local function findSheriff()
     for _, plr in pairs(Players:GetPlayers()) do
         if plr ~= player and plr.Character then
@@ -144,28 +148,62 @@ local function clearESP()
     espHighlights = {}
 end
 
--- Aimbot (apunta la cámara a la cabeza del Murderer)
-local function startAimbot()
-    aimbotConn = RunService.RenderStepped:Connect(function()
-        if aimbotEnabled then
-            murderer = findMurderer()
-            if murderer and murderer.Character and murderer.Character:FindFirstChild("Head") then
-                Camera.CFrame = CFrame.new(Camera.CFrame.Position, murderer.Character.Head.Position)
+-- Aimbot a Inocentes (todos excepto Murderer y Sheriff)
+local function startAimbotInocentes()
+    aimbotInocentesConn = RunService.RenderStepped:Connect(function()
+        if not aimbotInocentesEnabled then return end
+        
+        murderer = findMurderer()
+        sheriff = findSheriff()
+        
+        local closest = nil
+        local closestDist = math.huge
+        
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= player and plr.Character and plr.Character:FindFirstChild("Head") then
+                if plr ~= murderer and plr ~= sheriff then
+                    local dist = (plr.Character.Head.Position - Camera.CFrame.Position).Magnitude
+                    if dist < closestDist then
+                        closestDist = dist
+                        closest = plr.Character.Head
+                    end
+                end
             end
+        end
+        
+        if closest then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closest.Position)
         end
     end)
 end
 
-local function stopAimbot()
-    if aimbotConn then aimbotConn:Disconnect() end
-    aimbotEnabled = false
+local function stopAimbotInocentes()
+    if aimbotInocentesConn then aimbotInocentesConn:Disconnect() end
+    aimbotInocentesEnabled = false
+end
+
+-- Aimbot al Sheriff
+local function startAimbotSheriff()
+    aimbotSheriffConn = RunService.RenderStepped:Connect(function()
+        if not aimbotSheriffEnabled then return end
+        
+        sheriff = findSheriff()
+        if sheriff and sheriff.Character and sheriff.Character:FindFirstChild("Head") then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, sheriff.Character.Head.Position)
+        end
+    end)
+end
+
+local function stopAimbotSheriff()
+    if aimbotSheriffConn then aimbotSheriffConn:Disconnect() end
+    aimbotSheriffEnabled = false
 end
 
 -- Tabs
 local tabCazador = window:AddTab("Cazador")
 local tabSheriff = window:AddTab("Sheriff")
 
--- === PESTAÑA CAZADOR ===
+-- === PESTAÑA CAZADOR (MURDERER) ===
 tabCazador:AddSwitch("Noclip", function(state)
     toggleNoclip(state)
 end)
@@ -191,12 +229,32 @@ tabCazador:AddSwitch("ESP Sheriff", function(state)
     end
 end)
 
-tabCazador:AddSwitch("Aimbot (al Cazador)", function(state)
-    aimbotEnabled = state
+-- Nuevo: Dos aimbots para el Cazador
+tabCazador:AddSwitch("Aimbot a Inocentes", function(state)
+    aimbotInocentesEnabled = state
     if state then
-        startAimbot()
+        startAimbotInocentes()
+        -- Si el otro aimbot está activado, lo desactivamos para evitar conflicto
+        if aimbotSheriffEnabled then
+            aimbotSheriffEnabled = false
+            stopAimbotSheriff()
+        end
     else
-        stopAimbot()
+        stopAimbotInocentes()
+    end
+end)
+
+tabCazador:AddSwitch("Aimbot al Sheriff", function(state)
+    aimbotSheriffEnabled = state
+    if state then
+        startAimbotSheriff()
+        -- Desactivamos el de inocentes si está encendido
+        if aimbotInocentesEnabled then
+            aimbotInocentesEnabled = false
+            stopAimbotInocentes()
+        end
+    else
+        stopAimbotSheriff()
     end
 end)
 
@@ -225,15 +283,27 @@ tabSheriff:AddButton("TP atrás del Cazador", function()
 end)
 
 tabSheriff:AddSwitch("Aimbot (al Cazador)", function(state)
-    aimbotEnabled = state
+    aimbotInocentesEnabled = state  -- Reutilizamos la variable, pero apunta solo al murderer
     if state then
-        startAimbot()
+        murderer = findMurderer()
+        if murderer and murderer.Character and murderer.Character:FindFirstChild("Head") then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, murderer.Character.Head.Position)
+        end
+        -- Loop continuo
+        aimbotInocentesConn = RunService.RenderStepped:Connect(function()
+            if aimbotInocentesEnabled then
+                murderer = findMurderer()
+                if murderer and murderer.Character and murderer.Character:FindFirstChild("Head") then
+                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, murderer.Character.Head.Position)
+                end
+            end
+        end)
     else
-        stopAimbot()
+        if aimbotInocentesConn then aimbotInocentesConn:Disconnect() end
     end
 end)
 
--- Actualizar roles constantemente
+-- Actualizar roles
 task.spawn(function()
     while true do
         murderer = findMurderer()
