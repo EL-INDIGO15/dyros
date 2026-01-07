@@ -51,8 +51,6 @@ local noclipLoop
 local espHighlights = {}
 local murderer = nil
 local sheriff = nil
-
--- Variables para aimbot (Cazador)
 local aimbotInocentesEnabled = false
 local aimbotSheriffEnabled = false
 local aimbotInocentesConn
@@ -72,38 +70,20 @@ local function findMurderer()
     return nil
 end
 
--- === EN LA PESTAÑA CAZADOR ===
-tabCazador:AddButton("Traer a TODOS delante mío (congelados 10s)", function()
-    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
-    local myHrp = player.Character.HumanoidRootPart
-    local myPos = myHrp.CFrame * CFrame.new(0, 0, -2)  -- Posición delante de ti
-
+-- Encontrar Sheriff
+local function findSheriff()
     for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            local targetHrp = plr.Character.HumanoidRootPart
-            local humanoid = plr.Character:FindFirstChild("Humanoid")
-
-            -- Teletransportar delante tuyo
-            targetHrp.CFrame = myPos
-
-            -- Congelar al jugador (no puede moverse ni saltar)
-            if humanoid then
-                humanoid.WalkSpeed = 0
-                humanoid.JumpPower = 0
-                humanoid.PlatformStand = true  -- Lo deja "parado en el aire" si es necesario
+        if plr ~= player and plr.Character then
+            local backpack = plr:FindFirstChild("Backpack")
+            local char = plr.Character
+            if (backpack and (backpack:FindFirstChild("Gun") or backpack:FindFirstChild("Revolver"))) or 
+               (char and (char:FindFirstChild("Gun") or char:FindFirstChild("Revolver"))) then
+                return plr
             end
-
-            -- Después de 10 segundos, devolver el control
-            task.delay(10, function()
-                if humanoid and humanoid.Parent then
-                    humanoid.WalkSpeed = 16  -- Velocidad normal
-                    humanoid.JumpPower = 50
-                    humanoid.PlatformStand = false
-                end
-            end)
         end
     end
-end)
+    return nil
+end
 
 -- Noclip
 local function toggleNoclip(state)
@@ -123,7 +103,7 @@ local function toggleNoclip(state)
     end
 end
 
--- Crear ESP con Highlight
+-- ESP
 local function createESP(targetPlr, color, labelText)
     if targetPlr and targetPlr.Character then
         local highlight = Instance.new("Highlight")
@@ -170,13 +150,10 @@ end
 local function startAimbotInocentes()
     aimbotInocentesConn = RunService.RenderStepped:Connect(function()
         if not aimbotInocentesEnabled then return end
-        
         murderer = findMurderer()
         sheriff = findSheriff()
-        
         local closest = nil
         local closestDist = math.huge
-        
         for _, plr in pairs(Players:GetPlayers()) do
             if plr ~= player and plr.Character and plr.Character:FindFirstChild("Head") then
                 if plr ~= murderer and plr ~= sheriff then
@@ -188,55 +165,43 @@ local function startAimbotInocentes()
                 end
             end
         end
-       
--- === EN LA PESTAÑA SHERIFF ===
-tabSheriff:AddButton("Traer al Cazador hacia mí (congelado 10s)", function()
-    murderer = findMurderer()
-    if not murderer or not murderer.Character or not murderer.Character:FindFirstChild("HumanoidRootPart") 
-       or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-        return
-    end
-
-    local myHrp = player.Character.HumanoidRootPart
-    local murdererHrp = murderer.Character.HumanoidRootPart
-    local humanoid = murderer.Character:FindFirstChild("Humanoid")
-
-    -- Teletransportar delante tuyo
-    murdererHrp.CFrame = myHrp.CFrame * CFrame.new(0, 0, -10)
-
-    -- Congelar al Murderer
-    if humanoid then
-        humanoid.WalkSpeed = 0
-        humanoid.JumpPower = 0
-        humanoid.PlatformStand = true
-    end
-
-    -- Después de 10 segundos, devolver el control
-    task.delay(10, function()
-        if humanoid and humanoid.Parent then
-            humanoid.WalkSpeed = 16
-            humanoid.JumpPower = 50
-            humanoid.PlatformStand = false
+        if closest then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closest.Position)
         end
     end)
-end)
+end
 
--- Tabs
+local function stopAimbotInocentes()
+    if aimbotInocentesConn then aimbotInocentesConn:Disconnect() end
+end
+
+-- Aimbot al Sheriff
+local function startAimbotSheriff()
+    aimbotSheriffConn = RunService.RenderStepped:Connect(function()
+        if not aimbotSheriffEnabled then return end
+        sheriff = findSheriff()
+        if sheriff and sheriff.Character and sheriff.Character:FindFirstChild("Head") then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, sheriff.Character.Head.Position)
+        end
+    end)
+end
+
+local function stopAimbotSheriff()
+    if aimbotSheriffConn then aimbotSheriffConn:Disconnect() end
+end
+
+-- CREAR TABS PRIMERO
 local tabCazador = window:AddTab("Cazador")
 local tabSheriff = window:AddTab("Sheriff")
 
--- === PESTAÑA CAZADOR (MURDERER) ===
-tabCazador:AddSwitch("Noclip", function(state)
-    toggleNoclip(state)
-end)
+-- === PESTAÑA CAZADOR ===
+tabCazador:AddSwitch("Noclip", function(state) toggleNoclip(state) end)
 
 tabCazador:AddSwitch("ESP Jugadores", function(state)
     clearESP()
     if state then
         for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= player then
-                createESP(plr, Color3.fromRGB(0, 255, 0), nil)
-            end
+            if plr ~= player then createESP(plr, Color3.fromRGB(0, 255, 0), nil) end
         end
     end
 end)
@@ -245,9 +210,7 @@ tabCazador:AddSwitch("ESP Sheriff", function(state)
     clearESP()
     if state then
         sheriff = findSheriff()
-        if sheriff then
-            createESP(sheriff, Color3.fromRGB(0, 100, 255), "SHERIFF")
-        end
+        if sheriff then createESP(sheriff, Color3.fromRGB(0, 100, 255), "SHERIFF") end
     end
 end)
 
@@ -255,10 +218,7 @@ tabCazador:AddSwitch("Aimbot a Inocentes", function(state)
     aimbotInocentesEnabled = state
     if state then
         startAimbotInocentes()
-        if aimbotSheriffEnabled then
-            aimbotSheriffEnabled = false
-            stopAimbotSheriff()
-        end
+        if aimbotSheriffEnabled then aimbotSheriffEnabled = false; stopAimbotSheriff() end
     else
         stopAimbotInocentes()
     end
@@ -268,86 +228,61 @@ tabCazador:AddSwitch("Aimbot al Sheriff", function(state)
     aimbotSheriffEnabled = state
     if state then
         startAimbotSheriff()
-        if aimbotInocentesEnabled then
-            aimbotInocentesEnabled = false
-            stopAimbotInocentes()
-        end
+        if aimbotInocentesEnabled then aimbotInocentesEnabled = false; stopAimbotInocentes() end
     else
         stopAimbotSheriff()
     end
 end)
 
--- NUEVO: TP atrás del Sheriff
 tabCazador:AddButton("TP atrás del Sheriff", function()
     sheriff = findSheriff()
-    if sheriff and sheriff.Character and sheriff.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = player.Character.HumanoidRootPart
-        local targetHrp = sheriff.Character.HumanoidRootPart
-        -- Te pone exactamente detrás del Sheriff (5 studs atrás en su dirección de mirada)
-        hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, 5)
+    if sheriff and sheriff.Character and sheriff.Character.HumanoidRootPart then
+        player.Character.HumanoidRootPart.CFrame = sheriff.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
     end
 end)
 
--- NUEVA FUNCIÓN: Teletransportar TODOS los jugadores delante de ti (Cazador)
 tabCazador:AddButton("Traer a TODOS delante mío", function()
-    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
-    local myHrp = player.Character.HumanoidRootPart
-    
+    if not player.Character or not player.Character.HumanoidRootPart then return end
+    local myCFrame = player.Character.HumanoidRootPart.CFrame
     for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            local targetHrp = plr.Character.HumanoidRootPart
-            -- Los pone a 2 studs delante de donde estás mirando
-            targetHrp.CFrame = myHrp.CFrame * CFrame.new(0, 0, -2)
+        if plr ~= player and plr.Character and plr.Character.HumanoidRootPart then
+            plr.Character.HumanoidRootPart.CFrame = myCFrame * CFrame.new(0, 0, -5)
         end
     end
 end)
 
 -- === PESTAÑA SHERIFF ===
-tabSheriff:AddSwitch("Noclip", function(state)
-    toggleNoclip(state)
-end)
+tabSheriff:AddSwitch("Noclip", function(state) toggleNoclip(state) end)
 
 tabSheriff:AddSwitch("ESP Cazador", function(state)
     clearESP()
     if state then
         murderer = findMurderer()
-        if murderer then
-            createESP(murderer, Color3.fromRGB(255, 0, 0), "MURDERER")
-        end
+        if murderer then createESP(murderer, Color3.fromRGB(255, 0, 0), "MURDERER") end
     end
 end)
 
--- NUEVA FUNCIÓN: Traer SOLO al Cazador hacia ti (Sheriff)
 tabSheriff:AddButton("Traer al Cazador hacia mí", function()
     murderer = findMurderer()
-    if murderer and murderer.Character and murderer.Character:FindFirstChild("HumanoidRootPart") 
-       and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        
-        local myHrp = player.Character.HumanoidRootPart
-        local murdererHrp = murderer.Character.HumanoidRootPart
-        -- Lo pone justo delante de ti (8 studs adelante de donde miras)
-        murdererHrp.CFrame = myHrp.CFrame * CFrame.new(0, 0, -8)
+    if murderer and murderer.Character and murderer.Character.HumanoidRootPart
+       and player.Character and player.Character.HumanoidRootPart then
+        murderer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -8)
     end
 end)
 
 tabSheriff:AddButton("TP atrás del Cazador", function()
     murderer = findMurderer()
-    if murderer and murderer.Character and murderer.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = player.Character.HumanoidRootPart
-        local targetHrp = murderer.Character.HumanoidRootPart
-        hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, 5)
+    if murderer and murderer.Character and murderer.Character.HumanoidRootPart then
+        player.Character.HumanoidRootPart.CFrame = murderer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
     end
 end)
 
-tabSheriff:AddSwitch("Aimbot (al Cazador)", function(state)
-    aimbotInocentesEnabled = state
+tabSheriff:AddSwitch("Aimbot al Cazador", function(state)
     if state then
         aimbotInocentesConn = RunService.RenderStepped:Connect(function()
-            if aimbotInocentesEnabled then
-                murderer = findMurderer()
-                if murderer and murderer.Character and murderer.Character:FindFirstChild("Head") then
-                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, murderer.Character.Head.Position)
-                end
+            murderer = findMurderer()
+            if murderer and murderer.Character and murderer.Character:FindFirstChild("Head") then
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, murderer.Character.Head.Position)
             end
         end)
     else
@@ -355,7 +290,7 @@ tabSheriff:AddSwitch("Aimbot (al Cazador)", function(state)
     end
 end)
 
--- Actualizar roles
+-- Actualizar roles cada 1.5 segundos
 task.spawn(function()
     while true do
         murderer = findMurderer()
