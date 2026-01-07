@@ -241,16 +241,6 @@ tabCazador:AddButton("TP atrás del Sheriff", function()
     end
 end)
 
-tabCazador:AddButton("Traer a TODOS delante mío", function()
-    if not player.Character or not player.Character.HumanoidRootPart then return end
-    local myCFrame = player.Character.HumanoidRootPart.CFrame
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player and plr.Character and plr.Character.HumanoidRootPart then
-            plr.Character.HumanoidRootPart.CFrame = myCFrame * CFrame.new(0, 0, -5)
-        end
-    end
-end)
-
 -- === PESTAÑA SHERIFF ===
 tabSheriff:AddSwitch("Noclip", function(state) toggleNoclip(state) end)
 
@@ -259,14 +249,6 @@ tabSheriff:AddSwitch("ESP Cazador", function(state)
     if state then
         murderer = findMurderer()
         if murderer then createESP(murderer, Color3.fromRGB(255, 0, 0), "MURDERER") end
-    end
-end)
-
-tabSheriff:AddButton("Traer al Cazador hacia mí", function()
-    murderer = findMurderer()
-    if murderer and murderer.Character and murderer.Character.HumanoidRootPart
-       and player.Character and player.Character.HumanoidRootPart then
-        murderer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -8)
     end
 end)
 
