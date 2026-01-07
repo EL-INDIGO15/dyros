@@ -43,7 +43,6 @@ end)
 -- Servicios
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
 local Camera = workspace.CurrentCamera
 
 -- Variables globales
@@ -53,7 +52,6 @@ local espHighlights = {}
 local murderer = nil
 local sheriff = nil
 local aimbotEnabled = false
-local autoShootEnabled = false
 local aimbotConn
 
 -- Encontrar Murderer (Knife)
@@ -146,7 +144,7 @@ local function clearESP()
     espHighlights = {}
 end
 
--- Aimbot (apunta cámara a la cabeza del murderer)
+-- Aimbot (apunta la cámara a la cabeza del Murderer)
 local function startAimbot()
     aimbotConn = RunService.RenderStepped:Connect(function()
         if aimbotEnabled then
@@ -161,20 +159,6 @@ end
 local function stopAimbot()
     if aimbotConn then aimbotConn:Disconnect() end
     aimbotEnabled = false
-end
-
--- Auto disparo (solo si tienes arma equipada)
-local function autoShootLoop()
-    spawn(function()
-        while autoShootEnabled do
-            if aimbotEnabled then
-                mouse1press()
-                task.wait(0.1)
-                mouse1release()
-            end
-            task.wait(0.3)
-        end
-    end)
 end
 
 -- Tabs
@@ -207,15 +191,12 @@ tabCazador:AddSwitch("ESP Sheriff", function(state)
     end
 end)
 
-tabCazador:AddSwitch("Aimbot + Auto Disparo", function(state)
+tabCazador:AddSwitch("Aimbot (al Cazador)", function(state)
     aimbotEnabled = state
-    autoShootEnabled = state
     if state then
         startAimbot()
-        autoShootLoop()
     else
         stopAimbot()
-        autoShootEnabled = false
     end
 end)
 
@@ -243,15 +224,12 @@ tabSheriff:AddButton("TP atrás del Cazador", function()
     end
 end)
 
-tabSheriff:AddSwitch("Aimbot + Auto Disparo (solo Cazador)", function(state)
+tabSheriff:AddSwitch("Aimbot (al Cazador)", function(state)
     aimbotEnabled = state
-    autoShootEnabled = state
     if state then
         startAimbot()
-        autoShootLoop()
     else
         stopAimbot()
-        autoShootEnabled = false
     end
 end)
 
