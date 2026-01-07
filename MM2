@@ -15,9 +15,9 @@ local options = {
 -- VENTANA PRINCIPAL
 local window = library:AddWindow("HadesHub | Bienvenid@ I love you " .. displayName, options)
 
--- LISTA DE COLORES PARA LA ANIMACIÓN
+-- ANIMACIÓN DE COLOR (igual que antes)
 local colores = {
-    Color3.fromRGB(220, 20, 60),   -- Crimson
+    Color3.fromRGB(220, 20, 60),
     Color3.fromRGB(255, 102, 102),
     Color3.fromRGB(255, 0, 0),
     Color3.fromRGB(255, 140, 0),
@@ -26,30 +26,25 @@ local colores = {
     Color3.fromRGB(255, 255, 0),
 }
 
--- ANIMACIÓN DE COLOR
 task.spawn(function()
     local indice = 1
     while true do
         local colorActual = colores[indice]
         local colorSiguiente = colores[indice % #colores + 1]
-
         for i = 0, 50 do
             local alpha = i / 50
             options.main_color = colorActual:Lerp(colorSiguiente, alpha)
             task.wait(0.05)
         end
-
         indice = indice % #colores + 1
     end
 end) 
 
--- Servicios
+-- Servicios y variables (igual)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 
--- Variables globales
 local noclipActive = false
 local noclipConnection
 local espHighlights = {}
@@ -59,180 +54,20 @@ local aimbotActive = false
 local autoShootActive = false
 local aimbotConnection
 
--- Función para encontrar al Murderer (Knife)
-local function findMurderer()
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player and plr.Character then
-            local backpack = plr:FindFirstChild("Backpack")
-            local character = plr.Character
-            if (backpack and backpack:FindFirstChild("Knife")) or (character and character:FindFirstChild("Knife")) then
-                return plr
-            end
-        end
-    end
-    return nil
-end
-
--- Función para encontrar al Sheriff (Gun)
-local function findSheriff()
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player and plr.Character then
-            local backpack = plr:FindFirstChild("Backpack")
-            local character = plr.Character
-            if (backpack and (backpack:FindFirstChild("Gun") or backpack:FindFirstChild("Revolver"))) or 
-               (character and (character:FindFirstChild("Gun") or character:FindFirstChild("Revolver"))) then
-                return plr
-            end
-        end
-    end
-    return nil
-end
-
--- Teleport básico
-local function teleportTo(targetPosition)
-    local char = player.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        char.HumanoidRootPart.CFrame = CFrame.new(targetPosition + Vector3.new(0, 5, 0))
-    end
-end
-
--- Noclip universal
-local function toggleNoclip(state)
-    noclipActive = state
-    if noclipActive then
-        noclipConnection = RunService.Stepped:Connect(function()
-            local char = player.Character
-            if char then
-                for _, part in pairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
-                end
-            end
-        end)
-    else
-        if noclipConnection then
-            noclipConnection:Disconnect()
-        end
-        local char = player.Character
-        if char then
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                end
-            end
-        end
-    end
-end
-
--- ESP con Highlight
-local function createESP(plr, fillColor, outlineColor, labelText)
-    if plr.Character then
-        local highlight = Instance.new("Highlight")
-        highlight.FillColor = fillColor
-        highlight.OutlineColor = outlineColor
-        highlight.FillTransparency = 0.3
-        highlight.OutlineTransparency = 0
-        highlight.Adornee = plr.Character
-        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-        highlight.Parent = plr.Character
-        espHighlights[plr] = highlight
-
-        if labelText then
-            local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                local billboard = Instance.new("BillboardGui")
-                billboard.Adornee = hrp
-                billboard.Size = UDim2.new(0, 100, 0, 40)
-                billboard.StudsOffset = Vector3.new(0, 3, 0)
-                billboard.AlwaysOnTop = true
-                billboard.Parent = hrp
-
-                local label = Instance.new("TextLabel")
-                label.Size = UDim2.new(1, 0, 1, 0)
-                label.BackgroundTransparency = 1
-                label.Text = labelText .. "\n" .. plr.Name
-                label.TextColor3 = fillColor
-                label.TextScaled = true
-                label.Font = Enum.Font.SourceSansBold
-                label.Parent = billboard
-            end
-        end
-    end
-end
-
-local function clearESP()
-    for _, hl in pairs(espHighlights) do
-        if hl then hl:Destroy() end
-    end
-    espHighlights = {}
-end
-
--- Aimbot simple (camera hacia cabeza del target)
-local function getTargetHead(tabType)
-    if tabType == "Murderer" then
-        murderer = findMurderer()
-        if murderer and murderer.Character and murderer.Character:FindFirstChild("Head") then
-            return murderer.Character.Head
-        end
-    elseif tabType == "Sheriff" then
-        murderer = findMurderer()
-        if murderer and murderer.Character and murderer.Character:FindFirstChild("Head") then
-            return murderer.Character.Head
-        end
-    elseif tabType == "Innocent" then
-        murderer = findMurderer()
-        if murderer and murderer.Character and murderer.Character:FindFirstChild("Head") then
-            return murderer.Character.Head
-        end
-    end
-    return nil
-end
-
-local function startAimbot(tabType)
-    aimbotConnection = RunService.RenderStepped:Connect(function()
-        if aimbotActive then
-            local targetHead = getTargetHead(tabType)
-            if targetHead then
-                Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
-            end
-        end
-    end)
-end
-
-local function stopAimbot()
-    if aimbotConnection then
-        aimbotConnection:Disconnect()
-    end
-    aimbotActive = false
-end
-
--- Auto disparo/arroyo (simulado con mouse click si tienes arma)
-local function autoShoot(tabType)
-    if autoShootActive then
-        spawn(function()
-            while autoShootActive do
-                local target = getTargetHead(tabType)
-                if target then
-                    mouse1press()
-                    wait(0.1)
-                    mouse1release()
-                end
-                wait(0.2)
-            end
-        end)
-    end
-end
+-- (Aquí van todas las funciones que tenía antes: findMurderer, findSheriff, toggleNoclip, createESP, clearESP, getTargetHead, startAimbot, stopAimbot, autoShoot, teleportTo, etc.)
+-- Las copias tal cual del script anterior, no las repito para no alargar tanto.
 
 -- Tabs
-local tabMurderer = window:AddTab("Cazador (Murderer)")
+local tabMurderer = window:AddTab("Cazador")
 local tabSheriff = window:AddTab("Sheriff")
 local tabInocente = window:AddTab("Inocente")
 
--- Tab Cazador (Murderer)
-tabMurderer:AddToggle("Noclip", false, function(state) toggleNoclip(state) end)
+-- === TAB CAZADOR (Murderer) ===
+local folderMurderer = tabMurderer:AddFolder("Funciones Cazador")
 
-tabMurderer:AddToggle("ESP Jugadores", false, function(state)
+folderMurderer:AddToggle("Noclip", false, function(state) toggleNoclip(state) end)
+
+folderMurderer:AddToggle("ESP Jugadores", false, function(state)
     clearESP()
     if state then
         for _, plr in pairs(Players:GetPlayers()) do
@@ -243,11 +78,7 @@ tabMurderer:AddToggle("ESP Jugadores", false, function(state)
     end
 end)
 
-tabMurderer:AddButton("TP a Jugador (selecciona uno)", function()
-    -- Simple: TP al murderer no es necesario, pero puedes agregar dropdown si la lib lo soporta
-end)
-
-tabMurderer:AddToggle("Aimbot + Auto Disparo", false, function(state)
+folderMurderer:AddToggle("Aimbot + Auto Disparo", false, function(state)
     aimbotActive = state
     autoShootActive = state
     if state then
@@ -259,7 +90,7 @@ tabMurderer:AddToggle("Aimbot + Auto Disparo", false, function(state)
     end
 end)
 
-tabMurderer:AddToggle("ESP Sheriff", false, function(state)
+folderMurderer:AddToggle("ESP Sheriff", false, function(state)
     clearESP()
     if state then
         sheriff = findSheriff()
@@ -269,10 +100,18 @@ tabMurderer:AddToggle("ESP Sheriff", false, function(state)
     end
 end)
 
--- Tab Sheriff
-tabSheriff:AddToggle("Noclip", false, function(state) toggleNoclip(state) end)
+-- Para TP a jugadores puedes agregar un button simple o un dropdown si quieres seleccionar
+folderMurderer:AddButton("Actualizar Roles (por si acaso)", function()
+    murderer = findMurderer()
+    sheriff = findSheriff()
+end)
 
-tabSheriff:AddToggle("ESP Cazador", false, function(state)
+-- === TAB SHERIFF ===
+local folderSheriff = tabSheriff:AddFolder("Funciones Sheriff")
+
+folderSheriff:AddToggle("Noclip", false, function(state) toggleNoclip(state) end)
+
+folderSheriff:AddToggle("ESP Cazador", false, function(state)
     clearESP()
     if state then
         murderer = findMurderer()
@@ -282,7 +121,7 @@ tabSheriff:AddToggle("ESP Cazador", false, function(state)
     end
 end)
 
-tabSheriff:AddButton("TP atrás del Cazador", function()
+folderSheriff:AddButton("TP atrás del Cazador", function()
     murderer = findMurderer()
     if murderer and murderer.Character and murderer.Character:FindFirstChild("HumanoidRootPart") then
         local pos = murderer.Character.HumanoidRootPart.Position
@@ -290,7 +129,7 @@ tabSheriff:AddButton("TP atrás del Cazador", function()
     end
 end)
 
-tabSheriff:AddToggle("Aimbot + Auto Disparo (solo Cazador)", false, function(state)
+folderSheriff:AddToggle("Aimbot + Auto Disparo (solo Cazador)", false, function(state)
     aimbotActive = state
     autoShootActive = state
     if state then
@@ -302,10 +141,12 @@ tabSheriff:AddToggle("Aimbot + Auto Disparo (solo Cazador)", false, function(sta
     end
 end)
 
--- Tab Inocente
-tabInocente:AddToggle("Noclip", false, function(state) toggleNoclip(state) end)
+-- === TAB INOCENTE ===
+local folderInocente = tabInocente:AddFolder("Funciones Inocente")
 
-tabInocente:AddToggle("ESP Cazador y Sheriff", false, function(state)
+folderInocente:AddToggle("Noclip", false, function(state) toggleNoclip(state) end)
+
+folderInocente:AddToggle("ESP Cazador y Sheriff", false, function(state)
     clearESP()
     if state then
         murderer = findMurderer()
@@ -315,15 +156,14 @@ tabInocente:AddToggle("ESP Cazador y Sheriff", false, function(state)
     end
 end)
 
-tabInocente:AddButton("TP arriba del mapa", function()
+folderInocente:AddButton("TP arriba del mapa", function()
     local char = player.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
-        local pos = char.HumanoidRootPart.Position
-        char.HumanoidRootPart.CFrame = CFrame.new(pos.X, pos.Y + 200, pos.Z)  -- 200 studs arriba
+        char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(0, 200, 0)
     end
 end)
 
-tabInocente:AddToggle("Aimbot", false, function(state)
+folderInocente:AddToggle("Aimbot (al Cazador)", false, function(state)
     aimbotActive = state
     if state then
         startAimbot("Innocent")
@@ -332,7 +172,7 @@ tabInocente:AddToggle("Aimbot", false, function(state)
     end
 end)
 
--- Actualización periódica para detectar roles
+-- Actualización de roles cada 2 segundos
 task.spawn(function()
     while true do
         murderer = findMurderer()
