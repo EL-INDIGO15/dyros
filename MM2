@@ -148,7 +148,7 @@ local function clearESP()
     espHighlights = {}
 end
 
--- Aimbot a Inocentes (todos excepto Murderer y Sheriff)
+-- Aimbot a Inocentes
 local function startAimbotInocentes()
     aimbotInocentesConn = RunService.RenderStepped:Connect(function()
         if not aimbotInocentesEnabled then return end
@@ -229,12 +229,10 @@ tabCazador:AddSwitch("ESP Sheriff", function(state)
     end
 end)
 
--- Nuevo: Dos aimbots para el Cazador
 tabCazador:AddSwitch("Aimbot a Inocentes", function(state)
     aimbotInocentesEnabled = state
     if state then
         startAimbotInocentes()
-        -- Si el otro aimbot está activado, lo desactivamos para evitar conflicto
         if aimbotSheriffEnabled then
             aimbotSheriffEnabled = false
             stopAimbotSheriff()
@@ -248,13 +246,23 @@ tabCazador:AddSwitch("Aimbot al Sheriff", function(state)
     aimbotSheriffEnabled = state
     if state then
         startAimbotSheriff()
-        -- Desactivamos el de inocentes si está encendido
         if aimbotInocentesEnabled then
             aimbotInocentesEnabled = false
             stopAimbotInocentes()
         end
     else
         stopAimbotSheriff()
+    end
+end)
+
+-- NUEVO: TP atrás del Sheriff
+tabCazador:AddButton("TP atrás del Sheriff", function()
+    sheriff = findSheriff()
+    if sheriff and sheriff.Character and sheriff.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = player.Character.HumanoidRootPart
+        local targetHrp = sheriff.Character.HumanoidRootPart
+        -- Te pone exactamente detrás del Sheriff (5 studs atrás en su dirección de mirada)
+        hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, 5)
     end
 end)
 
@@ -278,18 +286,13 @@ tabSheriff:AddButton("TP atrás del Cazador", function()
     if murderer and murderer.Character and murderer.Character:FindFirstChild("HumanoidRootPart") then
         local hrp = player.Character.HumanoidRootPart
         local targetHrp = murderer.Character.HumanoidRootPart
-        hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, 5) -- 5 studs atrás
+        hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, 5)
     end
 end)
 
 tabSheriff:AddSwitch("Aimbot (al Cazador)", function(state)
-    aimbotInocentesEnabled = state  -- Reutilizamos la variable, pero apunta solo al murderer
+    aimbotInocentesEnabled = state
     if state then
-        murderer = findMurderer()
-        if murderer and murderer.Character and murderer.Character:FindFirstChild("Head") then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, murderer.Character.Head.Position)
-        end
-        -- Loop continuo
         aimbotInocentesConn = RunService.RenderStepped:Connect(function()
             if aimbotInocentesEnabled then
                 murderer = findMurderer()
