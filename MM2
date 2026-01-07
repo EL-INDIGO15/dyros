@@ -72,20 +72,38 @@ local function findMurderer()
     return nil
 end
 
--- Encontrar Sheriff
-local function findSheriff()
+-- === EN LA PESTAÑA CAZADOR ===
+tabCazador:AddButton("Traer a TODOS delante mío (congelados 10s)", function()
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+    local myHrp = player.Character.HumanoidRootPart
+    local myPos = myHrp.CFrame * CFrame.new(0, 0, -2)  -- Posición delante de ti
+
     for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player and plr.Character then
-            local backpack = plr:FindFirstChild("Backpack")
-            local char = plr.Character
-            if (backpack and (backpack:FindFirstChild("Gun") or backpack:FindFirstChild("Revolver"))) or 
-               (char and (char:FindFirstChild("Gun") or char:FindFirstChild("Revolver"))) then
-                return plr
+        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local targetHrp = plr.Character.HumanoidRootPart
+            local humanoid = plr.Character:FindFirstChild("Humanoid")
+
+            -- Teletransportar delante tuyo
+            targetHrp.CFrame = myPos
+
+            -- Congelar al jugador (no puede moverse ni saltar)
+            if humanoid then
+                humanoid.WalkSpeed = 0
+                humanoid.JumpPower = 0
+                humanoid.PlatformStand = true  -- Lo deja "parado en el aire" si es necesario
             end
+
+            -- Después de 10 segundos, devolver el control
+            task.delay(10, function()
+                if humanoid and humanoid.Parent then
+                    humanoid.WalkSpeed = 16  -- Velocidad normal
+                    humanoid.JumpPower = 50
+                    humanoid.PlatformStand = false
+                end
+            end)
         end
     end
-    return nil
-end
+end)
 
 -- Noclip
 local function toggleNoclip(state)
@@ -170,34 +188,38 @@ local function startAimbotInocentes()
                 end
             end
         end
-        
-        if closest then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closest.Position)
+       
+-- === EN LA PESTAÑA SHERIFF ===
+tabSheriff:AddButton("Traer al Cazador hacia mí (congelado 10s)", function()
+    murderer = findMurderer()
+    if not murderer or not murderer.Character or not murderer.Character:FindFirstChild("HumanoidRootPart") 
+       or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        return
+    end
+
+    local myHrp = player.Character.HumanoidRootPart
+    local murdererHrp = murderer.Character.HumanoidRootPart
+    local humanoid = murderer.Character:FindFirstChild("Humanoid")
+
+    -- Teletransportar delante tuyo
+    murdererHrp.CFrame = myHrp.CFrame * CFrame.new(0, 0, -10)
+
+    -- Congelar al Murderer
+    if humanoid then
+        humanoid.WalkSpeed = 0
+        humanoid.JumpPower = 0
+        humanoid.PlatformStand = true
+    end
+
+    -- Después de 10 segundos, devolver el control
+    task.delay(10, function()
+        if humanoid and humanoid.Parent then
+            humanoid.WalkSpeed = 16
+            humanoid.JumpPower = 50
+            humanoid.PlatformStand = false
         end
     end)
-end
-
-local function stopAimbotInocentes()
-    if aimbotInocentesConn then aimbotInocentesConn:Disconnect() end
-    aimbotInocentesEnabled = false
-end
-
--- Aimbot al Sheriff
-local function startAimbotSheriff()
-    aimbotSheriffConn = RunService.RenderStepped:Connect(function()
-        if not aimbotSheriffEnabled then return end
-        
-        sheriff = findSheriff()
-        if sheriff and sheriff.Character and sheriff.Character:FindFirstChild("Head") then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, sheriff.Character.Head.Position)
-        end
-    end)
-end
-
-local function stopAimbotSheriff()
-    if aimbotSheriffConn then aimbotSheriffConn:Disconnect() end
-    aimbotSheriffEnabled = false
-end
+end)
 
 -- Tabs
 local tabCazador = window:AddTab("Cazador")
