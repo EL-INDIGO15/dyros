@@ -193,6 +193,7 @@ end
 -- CREAR TABS PRIMERO
 local tabCazador = window:AddTab("Cazador")
 local tabSheriff = window:AddTab("Sheriff")
+local tabplayer = window:AddTab("player")
 
 -- === PESTAÑA CAZADOR ===
 tabCazador:AddSwitch("Noclip", function(state) toggleNoclip(state) end)
@@ -278,5 +279,86 @@ task.spawn(function()
         murderer = findMurderer()
         sheriff = findSheriff()
         task.wait(1.5)
+    end
+end)
+
+--  BOTÓN DE SUPER VELOCIDAD 
+local speedConnection
+local resetConnection
+
+tabplayer:AddSwitch("super velocidad", function(enabled)
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local player = Players.LocalPlayer
+    
+    -- Limpia conexiones previas para evitar leaks
+    if speedConnection then
+        speedConnection:Disconnect()
+        speedConnection = nil
+    end
+    if resetConnection then
+        resetConnection:Disconnect()
+        resetConnection = nil
+    end
+    
+    if enabled then
+        -- ON: Fuerza WalkSpeed alta cada frame (anti-reset del servidor)
+        speedConnection = RunService.Heartbeat:Connect(function()
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = 128  -- x8 velocidad (¡superrápido! Cambia a 100/200 si quieres)
+                end
+            end
+        end)
+        
+        -- También boost JumpPower para volar un poco
+        task.spawn(function()
+            while speedConnection do
+                local character = player.Character
+                if character then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.JumpPower = 100  -- Salto alto
+                    end
+                end
+                task.wait(0.5)
+            end
+        end)
+        
+        print("[SpeedHack] ¡Activado! Corre como Flash ")
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "HadesHub",
+            Text = "¡Super Velocidad ACTIVADA! (x8)",
+            Duration = 3
+        })
+    else
+        -- OFF: Resetea inmediatamente y en respawns futuros
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = 16
+                humanoid.JumpPower = 50
+            end
+        end
+        
+        -- Reset automático en nuevos personajes
+        resetConnection = player.CharacterAdded:Connect(function(newChar)
+            task.wait(0.2)  -- Espera carga completa
+            local humanoid = newChar:WaitForChild("Humanoid", 5)
+            if humanoid then
+                humanoid.WalkSpeed = 16
+                humanoid.JumpPower = 50
+            end
+        end)
+        
+        print("🔴 [SpeedHack] Desactivado - Velocidad normal")
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "HadesHub",
+            Text = "Super Velocidad DESACTIVADA",
+            Duration = 3
+        })
     end
 end)
