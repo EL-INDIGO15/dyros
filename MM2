@@ -266,6 +266,20 @@ tabCazador:AddButton("TP atrás del Sheriff", function()
     end
 end)
 
+-- NUEVA FUNCIÓN: Teletransportar TODOS los jugadores delante de ti (Cazador)
+tabCazador:AddButton("Traer a TODOS delante mío", function()
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+    local myHrp = player.Character.HumanoidRootPart
+    
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local targetHrp = plr.Character.HumanoidRootPart
+            -- Los pone a 2 studs delante de donde estás mirando
+            targetHrp.CFrame = myHrp.CFrame * CFrame.new(0, 0, -2)
+        end
+    end
+end)
+
 -- === PESTAÑA SHERIFF ===
 tabSheriff:AddSwitch("Noclip", function(state)
     toggleNoclip(state)
@@ -278,6 +292,19 @@ tabSheriff:AddSwitch("ESP Cazador", function(state)
         if murderer then
             createESP(murderer, Color3.fromRGB(255, 0, 0), "MURDERER")
         end
+    end
+end)
+
+-- NUEVA FUNCIÓN: Traer SOLO al Cazador hacia ti (Sheriff)
+tabSheriff:AddButton("Traer al Cazador hacia mí", function()
+    murderer = findMurderer()
+    if murderer and murderer.Character and murderer.Character:FindFirstChild("HumanoidRootPart") 
+       and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        
+        local myHrp = player.Character.HumanoidRootPart
+        local murdererHrp = murderer.Character.HumanoidRootPart
+        -- Lo pone justo delante de ti (8 studs adelante de donde miras)
+        murdererHrp.CFrame = myHrp.CFrame * CFrame.new(0, 0, -8)
     end
 end)
 
