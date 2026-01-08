@@ -1,7 +1,6 @@
 -- HadesHub | Natural Disaster Survival - HadesHub Fly Modern GUI (Tema Rojo)
 -- Impulso: Solo zoom out/in + efectos intensos (velocidad REAL igual) <3
 
--- Servicios
 local Players = game:GetService("Players")
 local RS = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
@@ -22,7 +21,6 @@ local BoostFOV = 95
 
 local flyObjects = {}
 local flyConnection
-
 local boostParticles = {}
 
 local function updateChar()
@@ -32,7 +30,6 @@ local function updateChar()
     end
 end
 
--- Función Fly
 local function startFly()
     local hum, hrp = updateChar()
     if not hrp or not hum then return end
@@ -66,7 +63,7 @@ local function startFly()
     local trail = Instance.new("Trail", hrp)
     trail.Attachment0 = attach0
     trail.Attachment1 = attach1
-    trail.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0), Color3.fromRGB(255, 100, 100))  -- Rojo intenso a rojo claro
+    trail.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0), Color3.fromRGB(255, 100, 100))
     trail.Transparency = NumberSequence.new(0.1, 1)
     trail.Lifetime = 1.5
     trail.FaceCamera = true
@@ -88,7 +85,7 @@ local function startFly()
     windPE.Rate = 600
     windPE.Speed = NumberRange.new(150, 300)
     windPE.SpreadAngle = Vector2.new(360, 360)
-    windPE.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255, 0.6))
+    windPE.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
     windPE.Transparency = NumberSequence.new(0.2, 1)
     windPE.Size = NumberSequence.new(1, 4)
     windPE.Acceleration = Vector3.new(0, 0, -100)
@@ -111,7 +108,6 @@ local function startFly()
         
         local cam = workspace.CurrentCamera
         local move = hum2.MoveDirection
-        
         local currentSpeed = FlySpeed
         
         local vel = Vector3.new(0, 0, 0)
@@ -120,10 +116,10 @@ local function startFly()
         end
         
         if UIS:IsKeyDown(Enum.KeyCode.Space) then
-            vel = vel + Vector3.new(0, currentSpeed, 0)
+            vel += Vector3.new(0, currentSpeed, 0)
         end
         if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
-            vel = vel - Vector3.new(0, currentSpeed, 0)
+            vel -= Vector3.new(0, currentSpeed, 0)
         end
         
         bv.Velocity = vel
@@ -148,12 +144,11 @@ end
 
 local function activateBoost()
     if not FlyEnabled or IsBoosting then return end
-    
     IsBoosting = true
     
     TweenService:Create(Camera, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {FieldOfView = BoostFOV}):Play()
     
-    local hrp = updateChar() and player.Character:FindFirstChild("HumanoidRootPart")
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if hrp then
         local extraPE = Instance.new("ParticleEmitter", hrp)
         extraPE.Texture = "rbxassetid://241650934"
@@ -173,7 +168,7 @@ local function activateBoost()
         extraWind.Rate = 1000
         extraWind.Speed = NumberRange.new(300, 500)
         extraWind.SpreadAngle = Vector2.new(360, 360)
-        extraWind.Color = ColorSequence.new(Color3.fromRGB(255, 100, 100))
+        extraWind.Color = ColorSequence.new(Color3.fromRGB(255, 150, 150))
         extraWind.Transparency = NumberSequence.new(0.1, 0.8)
         extraWind.Size = NumberSequence.new(3, 8)
         extraWind.Enabled = true
@@ -201,7 +196,7 @@ UIS.InputBegan:Connect(function(input, gp)
     end
 end)
 
--- GUI con tema rojo
+-- GUI (Tema Rojo)
 local gui = Instance.new("ScreenGui")
 gui.Name = "HadesHubFly"
 gui.ResetOnSpawn = false
@@ -210,7 +205,7 @@ gui.Parent = player:WaitForChild("PlayerGui")
 local mainButton = Instance.new("TextButton")
 mainButton.Size = UDim2.new(0, 70, 0, 70)
 mainButton.Position = UDim2.new(1, -80, 0.5, -35)
-mainButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Botón principal rojo
+mainButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 mainButton.Text = "🦸🏻"
 mainButton.TextColor3 = Color3.new(1,1,1)
 mainButton.TextSize = 40
@@ -227,21 +222,189 @@ mainGlow.Size = UDim2.new(1.5, 0, 1.5, 0)
 mainGlow.Position = UDim2.new(-0.25, 0, -0.25, 0)
 mainGlow.BackgroundTransparency = 1
 mainGlow.Image = "rbxassetid://4996784993"
-mainGlow.ImageColor3 = Color3.fromRGB(255, 0, 0)  -- Glow rojo
+mainGlow.ImageColor3 = Color3.fromRGB(255, 0, 0)
 mainGlow.ImageTransparency = 0.4
 mainGlow.Parent = mainButton
 
--- ... (el resto del GUI se mantiene igual, solo cambian los colores morados a rojos donde aparecen)
+local panel = Instance.new("Frame")
+panel.Size = UDim2.new(0, 220, 0, 220)
+panel.Position = UDim2.new(1, -300, 0.5, -110)
+panel.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+panel.BackgroundTransparency = 0.2
+panel.BorderSizePixel = 0
+panel.Visible = false
+panel.Parent = gui
+
+local panelCorner = Instance.new("UICorner")
+panelCorner.CornerRadius = UDim.new(0, 20)
+panelCorner.Parent = panel
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
 title.BackgroundTransparency = 1
 title.Text = "HadesHub Fly"
-title.TextColor3 = Color3.fromRGB(255, 0, 0)  -- Título en rojo
+title.TextColor3 = Color3.fromRGB(255, 0, 0)
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 24
 title.Parent = panel
 
--- El resto del código GUI y funciones es idéntico al anterior (solo cambié los colores morados)
+local flyButton = Instance.new("TextButton")
+flyButton.Size = UDim2.new(0.8, 0, 0, 50)
+flyButton.Position = UDim2.new(0.1, 0, 0, 40)
+flyButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+flyButton.Text = "Fly OFF"
+flyButton.TextColor3 = Color3.new(1,1,1)
+flyButton.Font = Enum.Font.SourceSansBold
+flyButton.TextSize = 20
+flyButton.Parent = panel
 
-print("¡HadesHub Fly (Tema Rojo) cargado!")
+local flyCorner = Instance.new("UICorner")
+flyCorner.CornerRadius = UDim.new(0, 15)
+flyCorner.Parent = flyButton
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(1, 0, 0, 30)
+speedLabel.Position = UDim2.new(0, 0, 0, 100)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "Speed: 50 (Impulso)"
+speedLabel.TextColor3 = Color3.new(1,1,1)
+speedLabel.Font = Enum.Font.SourceSans
+speedLabel.TextSize = 16
+speedLabel.Parent = panel
+
+local plusButton = Instance.new("TextButton")
+plusButton.Size = UDim2.new(0, 50, 0, 50)
+plusButton.Position = UDim2.new(0.1, 0, 1, -100)
+plusButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+plusButton.Text = "+"
+plusButton.TextColor3 = Color3.new(1,1,1)
+plusButton.Font = Enum.Font.SourceSansBold
+plusButton.TextSize = 30
+plusButton.Parent = panel
+
+local plusCorner = Instance.new("UICorner")
+plusCorner.CornerRadius = UDim.new(1, 0)
+plusCorner.Parent = plusButton
+
+local minusButton = Instance.new("TextButton")
+minusButton.Size = UDim2.new(0, 50, 0, 50)
+minusButton.Position = UDim2.new(0.7, 0, 1, -100)
+minusButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+minusButton.Text = "-"
+minusButton.TextColor3 = Color3.new(1,1,1)
+minusButton.Font = Enum.Font.SourceSansBold
+minusButton.TextSize = 40
+minusButton.Parent = panel
+
+local minusCorner = Instance.new("UICorner")
+minusCorner.CornerRadius = UDim.new(1, 0)
+minusCorner.Parent = minusButton
+
+local boostButton = Instance.new("TextButton")
+boostButton.Size = UDim2.new(0.8, 0, 0, 40)
+boostButton.Position = UDim2.new(0.1, 0, 1, -50)
+boostButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+boostButton.Text = "Impulso"
+boostButton.TextColor3 = Color3.new(1,1,1)
+boostButton.Font = Enum.Font.SourceSansBold
+boostButton.TextSize = 16
+boostButton.Parent = panel
+
+local boostCorner = Instance.new("UICorner")
+boostCorner.CornerRadius = UDim.new(0, 15)
+boostCorner.Parent = boostButton
+
+-- Eventos GUI
+local function openPanel()
+    panel.Visible = true
+    TweenService:Create(panel, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Position = UDim2.new(1, -240, 0.5, -110)}):Play()
+end
+
+local function closePanel()
+    TweenService:Create(panel, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Position = UDim2.new(1, -300, 0.5, -110)}):Play()
+    task.wait(0.4)
+    panel.Visible = false
+end
+
+mainButton.MouseButton1Click:Connect(function()
+    if panel.Visible then closePanel() else openPanel() end
+end)
+
+flyButton.MouseButton1Click:Connect(function()
+    FlyEnabled = not FlyEnabled
+    flyButton.Text = FlyEnabled and "Fly ON" or "Fly OFF"
+    flyButton.BackgroundColor3 = FlyEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+    if FlyEnabled then startFly() else stopFly() end
+end)
+
+plusButton.MouseButton1Click:Connect(function()
+    FlySpeed = math.min(FlySpeed + 20, 600)
+    speedLabel.Text = "Speed: " .. FlySpeed .. " (Impulso)"
+end)
+
+minusButton.MouseButton1Click:Connect(function()
+    FlySpeed = math.max(FlySpeed - 20, 20)
+    speedLabel.Text = "Speed: " .. FlySpeed .. " (Impulso)"
+end)
+
+boostButton.MouseButton1Click:Connect(function()
+    activateBoost()
+end)
+
+-- Draggable
+local dragging = false
+local dragInput, dragStart, startPosMain, startPosPanel
+
+mainButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPosMain = mainButton.Position
+        startPosPanel = panel.Position
+    end
+end)
+
+mainButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        local delta = input.Position - dragStart
+        mainButton.Position = UDim2.new(startPosMain.X.Scale, startPosMain.X.Offset + delta.X, startPosMain.Y.Scale, startPosMain.Y.Offset + delta.Y)
+        panel.Position = UDim2.new(startPosPanel.X.Scale, startPosPanel.X.Offset + delta.X, startPosPanel.Y.Scale, startPosPanel.Y.Offset + delta.Y)
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Otros loops
+RS.Stepped:Connect(function()
+    if FlyEnabled and player.Character then
+        for _, part in pairs(player.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+UIS.JumpRequest:Connect(function()
+    if FlyEnabled then
+        local hum = updateChar()
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end
+end)
+
+player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    if FlyEnabled then startFly() end
+end)
+
+print("¡HadesHub Fly (Tema Rojo) cargado correctamente!")
