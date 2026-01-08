@@ -225,7 +225,7 @@ local mainButton = Instance.new("TextButton")
 mainButton.Size = UDim2.new(0, 70, 0, 70)
 mainButton.Position = UDim2.new(1, -80, 0.5, -35)
 mainButton.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
-mainButton.Text = "🥷🏻"
+mainButton.Text = "🦸🏻"
 mainButton.TextColor3 = Color3.new(1,1,1)
 mainButton.TextSize = 40
 mainButton.Font = Enum.Font.SourceSansBold
@@ -358,7 +358,7 @@ end)
 
 plusButton.MouseButton1Click:Connect(function()
     FlySpeed = math.min(FlySpeed + 20, 600)
-    speedLabel.Text = "Speed: " .. FlySpeed .. " (Impulso falso - 2s)"
+    speedLabel.Text = "Speed: " .. FlySpeed .. " (Impulso)"
 end)
 
 minusButton.MouseButton1Click:Connect(function()
