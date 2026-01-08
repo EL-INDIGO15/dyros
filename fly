@@ -1,5 +1,5 @@
 -- HadesHub | Natural Disaster Survival - HadesHub Fly Modern GUI
--- Impulso FALSO: Solo zoom out/in + efectos intensos (velocidad REAL igual) <3
+-- Impulso: Solo zoom out/in + efectos intensos (velocidad REAL igual) <3
 
 -- Servicios
 local Players = game:GetService("Players")
@@ -151,8 +151,8 @@ local function stopFly()
     TweenService:Create(Camera, TweenInfo.new(0.3), {FieldOfView = NormalFOV}):Play()
 end
 
--- Función Impulso FALSO (solo efectos + zoom)
-local function activateFakeBoost()
+-- Función Impulso (solo efectos + zoom)
+local function activateBoost()
     if not FlyEnabled or IsBoosting then return end
     
     IsBoosting = true
@@ -209,13 +209,13 @@ UIS.InputBegan:Connect(function(input, gp)
     if input.KeyCode == Enum.KeyCode.W and FlyEnabled then
         local time = tick()
         if time - lastWPress < doubleTapTime then
-            activateFakeBoost()
+            activateBoost()
         end
         lastWPress = time
     end
 end)
 
--- GUI (igual, solo texto actualizado)
+-- GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "HadesHubFly"
 gui.ResetOnSpawn = false
@@ -333,7 +333,7 @@ local boostCorner = Instance.new("UICorner")
 boostCorner.CornerRadius = UDim.new(0, 15)
 boostCorner.Parent = boostButton
 
--- Eventos (igual)
+-- Eventos
 local function openPanel()
     panel.Visible = true
     TweenService:Create(panel, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Position = UDim2.new(1, -240, 0.5, -110)}):Play()
@@ -363,11 +363,11 @@ end)
 
 minusButton.MouseButton1Click:Connect(function()
     FlySpeed = math.max(FlySpeed - 20, 20)
-    speedLabel.Text = "Speed: " .. FlySpeed .. " (Impulso falso - 2s)"
+    speedLabel.Text = "Speed: " .. FlySpeed .. " (Impulso)"
 end)
 
 boostButton.MouseButton1Click:Connect(function()
-    activateFakeBoost()
+    activateBoost()
 end)
 
 -- Draggable perfecto
