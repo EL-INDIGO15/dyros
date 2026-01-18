@@ -131,6 +131,22 @@ AutoFarm:AddSwitch("Anti Lag", function()
     }) 
 end) 
 
+AutoFarm:AddSwitch("lock posición", function(Value) 
+    if Value then 
+        local currentPos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame 
+        getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function() 
+            if game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then 
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = currentPos 
+            end 
+        end) 
+    else 
+        if getgenv().posLock then 
+            getgenv().posLock:Disconnect() 
+            getgenv().posLock = nil 
+        end 
+    end 
+end) 
+
 
 AutoFarm:AddSwitch("Full antilag", function(State) 
     local lighting = game:GetService("Lighting") 
