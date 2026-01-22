@@ -83,7 +83,7 @@ Tab1:CreateButton({
 Tab1:CreateButton({
    Name = "🔩 Metal",
    Callback = function()
-      local cnt = bringItems({"Broken Fan", "Bolt", "Sheet Metal", "Old Radio", "Tyre"}, "Metal")
+      local cnt = bringItems({"Broken Fan", "Bolt", "Sheet Metal", "Old Radio", "Tyre", "Broken Microwave", "Washing Machine", "Old Car Engine"}, "Metal")
       Rayfield:Notify({Title = "🔩 Metal", Content = cnt.." items traídos", Duration = 4})
    end,
 })
@@ -130,10 +130,14 @@ Tab2:CreateButton({Name = "Bolt", Callback = function() local c=bringItems({"Bol
 Tab2:CreateButton({Name = "Sheet Metal", Callback = function() local c=bringItems({"Sheet Metal"},"Sheet Metal") Rayfield:Notify({Title="Sheet Metal",Content=c.." traídos"}) end})
 Tab2:CreateButton({Name = "Old Radio", Callback = function() local c=bringItems({"Old Radio"},"Old Radio") Rayfield:Notify({Title="Old Radio",Content=c.." traídos"}) end})
 Tab2:CreateButton({Name = "Tyre", Callback = function() local c=bringItems({"Tyre"},"Tyre") Rayfield:Notify({Title="Tyre",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Broken Microwave", Callback = function() local c=bringItems({"Broken Microwave"},"Broken Microwave") Rayfield:Notify({Title="Broken Microware",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Washing Machine", Callback = function() local c=bringItems({"Washing Machine"},"Washing Machine") Rayfield:Notify({Title="Washing Machine",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Old Car Engine", Callback = function() local c=bringItems({"Old Car Engine"},"Old Car Engine") Rayfield:Notify({Title="Old Car Engine",Content=c.." traídos"}) end})
+
 
 Tab2:CreateSection("Curación")
 Tab2:CreateButton({Name = "Bandage", Callback = function() local c=bringItems({"Bandage"},"Bandage") Rayfield:Notify({Title="Bandage",Content=c.." traídos"}) end})
-Tab2:CreateButton({Name = "Medkit", Callback = function() local c=bringItems({"Medkit"},"Medkit") Rayfield:Notify({Title="Medkit",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "Medikit", Callback = function() local c=bringItems({"Medikit"},"Medkit") Rayfield:Notify({Title="Medikit",Content=c.." traídos"}) end})
 
 Tab2:CreateSection("Extra")
 Tab2:CreateButton({
