@@ -91,7 +91,7 @@ Tab1:CreateButton({
 Tab1:CreateButton({
    Name = "❤️ Curación",
    Callback = function()
-      local cnt = bringItems({"Bandage", "Medkit"}, "Curación")
+      local cnt = bringItems({"Bandage", "MedKit"}, "Curación")
       Rayfield:Notify({Title = "❤️ Curación", Content = cnt.." items traídos", Duration = 4})
    end,
 })
@@ -137,7 +137,7 @@ Tab2:CreateButton({Name = "Old Car Engine", Callback = function() local c=bringI
 
 Tab2:CreateSection("Curación")
 Tab2:CreateButton({Name = "Bandage", Callback = function() local c=bringItems({"Bandage"},"Bandage") Rayfield:Notify({Title="Bandage",Content=c.." traídos"}) end})
-Tab2:CreateButton({Name = "Medikit", Callback = function() local c=bringItems({"Medikit"},"Medkit") Rayfield:Notify({Title="Medikit",Content=c.." traídos"}) end})
+Tab2:CreateButton({Name = "MedKit", Callback = function() local c=bringItems({"MedKit"},"MedKit") Rayfield:Notify({Title="MedKit",Content=c.." traídos"}) end})
 
 Tab2:CreateSection("Extra")
 Tab2:CreateButton({
