@@ -681,3 +681,50 @@ Jumps:AddSwitch("Anti empujar", function(state)
         end
     end
 end)
+
+-- Air Walk: Create invisible platform under player to walk in air
+local airWalkEnabled = false
+local platform = nil
+local airWalkConnection
+
+Jumps:AddSwitch("Caminar en el Aire", function(state)
+    airWalkEnabled = state
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    local rootPart = character:WaitForChild("HumanoidRootPart")
+
+    if state then
+        if not platform then
+            platform = Instance.new("Part")
+            platform.Size = Vector3.new(10, 1, 10)  -- Platform size (adjust as needed)
+            platform.Transparency = 1  -- Invisible (set to 0 for visible)
+            platform.Anchored = true
+            platform.CanCollide = true
+            platform.Parent = workspace
+        end
+        humanoid.PlatformStand = false  -- Allow walking
+        print("[Caminar en el Aire] Enabled")
+
+        airWalkConnection = game:GetService("RunService").Stepped:Connect(function()
+            if airWalkEnabled and platform then
+                -- Position platform directly under the player's feet and follow movement
+                local footPosition = rootPart.Position - Vector3.new(0, rootPart.Size.Y / 2 + humanoid.HipHeight / 2, 0)  -- Adjust for accurate foot level
+                platform.Position = Vector3.new(footPosition.X, footPosition.Y - 0.5, footPosition.Z)  -- Platform top at foot level
+            end
+        end)
+    else
+        if platform then
+            platform:Destroy()
+            platform = nil
+        end
+        if airWalkConnection then airWalkConnection:Disconnect() end
+        print("[Caminar en el Aire] Disabled")
+    end
+end)
+
+-- Handle character respawn for Air Walk
+player.CharacterAdded:Connect(function(newChar)
+    character = newChar
+    humanoid = character:WaitForChild("Humanoid")
+    rootPart = character:WaitForChild("HumanoidRootPart")
+end)
