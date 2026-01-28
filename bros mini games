@@ -682,10 +682,11 @@ Jumps:AddSwitch("Anti empujar", function(state)
     end
 end)
 
--- Air Walk: Create invisible platform under player to walk in air
+-- Air Walk: Create invisible platform under player to walk in air at fixed height
 local airWalkEnabled = false
 local platform = nil
 local airWalkConnection
+local fixedY = nil
 
 Jumps:AddSwitch("Caminar en el Aire", function(state)
     airWalkEnabled = state
@@ -694,6 +695,10 @@ Jumps:AddSwitch("Caminar en el Aire", function(state)
     local rootPart = character:WaitForChild("HumanoidRootPart")
 
     if state then
+        -- Record fixed Y height at activation
+        local footPosition = rootPart.Position - Vector3.new(0, rootPart.Size.Y / 2 + humanoid.HipHeight / 2, 0)
+        fixedY = footPosition.Y - 0.5  -- Fixed platform Y position
+        
         if not platform then
             platform = Instance.new("Part")
             platform.Size = Vector3.new(10, 1, 10)  -- Platform size (adjust as needed)
@@ -706,10 +711,9 @@ Jumps:AddSwitch("Caminar en el Aire", function(state)
         print("[Caminar en el Aire] Enabled")
 
         airWalkConnection = game:GetService("RunService").Stepped:Connect(function()
-            if airWalkEnabled and platform then
-                -- Position platform directly under the player's feet and follow movement
-                local footPosition = rootPart.Position - Vector3.new(0, rootPart.Size.Y / 2 + humanoid.HipHeight / 2, 0)  -- Adjust for accurate foot level
-                platform.Position = Vector3.new(footPosition.X, footPosition.Y - 0.5, footPosition.Z)  -- Platform top at foot level
+            if airWalkEnabled and platform and fixedY then
+                -- Position platform under player's X/Z but at fixed Y
+                platform.Position = Vector3.new(rootPart.Position.X, fixedY, rootPart.Position.Z)
             end
         end)
     else
@@ -718,6 +722,7 @@ Jumps:AddSwitch("Caminar en el Aire", function(state)
             platform = nil
         end
         if airWalkConnection then airWalkConnection:Disconnect() end
+        fixedY = nil
         print("[Caminar en el Aire] Disabled")
     end
 end)
