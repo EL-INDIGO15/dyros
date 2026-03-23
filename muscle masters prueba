@@ -585,20 +585,31 @@ local AutoCollectReward = false
 
 local AutoCollectRewardToggle = Tabs.Misc:AddToggle("AutoCollectReward", { Title = "Auto Collect Reward", Default = false })
 AutoCollectRewardToggle:OnChanged(function()
-    AutoCollectRewards = Options.AutoCollectReward.Value
-    if AutoCollectReward then
-        task.spawn(function()
-            while AutoCollectReward do
-                game:GetService("ReplicatedStorage")
-                    :WaitForChild("RemotesEvent")
-                    :WaitForChild("CollectRewardFunction")
-                    :InvokeServer()
-                task.wait(0.1)
-            end
-        end)
-    end
-end)
+   local args = {
+	"reward1"
+}
+game:GetService("ReplicatedStorage"):WaitForChild("RemotesEvent"):WaitForChild("rewardClaim"):FireServer(unpack(args))
 
+local args = {
+	"reward2"
+}
+game:GetService("ReplicatedStorage"):WaitForChild("RemotesEvent"):WaitForChild("rewardClaim"):FireServer(unpack(args))
+
+local args = {
+	"reward3"
+}
+game:GetService("ReplicatedStorage"):WaitForChild("RemotesEvent"):WaitForChild("rewardClaim"):FireServer(unpack(args))
+
+local args = {
+	"reward4"
+}
+game:GetService("ReplicatedStorage"):WaitForChild("RemotesEvent"):WaitForChild("rewardClaim"):FireServer(unpack(args))
+
+local args = {
+	"reward5"
+}
+game:GetService("ReplicatedStorage"):WaitForChild("RemotesEvent"):WaitForChild("rewardClaim"):FireServer(unpack(args))
+end)
 
 -- ===========================================================
 -- ANTI AFK
