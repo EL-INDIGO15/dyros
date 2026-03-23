@@ -579,11 +579,11 @@ AutoSpinToggle:OnChanged(function()
 end)
 
 -- ===========================================================
--- AUTO Redwars
+-- AUTO Reward
 -- ===========================================================
 local AutoCollectReward = false
 
-local AutoCollectRewardToggle = Tabs.Misc:AddToggle("AutoCollectReward", { Title = "Auto Collect Reward", Default = false })
+local AutoCollectRewardToggle = Tabs.Misc:AddToggle("Auto Collect Reward", { Title = "Auto Collect Reward", Default = false })
 AutoCollectRewardToggle:OnChanged(function()
    local args = {
 	"reward1"
