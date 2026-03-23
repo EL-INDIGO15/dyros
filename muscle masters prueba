@@ -581,17 +581,17 @@ end)
 -- ===========================================================
 -- AUTO Redwars
 -- ===========================================================
-local AutoClaimRewards = false
+local AutoCollectReward = false
 
-local AutoClaimRewardsToggle = Tabs.Misc:AddToggle("AutoClaimRewards", { Title = "Auto Claim Rewards", Default = false })
-AutoRewardsToggle:OnChanged(function()
-    AutoSpin = Options.AutoClaimRewards.Value
-    if AutoClaimRewards then
+local AutoCollectRewardToggle = Tabs.Misc:AddToggle("AutoCollectReward", { Title = "Auto Collect Reward", Default = false })
+AutoCollectRewardToggle:OnChanged(function()
+    AutoCollectRewards = Options.AutoCollectReward.Value
+    if AutoCollectReward then
         task.spawn(function()
-            while AutoClaimRewards do
+            while AutoCollectReward do
                 game:GetService("ReplicatedStorage")
                     :WaitForChild("RemotesEvent")
-                    :WaitForChild("REWARDSFunction")
+                    :WaitForChild("CollectRewardFunction")
                     :InvokeServer()
                 task.wait(0.1)
             end
