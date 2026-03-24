@@ -44,6 +44,8 @@ task.spawn(function()
     end
 end) 
 
+local AutoFarm = window:AddTab("Main+") 
+
 -- ================= VARIABLES =================
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
