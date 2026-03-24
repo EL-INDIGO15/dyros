@@ -1011,10 +1011,12 @@ end)
 local estadisticas = window:AddTab("Stats Jugadores")
 
 local SelectPlayerName = ""
+local SelectedPlayer = nil
 
 -- DROPDOWN
 local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
     SelectPlayerName = Value:match("| (.+)")
+    SelectedPlayer = game.Players:FindFirstChild(SelectPlayerName)
 end)
 
 -- PLAYERS
@@ -1049,12 +1051,15 @@ local Emperor = estadisticas:AddLabel("")
 local Device = estadisticas:AddLabel("")
 local Pets = estadisticas:AddLabel("")
 
--- BUSCAR STAT REAL
-local function findStat(plr, possibleNames)
-    for _, name in pairs(possibleNames) do
-        local obj = plr:FindFirstChild(name, true)
-        if obj and obj.Value then
-            return obj.Value
+-- BUSCAR STAT MEJORADO 🔥
+local function findStat(plr, names)
+    for _, v in pairs(plr:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("StringValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name:lower()) then
+                    return v.Value
+                end
+            end
         end
     end
     return "N/A"
@@ -1063,24 +1068,20 @@ end
 -- LOOP
 task.spawn(function()
     while task.wait(0.3) do
-        if SelectPlayerName ~= "" then
-            local plr = game.Players:FindFirstChild(SelectPlayerName)
-            if plr then
+        if SelectedPlayer then
 
-                Strong.Text = "Strong: " .. FormatNumber(findStat(plr, {"Strong","Strength"}))
-                Endurance.Text = "Endurance: " .. FormatNumber(findStat(plr, {"Endurance","Durability"}))
-                Mobility.Text = "Mobility: " .. FormatNumber(findStat(plr, {"Mobility","Agility"}))
-                Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(plr, {"Rebirths","Rebiths"}))
-                Kills.Text = "Kills: " .. FormatNumber(findStat(plr, {"Kills"}))
-                Coins.Text = "Coins: " .. FormatNumber(findStat(plr, {"Coins","Cash"}))
+            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strong","strength"}))
+            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance","durability"}))
+            Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
+            Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
+            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill"}))
+            Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
 
-                -- 👇 ESTE ES NUEVO (EMPEROR REPS)
-                Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(plr, {"EmperorReps","Emperor Reps","Reps"}))
+            -- 🔥 ESTAS SON LAS QUE FALTABAN
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"emperor","reps"}))
+            Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
+            Pets.Text = "Total Pets Gain: " .. FormatNumber(findStat(SelectedPlayer, {"pet","gain"}))
 
-                Device.Text = "Device: " .. tostring(findStat(plr, {"DeviceType","Device type"}))
-                Pets.Text = "Total Pets Gain: " .. FormatNumber(findStat(plr, {"TotalPetsGain","PetsGain"}))
-
-            end
         end
     end
 end)
