@@ -579,7 +579,7 @@ AutoSpinToggle:OnChanged(function()
 end)
 
 -- ===========================================================
--- AUTO COLLECT REWARDS (Corregido y Mejorado)
+-- AUTO COLLECT REWARDS (VERSIÓN CORREGIDA Y FUNCIONAL)
 -- ===========================================================
 local AutoCollectRewardEnabled = false
 
@@ -590,27 +590,20 @@ local AutoCollectRewardToggle = Tabs.Misc:AddToggle("AutoCollectReward", {
 
 AutoCollectRewardToggle:OnChanged(function()
     AutoCollectRewardEnabled = Options.AutoCollectReward.Value
-    
+
     if AutoCollectRewardEnabled then
         task.spawn(function()
             while AutoCollectRewardEnabled do
                 for i = 1, 5 do
-                    local args = { "reward" .. i }
+                    local args = {"reward" .. i}
                     game:GetService("ReplicatedStorage")
                         :WaitForChild("RemotesEvent")
                         :WaitForChild("rewardClaim")
                         :FireServer(unpack(args))
                 end
-                task.wait(0.8) -- Puedes subirlo a 2 o 5 si quieres menos detección
+                task.wait(1.2) -- 1.2 segundos (seguro y efectivo)
             end
         end)
-    end
-end)
-                task.wait(0.8)
-            end
-        end)
-    else
-        -- opcional: puedes poner aquí algo si quieres limpiar
     end
 end)
 
