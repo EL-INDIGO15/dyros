@@ -9,7 +9,7 @@ local window = library:AddWindow("Muscle Masters HUB | INDIGO", {
 
 -- TABS
 local farmTab = window:AddTab("Farm")
-local KillerTab = window:AddTab("Kill")
+local Killer = window:AddTab("Killss")
 local miscTab = window:AddTab("Misc")
 
 farmTab:Show()
@@ -132,7 +132,7 @@ end)
 -- KILL ALL
 local Killer = false
 
-KillerTab:AddSwitch("Kill All", function(state)
+Killer:AddSwitch("Kill All", function(state)
     KillAll = state
 
     if state then
