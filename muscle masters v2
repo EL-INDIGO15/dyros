@@ -911,9 +911,6 @@ task.spawn(function()
 end)
 
 -- ================= SWITCHES EGGS =================
-Misc:AddSwitch("Master Eggs", function(state)
-    masterEgg = state
-end)
 
 Misc:AddSwitch("Common Egg", function(state)
     eggsState.Common = state
@@ -933,6 +930,10 @@ end)
 
 Misc:AddSwitch("Mythic Egg", function(state)
     eggsState.Mythic = state
+end)
+
+Misc:AddSwitch("Master Eggs", function(state)
+    eggsState.Master = state
 end)
 
 -- ================= AUTO SPIN =================
