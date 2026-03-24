@@ -937,12 +937,12 @@ Misc:AddSwitch("Master Eggs", function(state)
 end)
 
 -- ================= AUTO SPIN =================
-Misc:AddSwitch("AutoSpin", function(state)
+Misc:AddSwitch("Auto Spin", function(state)
     autoSpin = state
 
-        if AutoSpin then
+    if autoSpin then
         task.spawn(function()
-            while AutoSpin do
+            while autoSpin do
                 game:GetService("ReplicatedStorage")
                     :WaitForChild("RemotesEvent")
                     :WaitForChild("SpinFunction")
