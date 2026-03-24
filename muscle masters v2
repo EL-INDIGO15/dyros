@@ -953,17 +953,26 @@ Misc:AddSwitch("Auto Spin", function(state)
     end
 end)
 
--- Add Auto Claim Gifts toggle
-Misc:AddSwitch("Auto Collect Reward", function(state)
-    _G.AutoCollectReward = state
+-- Auto Collect Rewards
+Misc:AddSwitch("Auto Claim Reward", function(state)
+    autoCollect = state
 
-    if state then
-        spawn(function()
-            while _G.AutoCollectReward do
+    if autoCollect then
+        task.spawn(function()
+            while autoCollect do
                 for i = 1, 5 do
-                    game:GetService("ReplicatedStorage").rEvents.CollectRewardRemote:InvokeServer("Collect Reward", i)
+                    local args = {
+                        "reward"..i
+                    }
+
+                    game:GetService("ReplicatedStorage")
+                        :WaitForChild("RemotesEvent")
+                        :WaitForChild("rewardClaim")
+                        :FireServer(unpack(args))
+
+                    task.wait(0.2)
                 end
-                wait(1)
+                task.wait(1)
             end
         end)
     end
