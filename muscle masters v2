@@ -1017,37 +1017,28 @@ local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
     SelectPlayerName = Value:match("| (.+)")
 end)
 
--- LISTA DE JUGADORES
+-- PLAYERS
 for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
     PlayerDrop:Add(Plr.DisplayName .. " | " .. Plr.Name)
 end
 
-game:GetService("Players").PlayerAdded:Connect(function(plr)
+game.Players.PlayerAdded:Connect(function(plr)
     PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
 end)
 
--- FORMATOS
-local function FormatNumberWithCommas(number)
-    local formatted = tostring(number):reverse():gsub("(%d%d%d)", "%1,"):reverse()
-    return formatted:gsub("^,", "")
-end
-
-local function FormatAbbreviated(number)
-    local abbreviations = {"", "K", "M", "B", "T"}
-    local index = 1
-    while number >= 1000 and index < #abbreviations do
-        number = number / 1000
-        index += 1
+-- FORMATO
+local function FormatNumber(n)
+    if typeof(n) ~= "number" then return tostring(n) end
+    local suffix = {"","K","M","B","T"}
+    local i = 1
+    while n >= 1000 and i < #suffix do
+        n /= 1000
+        i += 1
     end
-    return string.format("%.2f", number) .. abbreviations[index]
+    return string.format("%.2f", n) .. suffix[i]
 end
 
-local function FormatDisplay(value)
-    if typeof(value) ~= "number" then return tostring(value) end
-    return "[ " .. FormatNumberWithCommas(value) .. " | " .. FormatAbbreviated(value) .. " ]"
-end
-
--- LABELS (TUS STATS)
+-- LABELS
 local Strong = estadisticas:AddLabel("")
 local Endurance = estadisticas:AddLabel("")
 local Mobility = estadisticas:AddLabel("")
@@ -1058,28 +1049,36 @@ local Emperor = estadisticas:AddLabel("")
 local Device = estadisticas:AddLabel("")
 local Pets = estadisticas:AddLabel("")
 
--- FUNCIÓN PARA BUSCAR STAT EN TODO EL PLAYER
-local function getStat(player, name)
-    local obj = player:FindFirstChild(name, true)
-    return obj and obj.Value or nil
+-- BUSCAR STAT REAL
+local function findStat(plr, possibleNames)
+    for _, name in pairs(possibleNames) do
+        local obj = plr:FindFirstChild(name, true)
+        if obj and obj.Value then
+            return obj.Value
+        end
+    end
+    return "N/A"
 end
 
 -- LOOP
 task.spawn(function()
     while task.wait(0.3) do
         if SelectPlayerName ~= "" then
-            local player = game.Players:FindFirstChild(SelectPlayerName)
-            if player then
+            local plr = game.Players:FindFirstChild(SelectPlayerName)
+            if plr then
 
-                Strong.Text = "Strong: " .. FormatDisplay(getStat(player, "Strong") or "N/A")
-                Endurance.Text = "Endurance: " .. FormatDisplay(getStat(player, "Endurance") or "N/A")
-                Mobility.Text = "Mobility: " .. FormatDisplay(getStat(player, "Mobility") or "N/A")
-                Rebirths.Text = "Rebirths: " .. FormatDisplay(getStat(player, "Rebirths") or "N/A")
-                Kills.Text = "Kills: " .. FormatDisplay(getStat(player, "Kills") or "N/A")
-                Coins.Text = "Coins: " .. FormatDisplay(getStat(player, "Coins") or "N/A")
-                Emperor.Text = "Emperor Reps: " .. FormatDisplay(getStat(player, "Emperor Reps") or "N/A")
-                Device.Text = "Device: " .. tostring(getStat(player, "Device type") or "N/A")
-                Pets.Text = "Total Pets Gain: " .. FormatDisplay(getStat(player, "Total Pets Gain") or "N/A")
+                Strong.Text = "Strong: " .. FormatNumber(findStat(plr, {"Strong","Strength"}))
+                Endurance.Text = "Endurance: " .. FormatNumber(findStat(plr, {"Endurance","Durability"}))
+                Mobility.Text = "Mobility: " .. FormatNumber(findStat(plr, {"Mobility","Agility"}))
+                Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(plr, {"Rebirths","Rebiths"}))
+                Kills.Text = "Kills: " .. FormatNumber(findStat(plr, {"Kills"}))
+                Coins.Text = "Coins: " .. FormatNumber(findStat(plr, {"Coins","Cash"}))
+
+                -- 👇 ESTE ES NUEVO (EMPEROR REPS)
+                Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(plr, {"EmperorReps","Emperor Reps","Reps"}))
+
+                Device.Text = "Device: " .. tostring(findStat(plr, {"DeviceType","Device type"}))
+                Pets.Text = "Total Pets Gain: " .. FormatNumber(findStat(plr, {"TotalPetsGain","PetsGain"}))
 
             end
         end
