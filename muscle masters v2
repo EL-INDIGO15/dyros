@@ -872,3 +872,82 @@ godDamageActive = state
     end
 end)
 
+local Misc = window:AddTab("Misc")
+
+-- ================= MISC =================
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- REMOTES
+local OpenPetRemote = ReplicatedStorage:WaitForChild("RemotesEvent"):WaitForChild("OpenPetEvent")
+
+-- ESTADOS
+local eggsState = {
+    Common = false,
+    Rare = false,
+    Epic = false,
+    Legendary = false,
+    Mythic = false
+}
+
+local masterEgg = false
+local autoSpin = false
+
+-- ================= AUTO EGGS LOOP =================
+task.spawn(function()
+    while true do
+        if masterEgg then
+            for eggName, _ in pairs(eggsState) do
+                OpenPetRemote:FireServer(string.lower(eggName))
+            end
+        else
+            for eggName, enabled in pairs(eggsState) do
+                if enabled then
+                    OpenPetRemote:FireServer(string.lower(eggName))
+                end
+            end
+        end
+        task.wait(0.15)
+    end
+end)
+
+-- ================= SWITCHES EGGS =================
+Misc:AddSwitch("Master Eggs", function(state)
+    masterEgg = state
+end)
+
+Misc:AddSwitch("Common Egg", function(state)
+    eggsState.Common = state
+end)
+
+Misc:AddSwitch("Rare Egg", function(state)
+    eggsState.Rare = state
+end)
+
+Misc:AddSwitch("Epic Egg", function(state)
+    eggsState.Epic = state
+end)
+
+Misc:AddSwitch("Legendary Egg", function(state)
+    eggsState.Legendary = state
+end)
+
+Misc:AddSwitch("Mythic Egg", function(state)
+    eggsState.Mythic = state
+end)
+
+-- ================= AUTO SPIN =================
+Misc:AddSwitch("Auto Spin", function(state)
+    autoSpin = state
+
+    if state then
+        task.spawn(function()
+            while autoSpin do
+                ReplicatedStorage.rEvents.openFortuneWheelRemote:InvokeServer(
+                    "openFortuneWheel",
+                    ReplicatedStorage.fortuneWheelChances["Fortune Wheel"]
+                )
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
