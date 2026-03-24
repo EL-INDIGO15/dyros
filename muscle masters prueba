@@ -9,7 +9,7 @@ local window = library:AddWindow("Muscle Masters HUB | INDIGO", {
 
 -- TABS
 local farmTab = window:AddTab("Farm")
-local playerTab = window:AddTab("Player")
+local KillerTab = window:AddTab("Kill")
 local miscTab = window:AddTab("Misc")
 
 farmTab:Show()
