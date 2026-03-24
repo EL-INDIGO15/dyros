@@ -1049,7 +1049,6 @@ local Kills = estadisticas:AddLabel("")
 local Coins = estadisticas:AddLabel("")
 local Emperor = estadisticas:AddLabel("")
 local Device = estadisticas:AddLabel("")
-local Pets = estadisticas:AddLabel("")
 
 -- BUSCAR STAT MEJORADO 🔥
 local function findStat(plr, names)
@@ -1078,9 +1077,8 @@ task.spawn(function()
             Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
 
             -- 🔥 ESTAS SON LAS QUE FALTABAN
-            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"emperor","reps"}))
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"Emperor Reps","emperor","reps"}))
             Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
-            Pets.Text = "Total Pets Gain: " .. FormatNumber(findStat(SelectedPlayer, {"pet","gain"}))
 
         end
     end
