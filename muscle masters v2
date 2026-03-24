@@ -955,7 +955,7 @@ Misc:AddSwitch("Auto Spin", function(state)
 end)
 
 -- Auto Collect Rewards
-Misc:AddSwitch("Auto Claim Reward", function(state)
+Misc:AddSwitch("Auto Claim Rewards", function(state)
     autoCollect = state
 
     if autoCollect then
