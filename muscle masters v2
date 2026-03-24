@@ -738,34 +738,27 @@ Punch:AddSwitch("Auto Punch [without animation ]", function(state)
 end)
 
 Punch:AddSwitch("Auto Punch", function(state)
-    _G.fastHitActive = state
+    _G.autoPunch = state
 
- local function EquipPunch()
-    local backpack = localPlayer:FindFirstChild("Backpack")
-    if backpack then
-        local tool = backpack:FindFirstChild("Punch")
-        if tool and localPlayer.Character and not localPlayer.Character:FindFirstChild("Punch") then
-            local humanoid = localPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid:EquipTool(tool)
-            end
-        end
-    end
-end
-EquipPunch()
+    task.spawn(function()
+        while _G.autoPunch do
+            local char = LocalPlayer.Character
+            if char then
+                local punch = char:FindFirstChild("Punch") or LocalPlayer.Backpack:FindFirstChild("Punch")
 
-                    local punch = localPlayer.Character:FindFirstChild("Punch")
-                    if punch then
-                        punch:Activate()
-                    end
+                if punch then
+                    punch.Parent = char
 
-                    task.wait(0.03)
+                    -- 🔥 ATAQUE REAL (FUNCIONA)
+                    muscleEvent:FireServer("punch", "rightHand")
+                    muscleEvent:FireServer("punch", "leftHand")
                 end
             end
+
+            task.wait(0.05)
         end
-        task.wait(0.05)
-    end
-end
+    end)
+end)
 
 Punch:AddSwitch("Fast punch", function(state)
     _G.autoPunchActive = state
