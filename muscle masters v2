@@ -740,26 +740,32 @@ end)
 Punch:AddSwitch("Auto Punch", function(state)
     _G.fastHitActive = state
 
-    if state then
-        task.spawn(function()
-            while _G.fastHitActive do
-                local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
-                if punch then
-                    punch.Parent = LocalPlayer.Character
-                end
-                task.wait(0.05)
+ local function EquipPunch()
+    local backpack = localPlayer:FindFirstChild("Backpack")
+    if backpack then
+        local tool = backpack:FindFirstChild("Punch")
+        if tool and localPlayer.Character and not localPlayer.Character:FindFirstChild("Punch") then
+            local humanoid = localPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:EquipTool(tool)
             end
-        end)
-
-        task.spawn(function()
-            while _G.fastHitActive do
-                LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-                task.wait(0.05)
-            end
-        end)
+        end
     end
-end)
+end
+EquipPunch()
+
+                    local punch = localPlayer.Character:FindFirstChild("Punch")
+                    if punch then
+                        punch:Activate()
+                    end
+
+                    task.wait(0.03)
+                end
+            end
+        end
+        task.wait(0.05)
+    end
+end
 
 Punch:AddSwitch("Fast punch", function(state)
     _G.autoPunchActive = state
