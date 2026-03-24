@@ -960,7 +960,7 @@ Misc:AddSwitch("Auto Claim Reward", function(state)
     if autoCollect then
         task.spawn(function()
             while autoCollect do
-                for i = 1, 5 do
+                for i = 1,2,3,4, 5 do
                     local args = {
                         "reward"..i
                     }
