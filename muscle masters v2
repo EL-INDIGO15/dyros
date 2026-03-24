@@ -937,7 +937,7 @@ Misc:AddSwitch("Master Eggs", function(state)
 end)
 
 -- ================= AUTO SPIN =================
-Misc:AddSwitch("Auto Spin", function(state)
+Misc:AddSwitch("AutoSpin", function(state)
     autoSpin = state
 
         if AutoSpin then
