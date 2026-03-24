@@ -355,6 +355,80 @@ Killer:AddSwitch("View Player", function(bool)
     end)
 end)
 
+-- ================= AUTO KILL ALL =================
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local AutoKillAllEnabled = false
+local killAllThread
+
+local function EquipPunch()
+    local backpack = localPlayer:FindFirstChild("Backpack")
+    if backpack then
+        local tool = backpack:FindFirstChild("Punch")
+        if tool and localPlayer.Character and not localPlayer.Character:FindFirstChild("Punch") then
+            local humanoid = localPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:EquipTool(tool)
+            end
+        end
+    end
+end
+
+local function killAllLoop()
+    while AutoKillAllEnabled do
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= localPlayer
+            and plr.Character
+            and plr.Character:FindFirstChild("HumanoidRootPart")
+            and localPlayer.Character
+            and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+
+                local myHRP = localPlayer.Character.HumanoidRootPart
+                local targetHRP = plr.Character.HumanoidRootPart
+
+                -- Teleport + pegar rápido
+                local startTime = tick()
+                while tick() - startTime < 0.4 and AutoKillAllEnabled do
+                    myHRP.CFrame = targetHRP.CFrame
+
+                    EquipPunch()
+
+                    local punch = localPlayer.Character:FindFirstChild("Punch")
+                    if punch then
+                        punch:Activate()
+                    end
+
+                    task.wait(0.03)
+                end
+            end
+        end
+        task.wait(0.05)
+    end
+end
+
+-- 🔘 SWITCH EN TU GUI
+Killer:AddSwitch("Auto Kill All", function(state)
+    AutoKillAllEnabled = state
+
+    if state then
+        killAllThread = task.spawn(killAllLoop)
+    else
+        if killAllThread then
+            task.cancel(killAllThread)
+            killAllThread = nil
+        end
+    end
+end)
+
+-- 🔁 REINICIO AUTOMÁTICO AL MORIR
+localPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if AutoKillAllEnabled then
+        killAllThread = task.spawn(killAllLoop)
+    end
+end)
+
 local Punch = window:AddTab("Punch")
 
 local button = Punch:AddButton("Remove Punch Anim", function()
