@@ -44,4 +44,144 @@ task.spawn(function()
     end
 end) 
 
-local AutoFarm = window:AddTab("Main+") 
+-- ================= VARIABLES =================
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+
+local AutoFarmEnabled = false
+local AutoGlitchEnabled = false
+local AutoRebirthEnabled = false
+
+local farmThreads = {}
+local glitchThreads = {}
+
+local rng = Random.new()
+local rng2 = Random.new()
+
+-- ================= FUNCIONES BASE =================
+local function stopThreads(tbl)
+    for _, t in ipairs(tbl) do
+        if t then task.cancel(t) end
+    end
+    table.clear(tbl)
+end
+
+local function getPrompts(folder, positions)
+    local prompts = {}
+    for _, obj in ipairs(folder:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            for _, pos in ipairs(positions) do
+                if (obj.Position - pos).Magnitude < 0.01 then
+                    local p = obj:FindFirstChild("ProximityPromptMachine")
+                    if p then
+                        table.insert(prompts, p)
+                    end
+                end
+            end
+        end
+    end
+    return prompts
+end
+
+-- ================= AUTO FARM =================
+local function startAutoFarm()
+    local rebirths = player.leaderstats.Rebirths.Value
+
+    local positions = (rebirths < 10) and {
+        Vector3.new(-120.77, 5.02, -56.94),
+        Vector3.new(-94.25, 5.02, -35.08)
+    } or {
+        Vector3.new(2747.89, 7.65, 105.53),
+        Vector3.new(2747.89, 7.65, 126.65),
+        Vector3.new(2743.69, 11.66, 233.43),
+        Vector3.new(2743.69, 11.66, 258.49)
+    }
+
+    local folder = workspace:WaitForChild("MachinesFolder")
+    local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
+
+    local prompts = getPrompts(folder, positions)
+
+    table.insert(farmThreads, task.spawn(function()
+        while AutoFarmEnabled do
+            local p = prompts[rng:NextInteger(1, #prompts)]
+            if p and p.Enabled then fireproximityprompt(p) end
+            task.wait(0.01)
+        end
+    end))
+
+    table.insert(farmThreads, task.spawn(function()
+        while AutoFarmEnabled do
+            remote:FireServer()
+            task.wait(0.01)
+        end
+    end))
+end
+
+AutoFarm:AddSwitch("Auto Farm", function(state)
+    AutoFarmEnabled = state
+    stopThreads(farmThreads)
+
+    if state then
+        startAutoFarm()
+    end
+end)
+
+-- ================= AUTO GLITCH =================
+local function startAutoGlitch()
+    local rebirths = player.leaderstats.Rebirths.Value
+
+    local positions = (rebirths <= 10) and {
+        Vector3.new(-41.56, 3.47, 44.41),
+        Vector3.new(-24.11, 3.47, 44.41)
+    } or {
+        Vector3.new(2712.48, 3.71, 299.78),
+        Vector3.new(2691.11, 3.71, 299.78),
+        Vector3.new(2613.02, 4.78, 289.73),
+        Vector3.new(2584.55, 4.78, 289.73)
+    }
+
+    local folder = workspace:WaitForChild("MachinesFolder")
+    local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
+
+    local prompts = getPrompts(folder, positions)
+
+    table.insert(glitchThreads, task.spawn(function()
+        while AutoGlitchEnabled do
+            local p = prompts[rng2:NextInteger(1, #prompts)]
+            if p and p.Enabled then fireproximityprompt(p) end
+            task.wait(0.01)
+        end
+    end))
+
+    table.insert(glitchThreads, task.spawn(function()
+        while AutoGlitchEnabled do
+            remote:FireServer()
+            task.wait(0.03)
+        end
+    end))
+end
+
+AutoFarm:AddSwitch("Auto Glitch", function(state)
+    AutoGlitchEnabled = state
+    stopThreads(glitchThreads)
+
+    if state then
+        startAutoGlitch()
+    end
+end)
+
+-- ================= AUTO REBIRTH =================
+AutoFarm:AddSwitch("Auto Rebirth", function(state)
+    AutoRebirthEnabled = state
+end)
+
+task.spawn(function()
+    while true do
+        if AutoRebirthEnabled then
+            ReplicatedStorage.RemotesEvent.RebirthEvent:FireServer()
+        end
+        task.wait(0.05)
+    end
+end)
