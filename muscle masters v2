@@ -940,13 +940,13 @@ end)
 Misc:AddSwitch("Auto Spin", function(state)
     autoSpin = state
 
-    if state then
+        if AutoSpin then
         task.spawn(function()
-            while autoSpin do
-                ReplicatedStorage.rEvents.openFortuneWheelRemote:InvokeServer(
-                    "openFortuneWheel",
-                    ReplicatedStorage.fortuneWheelChances["Fortune Wheel"]
-                )
+            while AutoSpin do
+                game:GetService("ReplicatedStorage")
+                    :WaitForChild("RemotesEvent")
+                    :WaitForChild("SpinFunction")
+                    :InvokeServer()
                 task.wait(0.1)
             end
         end)
