@@ -737,6 +737,9 @@ Punch:AddSwitch("Auto Punch [without animation ]", function(state)
         end)
 end)
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local muscleEvent = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("muscleEvent")
+
 Punch:AddSwitch("Auto Punch", function(state)
     _G.autoPunch = state
 
@@ -749,7 +752,7 @@ Punch:AddSwitch("Auto Punch", function(state)
                 if punch then
                     punch.Parent = char
 
-                    -- 🔥 ATAQUE REAL (FUNCIONA)
+                    -- 🔥 ATAQUE REAL
                     muscleEvent:FireServer("punch", "rightHand")
                     muscleEvent:FireServer("punch", "leftHand")
                 end
