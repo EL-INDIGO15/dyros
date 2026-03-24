@@ -129,7 +129,7 @@ end)
 -- =========================
 -- PLAYER TAB
 -- =========================
-local selectedPlayer = nil
+local selectedKiller = nil
 
 local function getPlayers()
     local list = {}
@@ -141,7 +141,7 @@ local function getPlayers()
     return list
 end
 
-playerTab:AddDropdown("Select Player", getPlayers(), function(value)
+KillerTab:AddDropdown("Selec", getPlayers(), function(value)
     selectedPlayer = value
 end)
 
