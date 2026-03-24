@@ -886,7 +886,8 @@ local eggsState = {
     Rare = false,
     Epic = false,
     Legendary = false,
-    Mythic = false
+    Mythic = false,
+    Master = false
 }
 
 local masterEgg = false
