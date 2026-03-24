@@ -1077,7 +1077,7 @@ task.spawn(function()
             Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
 
             -- 🔥 ESTAS SON LAS QUE FALTABAN
-            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"Emperor Reps","emperor","reps"}))
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"Muscle Emperor Reps","muscle emperor reps","MuscleEmperorReps"}))
             Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
 
         end
