@@ -738,83 +738,54 @@ Punch:AddSwitch("Auto Punch [without animation ]", function(state)
 end)
 
 Punch:AddSwitch("Auto Punch", function(state)
-        _G.fastHitActive = state
-        if state then
-                task.spawn(function()
-                        while _G.fastHitActive do
-                                local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
-                                if punch then
-                                        punch.Parent = LocalPlayer.Character
-                                        if punch:FindFirstChild("attackTime") then
-                                                punch.attackTime.Value = 0
-                                        end
-                                end
-                                task.wait(0.1)
-                        end
-                end)
-                task.spawn(function()
-                        while _G.fastHitActive do
-                                local punch = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Punch")
-                                if punch then
-                                        punch:Activate()
-                                end
-                                task.wait(0.1)
-                        end
-                end)
-        else
-                local punch = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Punch")
+    _G.fastHitActive = state
+
+    if state then
+        task.spawn(function()
+            while _G.fastHitActive do
+                local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
                 if punch then
-                        punch.Parent = LocalPlayer.Backpack
+                    punch.Parent = LocalPlayer.Character
                 end
-        end
+                task.wait(0.05)
+            end
+        end)
+
+        task.spawn(function()
+            while _G.fastHitActive do
+                LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                task.wait(0.05)
+            end
+        end)
+    end
 end)
 
 Punch:AddSwitch("Fast punch", function(state)
-        _G.autoPunchActive = state
-        if state then
-                task.spawn(function()
-                        while _G.autoPunchActive do
-                                local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
-                                if punch then
-                                        punch.Parent = LocalPlayer.Character
-                                        if punch:FindFirstChild("attackTime") then
-                                                punch.attackTime.Value = 0
-                                        end
-                                end
-                                task.wait()
-                        end
-                end)
-                task.spawn(function()
-                        while _G.autoPunchActive do
-                                local punch = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Punch")
-                                if punch then
-                                        punch:Activate()
-                                end
-                                task.wait()
-                        end
-                end)
-        else
-                local punch = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Punch")
-                if punch then
-                        punch.Parent = LocalPlayer.Backpack
-                end
-        end
-end)
+    _G.autoPunchActive = state
 
-
-
-local godModeToggle = false
-Killer:AddSwitch("Good mode(pelea)", function(State)
-    godModeToggle = State
-    if State then
+    if state then
         task.spawn(function()
-            while godModeToggle do
-                game:GetService("ReplicatedStorage").rEvents.brawlEvent:FireServer("joinBrawl")
+            while _G.autoPunchActive do
+                local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
+                if punch then
+                    punch.Parent = LocalPlayer.Character
+                end
+                task.wait()
+            end
+        end)
+
+        task.spawn(function()
+            while _G.autoPunchActive do
+                LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
                 task.wait()
             end
         end)
     end
 end)
+
+
 -- 📌 Teleport / Follow System (versión auto-follow desde Dropdown)
 
 
@@ -925,33 +896,6 @@ LocalPlayer.CharacterAdded:Connect(function()
     end
 end)
 
-local godDamageActive = false
-
-Punch:AddSwitch("auto slams", function(state)
-
-godDamageActive = state
-    if state then
-        task.spawn(function()
-            while godDamageActive do
-                local player = LocalPlayer
-                local groundSlam = player.Backpack:FindFirstChild("Ground Slam") or (player.Character and player.Character:FindFirstChild("Ground Slam"))
-
-                if groundSlam then
-                    if groundSlam.Parent == player.Backpack then
-                        groundSlam.Parent = player.Character
-                    end
-                    if groundSlam:FindFirstChild("attackTime") then
-                        groundSlam.attackTime.Value = 0
-                    end
-                    player.muscleEvent:FireServer("slam")
-                    groundSlam:Activate()
-                end
-
-                task.wait(0.1)
-            end
-        end)
-    end
-end)
 
 local Misc = window:AddTab("Misc")
 
