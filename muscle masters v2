@@ -977,33 +977,3 @@ Misc:AddSwitch("Auto Claim Reward", function(state)
         end)
     end
 end)
-
-Misc:AddSwitch("Auto Eat Chocolate", function(state)
-    autoEat = state
-
-    if autoEat then
-        task.spawn(function()
-            while autoEat do
-                local player = game.Players.LocalPlayer
-                local backpack = player:FindFirstChild("Backpack")
-                local character = player.Character
-
-                if backpack and character then
-                    for _, item in pairs(backpack:GetChildren()) do
-                        if item.Name:lower():find("chocolate") then
-                            
-                            -- Equipar
-                            item.Parent = character
-                            task.wait(0.1)
-
-                            -- Usar
-                            item:Activate()
-                        end
-                    end
-                end
-
-                task.wait(0.5)
-            end
-        end)
-    end
-end)
