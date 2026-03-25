@@ -622,6 +622,38 @@ LocalPlayer.CharacterAdded:Connect(function()
     end
 end)
 
+local autoPunchSafe = false
+
+Killer:AddSwitch("Auto Punch (Safe)", function(state)
+    autoPunchSafe = state
+
+    task.spawn(function()
+        while autoPunchSafe do
+            local char = LocalPlayer.Character
+            if not char then task.wait() continue end
+
+            local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
+                or char:FindFirstChild("Punch")
+
+            if punch then
+                -- equipar
+                if punch.Parent ~= char then
+                    punch.Parent = char
+                    task.wait(0.1)
+                end
+
+                -- golpes más humanos
+                LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                task.wait(0.05 + math.random() * 0.05)
+
+                LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+            end
+
+            task.wait(0.1 + math.random() * 0.1)
+        end
+    end)
+end)
+
 
 local Misc = window:AddTab("Misc")
 
