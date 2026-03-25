@@ -785,6 +785,27 @@ Misc:AddSwitch("Auto Eat Chocolate", function(state)
     end
 end)
 
+-- ================= ANTI AFK PRO =================
+local AntiAFK = false
+local VirtualUser = game:GetService("VirtualUser")
+local AntiAFKConnection = nil
+
+Misc:AddSwitch("Anti AFK", function(state)
+    AntiAFK = state
+
+    if AntiAFKConnection then
+        AntiAFKConnection:Disconnect()
+        AntiAFKConnection = nil
+    end
+
+    if state then
+        AntiAFKConnection = player.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end
+end)
+
 local estadisticas = window:AddTab("Stats Jugadores")
 
 local SelectPlayerName = ""
