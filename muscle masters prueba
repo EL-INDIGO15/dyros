@@ -828,7 +828,7 @@ task.spawn(function()
 end)
 
 -- ================= AUTO SELL GUI PRO =================
-local AutoSell = window:AddTab("AutoSell")
+local AutoSell = window:AddTab("Auto Sell")
 
 -- FOLDERS POR CALIDAD
 local Master = AutoSell:AddFolder("Master Pets")
