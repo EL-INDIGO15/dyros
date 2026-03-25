@@ -102,21 +102,27 @@ local function startAutoFarm()
 
     local folder = workspace:WaitForChild("MachinesFolder")
     local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
-
     local prompts = getPrompts(folder, positions)
 
-    -- 🔥 CICLO: 5,4,3,2,3,4 (loop)
-    local cycle = {5,4,3,2,3,4}
+    -- 🔥 CICLO PERSONALIZADO
+    local cycle = {
+        {lag = 10, rest = 1},
+        {lag = 5,  rest = 2},
+        {lag = 2,  rest = 0.5},
+        {lag = 10, rest = 1},
+        {lag = 5,  rest = 2}
+    }
+
     local index = 1
 
     table.insert(farmThreads, task.spawn(function()
         while AutoFarmEnabled do
-            local duration = cycle[index]
+            local phase = cycle[index]
 
             local startTime = tick()
 
-            -- 💀 FASE LAG (spam extremo)
-            while tick() - startTime < duration and AutoFarmEnabled do
+            -- 💀 FASE LAG (ULTRA FARM)
+            while tick() - startTime < phase.lag and AutoFarmEnabled do
                 local p = prompts[rng:NextInteger(1, #prompts)]
                 if p and p.Enabled then
                     fireproximityprompt(p)
@@ -124,21 +130,19 @@ local function startAutoFarm()
 
                 remote:FireServer()
 
-                -- 🔥 ULTRA RÁPIDO = LAG
-                task.wait(0.0001)
+                -- 🔥 VELOCIDAD EXTREMA
+                task.wait()
             end
 
-            -- ⚡ FASE "NORMAL" (para que cargue visualmente)
-            local cooldownTime = 0.5
-            local cdStart = tick()
-
-            while tick() - cdStart < cooldownTime and AutoFarmEnabled do
+            -- ⚡ FASE DESCANSO (para que cargue todo)
+            local restStart = tick()
+            while tick() - restStart < phase.rest and AutoFarmEnabled do
                 remote:FireServer()
                 task.wait(0.05)
             end
 
-            -- 🔁 SIGUIENTE DEL CICLO
-            index = index + 1
+            -- 🔁 SIGUIENTE
+            index += 1
             if index > #cycle then
                 index = 1
             end
