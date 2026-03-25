@@ -105,18 +105,43 @@ local function startAutoFarm()
 
     local prompts = getPrompts(folder, positions)
 
-    table.insert(farmThreads, task.spawn(function()
-        while AutoFarmEnabled do
-            local p = prompts[rng:NextInteger(1, #prompts)]
-            if p and p.Enabled then fireproximityprompt(p) end
-            task.wait(0.5)
-        end
-    end))
+    -- 🔥 CICLO: 5,4,3,2,3,4 (loop)
+    local cycle = {5,4,3,2,3,4}
+    local index = 1
 
     table.insert(farmThreads, task.spawn(function()
         while AutoFarmEnabled do
-            remote:FireServer()
-            task.wait(0.01)
+            local duration = cycle[index]
+
+            local startTime = tick()
+
+            -- 💀 FASE LAG (spam extremo)
+            while tick() - startTime < duration and AutoFarmEnabled do
+                local p = prompts[rng:NextInteger(1, #prompts)]
+                if p and p.Enabled then
+                    fireproximityprompt(p)
+                end
+
+                remote:FireServer()
+
+                -- 🔥 ULTRA RÁPIDO = LAG
+                task.wait(0.0001)
+            end
+
+            -- ⚡ FASE "NORMAL" (para que cargue visualmente)
+            local cooldownTime = 0.5
+            local cdStart = tick()
+
+            while tick() - cdStart < cooldownTime and AutoFarmEnabled do
+                remote:FireServer()
+                task.wait(0.05)
+            end
+
+            -- 🔁 SIGUIENTE DEL CICLO
+            index = index + 1
+            if index > #cycle then
+                index = 1
+            end
         end
     end))
 end
