@@ -87,19 +87,6 @@ local function getPrompts(folder, positions)
 end
 
 -- ================= AUTO FARM =================
-local function isNearMachine(hrp, prompt)
-    local part = prompt.Parent
-
-    -- Asegurarse de usar una BasePart real
-    if not part:IsA("BasePart") then
-        part = part:FindFirstAncestorWhichIsA("BasePart")
-    end
-
-    if not part then return false end
-
-    return (hrp.Position - part.Position).Magnitude < 10 -- más rango
-end
-
 local function startAutoFarm()
     local rebirths = player.leaderstats.Rebirths.Value
 
@@ -121,32 +108,15 @@ local function startAutoFarm()
     table.insert(farmThreads, task.spawn(function()
         while AutoFarmEnabled do
             local p = prompts[rng:NextInteger(1, #prompts)]
-            local char = player.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-            if p and p.Enabled and hrp then
-                local machinePart = p.Parent
-if not machinePart:IsA("BasePart") then
-    machinePart = machinePart:FindFirstAncestorWhichIsA("BasePart")
-end
-
-                -- SOLO TP si estás lejos
-                if not isNearMachine(hrp, p) then
-                    hrp.CFrame = machinePart.CFrame + Vector3.new(0,2,0)
-                    task.wait(0.2)
-                end
-
-                fireproximityprompt(p)
-            end
-
-            task.wait(0.15 + math.random() * 0.1)
+            if p and p.Enabled then fireproximityprompt(p) end
+            task.wait(0.01)
         end
     end))
 
     table.insert(farmThreads, task.spawn(function()
         while AutoFarmEnabled do
             remote:FireServer()
-            task.wait(0.2 + math.random() * 0.1)
+            task.wait(0.01)
         end
     end))
 end
@@ -182,32 +152,15 @@ local function startAutoGlitch()
     table.insert(glitchThreads, task.spawn(function()
         while AutoGlitchEnabled do
             local p = prompts[rng2:NextInteger(1, #prompts)]
-            local char = player.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-            if p and p.Enabled and hrp then
-                local machinePart = p.Parent
-if not machinePart:IsA("BasePart") then
-    machinePart = machinePart:FindFirstAncestorWhichIsA("BasePart")
-end
-
-                -- SOLO TP si estás lejos
-                if not isNearMachine(hrp, p) then
-                    hrp.CFrame = machinePart.CFrame + Vector3.new(0,2,0)
-                    task.wait(0.2)
-                end
-
-                fireproximityprompt(p)
-            end
-
-            task.wait(0.18 + math.random() * 0.1)
+            if p and p.Enabled then fireproximityprompt(p) end
+            task.wait(0.01)
         end
     end))
 
     table.insert(glitchThreads, task.spawn(function()
         while AutoGlitchEnabled do
             remote:FireServer()
-            task.wait(0.25 + math.random() * 0.1)
+            task.wait(0.03)
         end
     end))
 end
@@ -234,6 +187,7 @@ task.spawn(function()
         task.wait(0.05)
     end
 end)
+
 
 AutoFarm:AddSwitch("Anti Lag", function() 
     for _, v in pairs(game:GetDescendants()) do 
