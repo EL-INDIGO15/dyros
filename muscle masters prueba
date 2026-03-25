@@ -87,8 +87,17 @@ local function getPrompts(folder, positions)
 end
 
 -- ================= AUTO FARM =================
-local function isNearMachine(hrp, part)
-    return (hrp.Position - part.Position).Magnitude < 6 -- rango seguro
+local function isNearMachine(hrp, prompt)
+    local part = prompt.Parent
+
+    -- Asegurarse de usar una BasePart real
+    if not part:IsA("BasePart") then
+        part = part:FindFirstAncestorWhichIsA("BasePart")
+    end
+
+    if not part then return false end
+
+    return (hrp.Position - part.Position).Magnitude < 10 -- más rango
 end
 
 local function startAutoFarm()
@@ -117,9 +126,12 @@ local function startAutoFarm()
 
             if p and p.Enabled and hrp then
                 local machinePart = p.Parent
+if not machinePart:IsA("BasePart") then
+    machinePart = machinePart:FindFirstAncestorWhichIsA("BasePart")
+end
 
                 -- SOLO TP si estás lejos
-                if not isNearMachine(hrp, machinePart) then
+                if not isNearMachine(hrp, p) then
                     hrp.CFrame = machinePart.CFrame + Vector3.new(0,2,0)
                     task.wait(0.2)
                 end
@@ -175,9 +187,12 @@ local function startAutoGlitch()
 
             if p and p.Enabled and hrp then
                 local machinePart = p.Parent
+if not machinePart:IsA("BasePart") then
+    machinePart = machinePart:FindFirstAncestorWhichIsA("BasePart")
+end
 
                 -- SOLO TP si estás lejos
-                if not isNearMachine(hrp, machinePart) then
+                if not isNearMachine(hrp, p) then
                     hrp.CFrame = machinePart.CFrame + Vector3.new(0,2,0)
                     task.wait(0.2)
                 end
