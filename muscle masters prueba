@@ -829,68 +829,81 @@ end)
 
 -- ================= AUTO SELL PETS =================
 local AutoSell = window:AddTab("AutoSell")
-local SellFolder = AutoSell:AddFolder("Select Pets To Sell")
 
-local SelectedPets = {}
 local SellRemote = ReplicatedStorage:WaitForChild("RemotesEvent"):WaitForChild("SellPetEvent")
 
+local SelectedPets = {}
+
+-- CREAR FOLDER POR CALIDAD
+local function createFolder(name)
+    return AutoSell:AddFolder(name)
+end
+
+local Master = createFolder("Master Pets")
+local Mythic = createFolder("Mythic Pets")
+local Limited = createFolder("Limited Pets")
+local Legendary = createFolder("Legendary Pets")
+local Epic = createFolder("Epic Pets")
+local Rare = createFolder("Rare Pets")
+local Common = createFolder("Common Pets")
+
 -- CREAR SWITCH
-local function createPetSwitch(petName)
+local function createPetSwitch(folder, petName)
     SelectedPets[petName] = false
 
-    SellFolder:AddSwitch(petName, function(state)
+    folder:AddSwitch(petName, function(state)
         SelectedPets[petName] = state
     end)
 end
 
--- ================= LISTA DE PETS =================
+-- ================= PETS =================
 
 -- MASTER
-createPetSwitch("Hedgehog")
-createPetSwitch("Bee")
-createPetSwitch("Panda")
-createPetSwitch("Kelpie")
+createPetSwitch(Master, "Hedgehog")
+createPetSwitch(Master, "Bee")
+createPetSwitch(Master, "Panda")
+createPetSwitch(Master, "Kelpie")
 
 -- MYTHIC
-createPetSwitch("Violet Fury")
-createPetSwitch("Ragehorn")
-createPetSwitch("RedHorn")
-createPetSwitch("Leviathos")
-createPetSwitch("Abyss Titan")
-createPetSwitch("Space Dragon")
+createPetSwitch(Mythic, "Violet Fury")
+createPetSwitch(Mythic, "Ragehorn")
+createPetSwitch(Mythic, "RedHorn")
+createPetSwitch(Mythic, "Leviathos")
+createPetSwitch(Mythic, "Abyss Titan")
+createPetSwitch(Mythic, "Space Dragon")
 
 -- LIMITED
-createPetSwitch("Dezz")
+createPetSwitch(Limited, "Dezz")
 
 -- LEGENDARY
-createPetSwitch("Dragon")
-createPetSwitch("Mighty Bull")
-createPetSwitch("Pyroclaw")
-createPetSwitch("Farmer")
-createPetSwitch("Military")
+createPetSwitch(Legendary, "Dragon")
+createPetSwitch(Legendary, "Mighty Bull")
+createPetSwitch(Legendary, "Pyroclaw")
+createPetSwitch(Legendary, "Farmer")
+createPetSwitch(Legendary, "Military")
 
 -- EPIC
-createPetSwitch("Captain")
-createPetSwitch("Dino")
-createPetSwitch("NerthEye")
-createPetSwitch("Tiger")
-createPetSwitch("TigEye")
+createPetSwitch(Epic, "Captain")
+createPetSwitch(Epic, "Dino")
+createPetSwitch(Epic, "NerthEye")
+createPetSwitch(Epic, "Tiger")
+createPetSwitch(Epic, "TigEye")
 
 -- RARE
-createPetSwitch("Hippopotamus")
-createPetSwitch("FrostKit")
-createPetSwitch("SparkPup")
-createPetSwitch("ShadowBun")
-createPetSwitch("Bubbles")
+createPetSwitch(Rare, "Hippopotamus")
+createPetSwitch(Rare, "FrostKit")
+createPetSwitch(Rare, "SparkPup")
+createPetSwitch(Rare, "ShadowBun")
+createPetSwitch(Rare, "Bubbles")
 
 -- COMMON
-createPetSwitch("Whisker")
-createPetSwitch("Fox")
-createPetSwitch("RageSpike")
-createPetSwitch("Sprout")
-createPetSwitch("Fangor")
+createPetSwitch(Common, "Whisker")
+createPetSwitch(Common, "Fox")
+createPetSwitch(Common, "RageSpike")
+createPetSwitch(Common, "Sprout")
+createPetSwitch(Common, "Fangor")
 
--- ================= LOOP AUTO SELL =================
+-- ================= AUTO SELL LOOP =================
 task.spawn(function()
     while true do
         local petsFolder = player:FindFirstChild("petsFolder")
@@ -900,13 +913,23 @@ task.spawn(function()
                 if folder:IsA("Folder") then
                     for _, pet in pairs(folder:GetChildren()) do
                         if SelectedPets[pet.Name] then
-                            SellRemote:FireServer(pet)
+                            
+                            -- 🔥 INTENTO 1 (objeto)
+                            pcall(function()
+                                SellRemote:FireServer(pet)
+                            end)
+
+                            -- 🔥 INTENTO 2 (nombre)
+                            pcall(function()
+                                SellRemote:FireServer(pet.Name)
+                            end)
+
                         end
                     end
                 end
             end
         end
 
-        task.wait(0.4) -- seguro anti-kick
+        task.wait(0.5)
     end
 end)
