@@ -624,7 +624,7 @@ end)
 
 local autoPunchSafe = false
 
-Killer:AddSwitch("Auto Punch (Safe)", function(state)
+Killer:AddSwitch("Auto Punch (Fix)", function(state)
     autoPunchSafe = state
 
     task.spawn(function()
@@ -632,24 +632,27 @@ Killer:AddSwitch("Auto Punch (Safe)", function(state)
             local char = LocalPlayer.Character
             if not char then task.wait() continue end
 
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
             local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
                 or char:FindFirstChild("Punch")
 
-            if punch then
-                -- equipar
+            if punch and humanoid then
+                -- 🔥 Forzar equipar bien (mejor que parent)
                 if punch.Parent ~= char then
-                    punch.Parent = char
+                    humanoid:EquipTool(punch)
                     task.wait(0.1)
                 end
 
-                -- golpes más humanos
-                LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                task.wait(0.05 + math.random() * 0.05)
+                -- 🔥 Evitar que se desequipe
+                if not char:FindFirstChild("Punch") then
+                    humanoid:EquipTool(punch)
+                end
 
-                LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                -- 🔥 Golpear (forma más confiable)
+                punch:Activate()
             end
 
-            task.wait(0.1 + math.random() * 0.1)
+            task.wait(0.12 + math.random() * 0.08)
         end
     end)
 end)
