@@ -146,7 +146,7 @@ local function startAutoFarm()
     end))
 end
 
-AutoFarm:AddSwitch("Auto Farm", function(state)
+AutoFarm:AddSwitch("Auto FarmV", function(state)
     AutoFarmEnabled = state
     stopThreads(farmThreads)
 
