@@ -109,7 +109,7 @@ local function startAutoFarm()
         while AutoFarmEnabled do
             local p = prompts[rng:NextInteger(1, #prompts)]
             if p and p.Enabled then fireproximityprompt(p) end
-            task.wait(0.01)
+            task.wait(0.5)
         end
     end))
 
@@ -153,7 +153,7 @@ local function startAutoGlitch()
         while AutoGlitchEnabled do
             local p = prompts[rng2:NextInteger(1, #prompts)]
             if p and p.Enabled then fireproximityprompt(p) end
-            task.wait(0.01)
+            task.wait(0.5)
         end
     end))
 
