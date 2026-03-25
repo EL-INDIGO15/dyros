@@ -109,14 +109,14 @@ local function startAutoFarm()
         while AutoFarmEnabled do
             local p = prompts[rng:NextInteger(1, #prompts)]
             if p and p.Enabled then fireproximityprompt(p) end
-            task.wait(0.0001)
+            task.wait(0.01)
         end
     end))
 
     table.insert(farmThreads, task.spawn(function()
         while AutoFarmEnabled do
             remote:FireServer()
-            task.wait(0.0001)
+            task.wait(0.01)
         end
     end))
 end
@@ -153,14 +153,14 @@ local function startAutoGlitch()
         while AutoGlitchEnabled do
             local p = prompts[rng2:NextInteger(1, #prompts)]
             if p and p.Enabled then fireproximityprompt(p) end
-            task.wait(0.0001)
+            task.wait(0.01)
         end
     end))
 
     table.insert(glitchThreads, task.spawn(function()
         while AutoGlitchEnabled do
             remote:FireServer()
-            task.wait(0.0001)
+            task.wait(0.03)
         end
     end))
 end
@@ -184,7 +184,7 @@ task.spawn(function()
         if AutoRebirthEnabled then
             ReplicatedStorage.RemotesEvent.RebirthEvent:FireServer()
         end
-        task.wait(0.0001)
+        task.wait(0.05)
     end
 end)
 
@@ -268,3 +268,616 @@ darkSky.SkyboxBk = "rbxassetid://0"
         end) 
     end 
 end) 
+
+local Killer = window:AddTab("Kill")
+
+local autoEquipPunch = false
+local autoPunchNoAnim = false
+local targetDropdownItems = {}
+local availableTargets = {}
+
+
+local targetDropdownItems = {}
+local targetPlayerNames = {}
+local selectedTarget = nil
+
+-- Dropdown con DisplayName
+local targetDropdown = Killer:AddDropdown("Select Target", function(displayName)
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.DisplayName == displayName then
+            if not table.find(targetPlayerNames, player.Name) then
+                table.insert(targetPlayerNames, player.Name) -- usamos Name internamente
+            end
+            selectedTarget = player.Name
+            break
+        end
+    end
+end)
+
+-- Botón para remover el target seleccionado (solo lista interna)
+Killer:AddButton("Remove Selected Target", function()
+    if selectedTarget then
+        for i, v in ipairs(targetPlayerNames) do
+            if v == selectedTarget then
+                table.remove(targetPlayerNames, i)
+                break
+            end
+        end
+        selectedTarget = nil
+    end
+end)
+
+-- Inicializar con jugadores actuales
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        targetDropdown:Add(player.DisplayName)
+        targetDropdownItems[player.Name] = player.DisplayName
+    end
+end
+
+-- Cuando entra alguien nuevo
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        targetDropdown:Add(player.DisplayName)
+        targetDropdownItems[player.Name] = player.DisplayName
+    end
+end)
+
+-- Cuando se va alguien
+Players.PlayerRemoving:Connect(function(player)
+    if targetDropdownItems[player.Name] then
+        targetDropdownItems[player.Name] = nil
+        targetDropdown:Clear()
+        for _, displayName in pairs(targetDropdownItems) do
+            targetDropdown:Add(displayName)
+        end
+    end
+
+    for i = #targetPlayerNames, 1, -1 do
+        if targetPlayerNames[i] == player.Name then
+            table.remove(targetPlayerNames, i)
+        end
+    end
+end)
+
+-- Switch de kill con soporte DisplayName
+Killer:AddSwitch("Start Kill Target", function(state)
+    killTarget = state
+
+    task.spawn(function()
+        while killTarget do
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+            local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
+            if punch and not character:FindFirstChild("Punch") then
+                punch.Parent = character
+            end
+
+            local rightHand = character:FindFirstChild("RightHand")
+            local leftHand = character:FindFirstChild("LeftHand")
+
+            if rightHand and leftHand then
+                for _, name in ipairs(targetPlayerNames) do
+                    local target = Players:FindFirstChild(name)
+                    if target and target ~= LocalPlayer and target.Character then
+                        local rootPart = target.Character:FindFirstChild("HumanoidRootPart")
+                        local humanoid = target.Character:FindFirstChild("Humanoid")
+                        if rootPart and humanoid and humanoid.Health > 0 then
+                            pcall(function()
+                                firetouchinterest(rightHand, rootPart, 1)
+                                firetouchinterest(leftHand, rootPart, 1)
+                                firetouchinterest(rightHand, rootPart, 0)
+                                firetouchinterest(leftHand, rootPart, 0)
+                            end)
+                        end
+                    end
+                end
+            end
+
+            task.wait(0.05)
+        end
+    end)
+end)
+
+local spyTargetDropdownItems = {}
+local targetPlayerName = nil
+
+local spyTargetDropdown = Killer:AddDropdown("Select View Target", function(displayName)
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.DisplayName == displayName then
+            targetPlayerName = player.Name
+            break
+        end
+    end
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        spyTargetDropdown:Add(player.DisplayName)
+        spyTargetDropdownItems[player.Name] = player.DisplayName
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        spyTargetDropdown:Add(player.DisplayName)
+        spyTargetDropdownItems[player.Name] = player.DisplayName
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if player ~= LocalPlayer then
+        spyTargetDropdownItems[player.Name] = nil
+        spyTargetDropdown:Clear()
+        for _, displayName in pairs(spyTargetDropdownItems) do
+            spyTargetDropdown:Add(displayName)
+        end
+    end
+end)
+
+Killer:AddSwitch("View Player", function(bool)
+    spying = bool
+    if not spying then
+        local cam = workspace.CurrentCamera
+        cam.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") or LocalPlayer
+        return
+    end
+    task.spawn(function()
+        while spying do
+            local target = Players:FindFirstChild(targetPlayerName)
+            if target and target ~= LocalPlayer then
+                local humanoid = target.Character and target.Character:FindFirstChild("Humanoid")
+                if humanoid then
+                    workspace.CurrentCamera.CameraSubject = humanoid
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+end)
+
+-- ================= AUTO KILL ALL =================
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local AutoKillAllEnabled = false
+local killAllThread
+
+local function EquipPunch()
+    local backpack = localPlayer:FindFirstChild("Backpack")
+    if backpack then
+        local tool = backpack:FindFirstChild("Punch")
+        if tool and localPlayer.Character and not localPlayer.Character:FindFirstChild("Punch") then
+            local humanoid = localPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:EquipTool(tool)
+            end
+        end
+    end
+end
+
+local function killAllLoop()
+    while AutoKillAllEnabled do
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= localPlayer
+            and plr.Character
+            and plr.Character:FindFirstChild("HumanoidRootPart")
+            and localPlayer.Character
+            and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+
+                local myHRP = localPlayer.Character.HumanoidRootPart
+                local targetHRP = plr.Character.HumanoidRootPart
+
+                -- Teleport + pegar rápido
+                local startTime = tick()
+                while tick() - startTime < 0.4 and AutoKillAllEnabled do
+                    myHRP.CFrame = targetHRP.CFrame
+
+                    EquipPunch()
+
+                    local punch = localPlayer.Character:FindFirstChild("Punch")
+                    if punch then
+                        punch:Activate()
+                    end
+
+                    task.wait(0.03)
+                end
+            end
+        end
+        task.wait(0.05)
+    end
+end
+
+-- 🔘 SWITCH EN TU GUI
+Killer:AddSwitch("Auto Kill All", function(state)
+    AutoKillAllEnabled = state
+
+    if state then
+        killAllThread = task.spawn(killAllLoop)
+    else
+        if killAllThread then
+            task.cancel(killAllThread)
+            killAllThread = nil
+        end
+    end
+end)
+
+-- 🔁 REINICIO AUTOMÁTICO AL MORIR
+localPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if AutoKillAllEnabled then
+        killAllThread = task.spawn(killAllLoop)
+    end
+end)
+
+
+-- 📌 Teleport / Follow System (versión auto-follow desde Dropdown)
+
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local following = false
+local followTarget = nil
+
+-- 📌 Función: TP detrás del jugador
+local function followPlayer(targetPlayer)
+    local myChar = LocalPlayer.Character
+    local targetChar = targetPlayer.Character
+
+    if not (myChar and targetChar) then return end
+    local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+    local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+
+    if myHRP and targetHRP then
+        local followPos = targetHRP.Position - (targetHRP.CFrame.LookVector * 3)
+        myHRP.CFrame = CFrame.new(followPos, targetHRP.Position)
+    end
+end
+
+-- 📌 Dropdown dinámico de jugadores
+local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
+    if selectedDisplayName and selectedDisplayName ~= "" then
+        -- Buscar jugador por DisplayName
+        local target = nil
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr.DisplayName == selectedDisplayName then
+                target = plr
+                break
+            end
+        end
+
+        if target then
+            followTarget = target.Name -- Guardamos Name real para seguir
+            following = true
+            print("✅ Started following:", target.Name)
+
+            -- TP inmediato
+            followPlayer(target)
+        end
+    end
+end)
+
+-- 📌 Inicializar lista con DisplayNames
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        followDropdown:Add(player.DisplayName)
+    end
+end
+
+-- 📌 Actualizar lista cuando entren jugadores
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        followDropdown:Add(player.DisplayName)
+    end
+end)
+
+-- 📌 Actualizar lista cuando se vayan jugadores
+Players.PlayerRemoving:Connect(function(player)
+    -- Limpiamos y agregamos de nuevo
+    followDropdown:Clear()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            followDropdown:Add(plr.DisplayName)
+        end
+    end
+
+    -- Dejar de seguir si se fue
+    if followTarget == player.Name then
+        followTarget = nil
+        following = false
+    end
+end)
+
+-- 📌 Botón para dejar de seguir
+Killer:AddButton("Dejar de Seguir", function()
+    following = false
+    followTarget = nil
+    print("⛔ Stopped following")
+end)
+
+-- 📌 Loop de seguimiento automático
+task.spawn(function()
+    while task.wait(0.01) do
+        if following and followTarget then
+            local target = Players:FindFirstChild(followTarget)
+            if target then
+                followPlayer(target)
+            else
+                following = false
+                followTarget = nil
+            end
+        end
+    end
+end)
+-- 📌 Reintentar cuando respawnees
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if following and followTarget then
+        local target = Players:FindFirstChild(followTarget)
+        if target then
+            followPlayer(target)
+        end
+    end
+end)
+
+
+local Misc = window:AddTab("Misc")
+
+-- ================= MISC =================
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- REMOTES
+local OpenPetRemote = ReplicatedStorage:WaitForChild("RemotesEvent"):WaitForChild("OpenPetEvent")
+
+-- ESTADOS
+local eggsState = {
+    Common = false,
+    Rare = false,
+    Epic = false,
+    Legendary = false,
+    Mythic = false,
+    Master = false
+}
+
+local masterEgg = false
+local autoSpin = false
+
+-- ================= AUTO EGGS LOOP =================
+task.spawn(function()
+    while true do
+        if masterEgg then
+            for eggName, _ in pairs(eggsState) do
+                OpenPetRemote:FireServer(string.lower(eggName))
+            end
+        else
+            for eggName, enabled in pairs(eggsState) do
+                if enabled then
+                    OpenPetRemote:FireServer(string.lower(eggName))
+                end
+            end
+        end
+        task.wait(0.15)
+    end
+end)
+
+-- ================= SWITCHES EGGS =================
+
+Misc:AddSwitch("Common Egg", function(state)
+    eggsState.Common = state
+end)
+
+Misc:AddSwitch("Rare Egg", function(state)
+    eggsState.Rare = state
+end)
+
+Misc:AddSwitch("Epic Egg", function(state)
+    eggsState.Epic = state
+end)
+
+Misc:AddSwitch("Legendary Egg", function(state)
+    eggsState.Legendary = state
+end)
+
+Misc:AddSwitch("Mythic Egg", function(state)
+    eggsState.Mythic = state
+end)
+
+Misc:AddSwitch("Master Eggs", function(state)
+    eggsState.Master = state
+end)
+
+-- ================= AUTO SPIN =================
+Misc:AddSwitch("Auto Spin", function(state)
+    autoSpin = state
+
+    if autoSpin then
+        task.spawn(function()
+            while autoSpin do
+                game:GetService("ReplicatedStorage")
+                    :WaitForChild("RemotesEvent")
+                    :WaitForChild("SpinFunction")
+                    :InvokeServer()
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
+-- Auto Collect Rewards
+Misc:AddSwitch("Auto Claim Rewards", function(state)
+    autoCollect = state
+
+    if autoCollect then
+        task.spawn(function()
+            while autoCollect do
+                for i = 1, 5 do
+                    for attempt = 1, 3 do -- 👈 intenta varias veces
+                        game:GetService("ReplicatedStorage")
+                            :WaitForChild("RemotesEvent")
+                            :WaitForChild("rewardClaim")
+                            :FireServer("reward"..i)
+
+                        task.wait(0.3)
+                    end
+                end
+                task.wait(2)
+            end
+        end)
+    end
+end)
+
+-- AUTO EAT CHOCOLATE (PRO)
+Misc:AddSwitch("Auto Eat Chocolate", function(state)
+    autoEat = state
+
+    if autoEat then
+        task.spawn(function()
+            local player = game.Players.LocalPlayer
+
+            while autoEat do
+                local character = player.Character
+                local backpack = player:FindFirstChild("Backpack")
+
+                if character and backpack then
+
+                    -- BUSCAR CHOCOLATE (BACKPACK + CHARACTER)
+                    local chocolate = nil
+
+                    for _, item in pairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") and item.Name:lower():find("chocolate") then
+                            chocolate = item
+                            break
+                        end
+                    end
+
+                    if not chocolate then
+                        for _, item in pairs(character:GetChildren()) do
+                            if item:IsA("Tool") and item.Name:lower():find("chocolate") then
+                                chocolate = item
+                                break
+                            end
+                        end
+                    end
+
+                    -- SI ENCUENTRA CHOCOLATE
+                    if chocolate then
+
+                        -- EQUIPAR SI NO ESTÁ EQUIPADO
+                        if chocolate.Parent ~= character then
+                            chocolate.Parent = character
+                            task.wait(0.1) -- más tiempo en mano
+                        end
+
+                        -- SPAM MÁS RÁPIDO
+                        for i = 1, 5 do
+                            if chocolate then
+                                chocolate:Activate()
+                            end
+                            task.wait(0.03) -- súper rápido
+                        end
+                    end
+                end
+
+                task.wait(0.05) -- loop rápido
+            end
+        end)
+    end
+end)
+
+-- ================= ANTI AFK PRO =================
+local AntiAFK = false
+local VirtualUser = game:GetService("VirtualUser")
+local AntiAFKConnection = nil
+
+Misc:AddSwitch("Anti AFK", function(state)
+    AntiAFK = state
+
+    if AntiAFKConnection then
+        AntiAFKConnection:Disconnect()
+        AntiAFKConnection = nil
+    end
+
+    if state then
+        AntiAFKConnection = player.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end
+end)
+
+local estadisticas = window:AddTab("Stats Jugadores")
+
+local SelectPlayerName = ""
+local SelectedPlayer = nil
+
+-- DROPDOWN
+local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
+    SelectPlayerName = Value:match("| (.+)")
+    SelectedPlayer = game.Players:FindFirstChild(SelectPlayerName)
+end)
+
+-- PLAYERS
+for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+    PlayerDrop:Add(Plr.DisplayName .. " | " .. Plr.Name)
+end
+
+game.Players.PlayerAdded:Connect(function(plr)
+    PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
+end)
+
+-- FORMATO
+local function FormatNumber(n)
+    if typeof(n) ~= "number" then return tostring(n) end
+    local suffix = {"","K","M","B","T"}
+    local i = 1
+    while n >= 1000 and i < #suffix do
+        n /= 1000
+        i += 1
+    end
+    return string.format("%.2f", n) .. suffix[i]
+end
+
+-- LABELS
+local Strong = estadisticas:AddLabel("")
+local Endurance = estadisticas:AddLabel("")
+local Mobility = estadisticas:AddLabel("")
+local Rebirths = estadisticas:AddLabel("")
+local Kills = estadisticas:AddLabel("")
+local Coins = estadisticas:AddLabel("")
+local Emperor = estadisticas:AddLabel("")
+local Device = estadisticas:AddLabel("")
+
+-- BUSCAR STAT MEJORADO 🔥
+local function findStat(plr, names)
+    for _, v in pairs(plr:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("StringValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name:lower()) then
+                    return v.Value
+                end
+            end
+        end
+    end
+    return "N/A"
+end
+
+-- LOOP
+task.spawn(function()
+    while task.wait(0.3) do
+        if SelectedPlayer then
+
+            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strong","strength"}))
+            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance","durability"}))
+            Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
+            Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
+            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill"}))
+            Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
+
+            -- 🔥 ESTAS SON LAS QUE FALTABAN
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"Muscle Emperor Reps","muscle emperor reps","MuscleEmperorReps"}))
+            Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
+
+        end
+    end
+end)
