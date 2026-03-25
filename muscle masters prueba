@@ -827,25 +827,19 @@ task.spawn(function()
     end
 end)
 
--- ================= AUTO SELL PETS =================
+-- ================= AUTO SELL GUI PRO =================
 local AutoSell = window:AddTab("AutoSell")
 
-local SellRemote = ReplicatedStorage:WaitForChild("RemotesEvent"):WaitForChild("SellPetEvent")
+-- FOLDERS POR CALIDAD
+local Master = AutoSell:AddFolder("Master Pets")
+local Mythic = AutoSell:AddFolder("Mythic Pets")
+local Limited = AutoSell:AddFolder("Limited Pets")
+local Legendary = AutoSell:AddFolder("Legendary Pets")
+local Epic = AutoSell:AddFolder("Epic Pets")
+local Rare = AutoSell:AddFolder("Rare Pets")
+local Common = AutoSell:AddFolder("Common Pets")
 
 local SelectedPets = {}
-
--- CREAR FOLDER POR CALIDAD
-local function createFolder(name)
-    return AutoSell:AddFolder(name)
-end
-
-local Master = createFolder("Master Pets")
-local Mythic = createFolder("Mythic Pets")
-local Limited = createFolder("Limited Pets")
-local Legendary = createFolder("Legendary Pets")
-local Epic = createFolder("Epic Pets")
-local Rare = createFolder("Rare Pets")
-local Common = createFolder("Common Pets")
 
 -- CREAR SWITCH
 local function createPetSwitch(folder, petName)
@@ -903,27 +897,44 @@ createPetSwitch(Common, "RageSpike")
 createPetSwitch(Common, "Sprout")
 createPetSwitch(Common, "Fangor")
 
+-- ================= FUNCION CLICK =================
+local function click(btn)
+    if btn and btn:IsA("TextButton") then
+        for _, v in pairs(getconnections(btn.MouseButton1Click)) do
+            v:Fire()
+        end
+    end
+end
+
 -- ================= AUTO SELL LOOP =================
 task.spawn(function()
     while true do
-        local petsFolder = player:FindFirstChild("petsFolder")
+        local playerGui = player:WaitForChild("PlayerGui")
 
-        if petsFolder then
-            for _, folder in pairs(petsFolder:GetChildren()) do
-                if folder:IsA("Folder") then
-                    for _, pet in pairs(folder:GetChildren()) do
-                        if SelectedPets[pet.Name] then
-                            
-                            -- 🔥 INTENTO 1 (objeto)
-                            pcall(function()
-                                SellRemote:FireServer(pet)
-                            end)
+        for _, gui in pairs(playerGui:GetDescendants()) do
+            if gui:IsA("TextLabel") and SelectedPets[gui.Text] then
+                
+                -- SELECCIONAR PET
+                local petButton = gui.Parent
+                if petButton then
+                    click(petButton)
+                    task.wait(0.12)
 
-                            -- 🔥 INTENTO 2 (nombre)
-                            pcall(function()
-                                SellRemote:FireServer(pet.Name)
-                            end)
+                    -- CLICK SELL (primer botón)
+                    for _, btn in pairs(playerGui:GetDescendants()) do
+                        if btn:IsA("TextButton") and btn.Text == "SELL" then
+                            click(btn)
+                            task.wait(0.12)
+                            break
+                        end
+                    end
 
+                    -- CONFIRMAR SELL
+                    for _, btn in pairs(playerGui:GetDescendants()) do
+                        if btn:IsA("TextButton") and btn.Text == "SELL" then
+                            click(btn)
+                            task.wait(0.2)
+                            break
                         end
                     end
                 end
