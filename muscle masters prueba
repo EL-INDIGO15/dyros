@@ -826,3 +826,58 @@ task.spawn(function()
         end
     end
 end)
+
+local AutoSell = window:AddTab("Sell Pets")
+-- ================= AUTO SELL PETS =================
+local SellRemote = ReplicatedStorage:WaitForChild("RemotesEvent"):WaitForChild("SellPetEvent")
+
+local function createSellButton(petName)
+    AutoSell:AddButton("Sell "..petName, function()
+        SellRemote:FireServer(petName)
+    end)
+end
+
+-- MASTER
+createSellButton("Hedgehog")
+createSellButton("Bee")
+createSellButton("Panda")
+createSellButton("Kelpie")
+
+-- MYTHIC
+createSellButton("Violet Fury")
+createSellButton("Ragehorn")
+createSellButton("RedHorn")
+createSellButton("Leviathos")
+createSellButton("Abyss Titan")
+createSellButton("Space Dragon")
+
+-- LIMITED
+createSellButton("Dezz")
+
+-- LEGENDARY
+createSellButton("Dragon")
+createSellButton("Mighty Bull")
+createSellButton("Pyroclaw")
+createSellButton("Farmer")
+createSellButton("Military")
+
+-- EPIC
+createSellButton("Captain")
+createSellButton("Dino")
+createSellButton("NerthEye")
+createSellButton("Tiger")
+createSellButton("TigEye")
+
+-- RARE
+createSellButton("Hippopotamus")
+createSellButton("FrostKit")
+createSellButton("SparkPup")
+createSellButton("ShadowBun")
+createSellButton("Bubbles")
+
+-- COMMON
+createSellButton("Whisker")
+createSellButton("Fox")
+createSellButton("RageSpike")
+createSellButton("Sprout")
+createSellButton("Fangor")
