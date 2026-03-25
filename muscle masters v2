@@ -271,149 +271,6 @@ end)
 
 local Killer = window:AddTab("Kill")
 
-local autoEquipPunch = false
-local autoPunchNoAnim = false
-local targetDropdownItems = {}
-local availableTargets = {}
-
-        
-local targetDropdownItems = {}
-local targetPlayerNames = {}
-local selectedTarget = nil
-
--- Dropdown con DisplayName
-local targetDropdown = Killer:AddDropdown("Select Target", function(displayName)
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player.DisplayName == displayName then
-            if not table.find(targetPlayerNames, player.Name) then
-                table.insert(targetPlayerNames, player.Name) -- usamos Name internamente
-            end
-            selectedTarget = player.Name
-            break
-        end
-    end
-end)
-
--- Botón para remover el target seleccionado (solo lista interna)
-Killer:AddButton("Remove Selected Target", function()
-    if selectedTarget then
-        for i, v in ipairs(targetPlayerNames) do
-            if v == selectedTarget then
-                table.remove(targetPlayerNames, i)
-                break
-            end
-        end
-        selectedTarget = nil
-    end
-end)
-
--- Inicializar con jugadores actuales
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        targetDropdown:Add(player.DisplayName)
-        targetDropdownItems[player.Name] = player.DisplayName
-    end
-end
-
--- Cuando entra alguien nuevo
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        targetDropdown:Add(player.DisplayName)
-        targetDropdownItems[player.Name] = player.DisplayName
-    end
-end)
-
--- Cuando se va alguien
-Players.PlayerRemoving:Connect(function(player)
-    if targetDropdownItems[player.Name] then
-        targetDropdownItems[player.Name] = nil
-        targetDropdown:Clear()
-        for _, displayName in pairs(targetDropdownItems) do
-            targetDropdown:Add(displayName)
-        end
-    end
-
-    for i = #targetPlayerNames, 1, -1 do
-        if targetPlayerNames[i] == player.Name then
-            table.remove(targetPlayerNames, i)
-        end
-    end
-end)
-
--- Switch de kill con soporte DisplayName
-Killer:AddSwitch("Start Kill Target", function(state)
-    killTarget = state
-
-    task.spawn(function()
-        while killTarget do
-            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-
-            local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
-            if punch and not character:FindFirstChild("Punch") then
-                punch.Parent = character
-            end
-
-            local rightHand = character:FindFirstChild("RightHand")
-            local leftHand = character:FindFirstChild("LeftHand")
-
-            if rightHand and leftHand then
-                for _, name in ipairs(targetPlayerNames) do
-                    local target = Players:FindFirstChild(name)
-                    if target and target ~= LocalPlayer and target.Character then
-                        local rootPart = target.Character:FindFirstChild("HumanoidRootPart")
-                        local humanoid = target.Character:FindFirstChild("Humanoid")
-                        if rootPart and humanoid and humanoid.Health > 0 then
-                            pcall(function()
-                                firetouchinterest(rightHand, rootPart, 1)
-                                firetouchinterest(leftHand, rootPart, 1)
-                                firetouchinterest(rightHand, rootPart, 0)
-                                firetouchinterest(leftHand, rootPart, 0)
-                            end)
-                        end
-                    end
-                end
-            end
-
-            task.wait(0.05)
-        end
-    end)
-end)
-
-local spyTargetDropdownItems = {}
-local targetPlayerName = nil
-
-local spyTargetDropdown = Killer:AddDropdown("Select View Target", function(displayName)
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player.DisplayName == displayName then
-            targetPlayerName = player.Name
-            break
-        end
-    end
-end)
-
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        spyTargetDropdown:Add(player.DisplayName)
-        spyTargetDropdownItems[player.Name] = player.DisplayName
-    end
-end
-
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        spyTargetDropdown:Add(player.DisplayName)
-        spyTargetDropdownItems[player.Name] = player.DisplayName
-    end
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    if player ~= LocalPlayer then
-        spyTargetDropdownItems[player.Name] = nil
-        spyTargetDropdown:Clear()
-        for _, displayName in pairs(spyTargetDropdownItems) do
-            spyTargetDropdown:Add(displayName)
-        end
-    end
-end)
 
 Killer:AddSwitch("View Player", function(bool)
     spying = bool
@@ -589,6 +446,24 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
+-- Cuando se va alguien
+Players.PlayerRemoving:Connect(function(player)
+    if targetDropdownItems[player.Name] then
+        targetDropdownItems[player.Name] = nil
+        targetDropdown:Clear()
+        for _, displayName in pairs(targetDropdownItems) do
+            targetDropdown:Add(displayName)
+        end
+    end
+
+    for i = #targetPlayerNames, 1, -1 do
+        if targetPlayerNames[i] == player.Name then
+            table.remove(targetPlayerNames, i)
+        end
+    end
+end)
+
+
 -- 📌 Botón para dejar de seguir
 Killer:AddButton("Dejar de Seguir", function()
     following = false
@@ -621,6 +496,40 @@ LocalPlayer.CharacterAdded:Connect(function()
     end
 end)
 
+local autoPunchSafe = false
+
+Killer:AddSwitch("Auto Punch", function(state)
+    autoPunchSafe = state
+
+    task.spawn(function()
+        while autoPunchSafe do
+            local char = LocalPlayer.Character
+            if not char then task.wait() continue end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
+                or char:FindFirstChild("Punch")
+
+            if punch and humanoid then
+                -- 🔥 Forzar equipar bien (mejor que parent)
+                if punch.Parent ~= char then
+                    humanoid:EquipTool(punch)
+                    task.wait(0.1)
+                end
+
+                -- 🔥 Evitar que se desequipe
+                if not char:FindFirstChild("Punch") then
+                    humanoid:EquipTool(punch)
+                end
+
+                -- 🔥 Golpear (forma más confiable)
+                punch:Activate()
+            end
+
+            task.wait(0.12 + math.random() * 0.08)
+        end
+    end)
+end)
 
 local Misc = window:AddTab("Misc")
 
