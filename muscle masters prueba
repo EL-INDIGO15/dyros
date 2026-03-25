@@ -108,15 +108,25 @@ local function startAutoFarm()
     table.insert(farmThreads, task.spawn(function()
         while AutoFarmEnabled do
             local p = prompts[rng:NextInteger(1, #prompts)]
-            if p and p.Enabled then fireproximityprompt(p) end
-            task.wait(0.01)
+            local char = player.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+            if p and p.Enabled and hrp then
+                -- TP a la máquina
+                hrp.CFrame = p.Parent.CFrame + Vector3.new(0,2,0)
+                task.wait(0.2)
+
+                fireproximityprompt(p)
+            end
+
+            task.wait(0.15 + math.random() * 0.1)
         end
     end))
 
     table.insert(farmThreads, task.spawn(function()
         while AutoFarmEnabled do
             remote:FireServer()
-            task.wait(0.01)
+            task.wait(0.2 + math.random() * 0.1)
         end
     end))
 end
