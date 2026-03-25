@@ -87,6 +87,10 @@ local function getPrompts(folder, positions)
 end
 
 -- ================= AUTO FARM =================
+local function isNearMachine(hrp, part)
+    return (hrp.Position - part.Position).Magnitude < 6 -- rango seguro
+end
+
 local function startAutoFarm()
     local rebirths = player.leaderstats.Rebirths.Value
 
@@ -112,9 +116,13 @@ local function startAutoFarm()
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
             if p and p.Enabled and hrp then
-                -- TP a la máquina
-                hrp.CFrame = p.Parent.CFrame + Vector3.new(0,2,0)
-                task.wait(0.2)
+                local machinePart = p.Parent
+
+                -- SOLO TP si estás lejos
+                if not isNearMachine(hrp, machinePart) then
+                    hrp.CFrame = machinePart.CFrame + Vector3.new(0,2,0)
+                    task.wait(0.2)
+                end
 
                 fireproximityprompt(p)
             end
@@ -166,9 +174,13 @@ local function startAutoGlitch()
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
             if p and p.Enabled and hrp then
-                -- TP a la máquina
-                hrp.CFrame = p.Parent.CFrame + Vector3.new(0,2,0)
-                task.wait(0.2)
+                local machinePart = p.Parent
+
+                -- SOLO TP si estás lejos
+                if not isNearMachine(hrp, machinePart) then
+                    hrp.CFrame = machinePart.CFrame + Vector3.new(0,2,0)
+                    task.wait(0.2)
+                end
 
                 fireproximityprompt(p)
             end
