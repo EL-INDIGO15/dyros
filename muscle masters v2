@@ -752,7 +752,7 @@ Misc:AddSwitch("Auto Eat Chocolate", function(state)
                     end
                 end
 
-                task.wait(0.5)
+                task.wait(0.001)
             end
         end)
     end
