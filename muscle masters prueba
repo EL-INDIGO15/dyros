@@ -827,106 +827,91 @@ task.spawn(function()
     end
 end)
 
--- ================= AUTO SELL PRO =================
-local AutoSell = window:AddTab("AutoSell")
+-- ================= PETS TAB =================
+local PetsTab = window:AddTab("Pets")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 
-local SelectedPets = {}
-getgenv().AutoSellPets = false
+local selectedPet = ""
+local AutoBuy = false
 
--- ================= CREAR FOLDERS =================
-local Master = AutoSell:AddFolder("Master Pets")
-local Mythic = AutoSell:AddFolder("Mythic Pets")
-local Limited = AutoSell:AddFolder("Limited Pets")
-local Legendary = AutoSell:AddFolder("Legendary Pets")
-local Epic = AutoSell:AddFolder("Epic Pets")
-local Rare = AutoSell:AddFolder("Rare Pets")
-local Common = AutoSell:AddFolder("Common Pets")
+-- ================= DROPDOWN =================
+local dropdown = PetsTab:AddDropdown("Select Pet", function(v)
+    selectedPet = v
+end)
 
--- ================= CREAR SWITCH =================
-local function createPetSwitch(folder, petName)
-    SelectedPets[petName] = false
-
-    folder:AddSwitch(petName, function(state)
-        SelectedPets[petName] = state
-    end)
-end
-
--- ================= PETS =================
+-- ================= LISTA DE PETS =================
 
 -- MASTER
-createPetSwitch(Master, "Hedgehog")
-createPetSwitch(Master, "Bee")
-createPetSwitch(Master, "Panda")
-createPetSwitch(Master, "Kelpie")
+dropdown:Add("Hedgehog")
+dropdown:Add("Bee")
+dropdown:Add("Panda")
+dropdown:Add("Kelpie")
 
 -- MYTHIC
-createPetSwitch(Mythic, "Violet Fury")
-createPetSwitch(Mythic, "Ragehorn")
-createPetSwitch(Mythic, "RedHorn")
-createPetSwitch(Mythic, "Leviathos")
-createPetSwitch(Mythic, "Abyss Titan")
-createPetSwitch(Mythic, "Space Dragon")
+dropdown:Add("Violet Fury")
+dropdown:Add("Ragehorn")
+dropdown:Add("RedHorn")
+dropdown:Add("Leviathos")
+dropdown:Add("Abyss Titan")
+dropdown:Add("Space Dragon")
 
 -- LIMITED
-createPetSwitch(Limited, "Dezz")
+dropdown:Add("Dezz")
 
 -- LEGENDARY
-createPetSwitch(Legendary, "Dragon")
-createPetSwitch(Legendary, "Mighty Bull")
-createPetSwitch(Legendary, "Pyroclaw")
-createPetSwitch(Legendary, "Farmer")
-createPetSwitch(Legendary, "Military")
+dropdown:Add("Dragon")
+dropdown:Add("Mighty Bull")
+dropdown:Add("Pyroclaw")
+dropdown:Add("Farmer")
+dropdown:Add("Military")
 
 -- EPIC
-createPetSwitch(Epic, "Captain")
-createPetSwitch(Epic, "Dino")
-createPetSwitch(Epic, "NerthEye")
-createPetSwitch(Epic, "Tiger")
-createPetSwitch(Epic, "TigEye")
+dropdown:Add("Captain")
+dropdown:Add("Dino")
+dropdown:Add("NerthEye")
+dropdown:Add("Tiger")
+dropdown:Add("TigEye")
 
 -- RARE
-createPetSwitch(Rare, "Hippopotamus")
-createPetSwitch(Rare, "FrostKit")
-createPetSwitch(Rare, "SparkPup")
-createPetSwitch(Rare, "ShadowBun")
-createPetSwitch(Rare, "Bubbles")
+dropdown:Add("Hippopotamus")
+dropdown:Add("FrostKit")
+dropdown:Add("SparkPup")
+dropdown:Add("ShadowBun")
+dropdown:Add("Bubbles")
 
 -- COMMON
-createPetSwitch(Common, "Whisker")
-createPetSwitch(Common, "Fox")
-createPetSwitch(Common, "RageSpike")
-createPetSwitch(Common, "Sprout")
-createPetSwitch(Common, "Fangor")
+dropdown:Add("Whisker")
+dropdown:Add("Fox")
+dropdown:Add("RageSpike")
+dropdown:Add("Sprout")
+dropdown:Add("Fangor")
 
--- ================= SWITCH GENERAL =================
-AutoSell:AddSwitch("Activar Auto Sell", function(state)
-    getgenv().AutoSellPets = state
+-- ================= AUTO BUY =================
+PetsTab:AddSwitch("Auto Buy Selected Pet", function(state)
+    AutoBuy = state
 
     if state then
         task.spawn(function()
-            while getgenv().AutoSellPets do
+            while AutoBuy do
 
-                for petName, enabled in pairs(SelectedPets) do
-                    if enabled then
-                        
-                        -- 🔥 MÉTODOS DE VENTA (varios intentos)
-                        pcall(function()
-                            ReplicatedStorage.rEvents.sellPetEvent:FireServer("sellPet", petName)
-                        end)
+                if selectedPet ~= "" then
+                    
+                    -- 🔥 MÉTODOS DE COMPRA (varios intentos)
+                    pcall(function()
+                        ReplicatedStorage.cPetShopRemote:InvokeServer(selectedPet)
+                    end)
 
-                        pcall(function()
-                            ReplicatedStorage.rEvents.sellPetEvent:FireServer(petName)
-                        end)
+                    pcall(function()
+                        local pet = ReplicatedStorage:FindFirstChild("cPetShopFolder")
+                        if pet then
+                            local obj = pet:FindFirstChild(selectedPet)
+                            if obj then
+                                ReplicatedStorage.cPetShopRemote:InvokeServer(obj)
+                            end
+                        end
+                    end)
 
-                        pcall(function()
-                            ReplicatedStorage.RemotesEvent.SellPetEvent:FireServer(petName)
-                        end)
-
-                        RunService.RenderStepped:Wait()
-                    end
                 end
 
                 task.wait(0.2)
