@@ -827,20 +827,23 @@ task.spawn(function()
     end
 end)
 
-local AutoSell = window:AddTab("Sell Pets")
-
 -- ================= AUTO SELL PETS =================
-local SellRemote = ReplicatedStorage:WaitForChild("RemotesEvent"):WaitForChild("SellPetEvent")
+local AutoSell = window:AddTab("AutoSell")
+local SellFolder = AutoSell:AddFolder("Select Pets To Sell")
 
 local SelectedPets = {}
+local SellRemote = ReplicatedStorage:WaitForChild("RemotesEvent"):WaitForChild("SellPetEvent")
 
+-- CREAR SWITCH
 local function createPetSwitch(petName)
     SelectedPets[petName] = false
 
-    AutoSell:AddSwitch(petName, function(state)
+    SellFolder:AddSwitch(petName, function(state)
         SelectedPets[petName] = state
     end)
 end
+
+-- ================= LISTA DE PETS =================
 
 -- MASTER
 createPetSwitch("Hedgehog")
@@ -887,14 +890,23 @@ createPetSwitch("RageSpike")
 createPetSwitch("Sprout")
 createPetSwitch("Fangor")
 
--- LOOP AUTO SELL
+-- ================= LOOP AUTO SELL =================
 task.spawn(function()
     while true do
-        for pet, enabled in pairs(SelectedPets) do
-            if enabled then
-                SellRemote:FireServer(pet)
+        local petsFolder = player:FindFirstChild("petsFolder")
+
+        if petsFolder then
+            for _, folder in pairs(petsFolder:GetChildren()) do
+                if folder:IsA("Folder") then
+                    for _, pet in pairs(folder:GetChildren()) do
+                        if SelectedPets[pet.Name] then
+                            SellRemote:FireServer(pet)
+                        end
+                    end
+                end
             end
         end
-        task.wait(0.5) -- velocidad segura
+
+        task.wait(0.4) -- seguro anti-kick
     end
 end)
