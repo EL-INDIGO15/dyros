@@ -561,10 +561,47 @@ Killer:AddSwitch("Auto Punch Fast", function(state)
                 punch:Activate()
             end
 
-            task.wait(0.001)
+            task.wait(0.000001)
         end
     end)
 end)
+
+local autoPunchultrafastSafe = false
+
+Killer:AddSwitch("Auto Punch Ultra Fast", function(state)
+    autoPunchSafe = state
+
+    task.spawn(function()
+        while autoPunchSafe do
+            local char = LocalPlayer.Character
+            if not char then task.wait() continue end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
+                or char:FindFirstChild("Punch")
+
+            if punch and humanoid then
+                -- 🔥 Forzar equipar bien (mejor que parent)
+                if punch.Parent ~= char then
+                    humanoid:EquipTool(punch)
+                    task.wait(0.1)
+                end
+
+                -- 🔥 Evitar que se desequipe
+                if not char:FindFirstChild("Punch") then
+                    humanoid:EquipTool(punch)
+                end
+
+                -- 🔥 Golpear (forma más confiable)
+                punch:Activate()
+            end
+
+            task.wait(0)
+        end
+    end)
+end)
+
+
 
 local Misc = window:AddTab("Misc")
 
