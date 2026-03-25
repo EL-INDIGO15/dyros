@@ -13,7 +13,7 @@ local options = {
 }
 
 -- VENTANA PRINCIPAL
-local window = library:AddWindow("HadesHub|Bienvenid@ I love you " .. displayName, options)
+local window = library:AddWindow("HadesHub|Bienvenid@ " .. displayName, options)
 
 -- LISTA DE COLORES PARA LA ANIMACIÓN (rojos + naranja + amarillo)
 local colores = {
@@ -827,10 +827,16 @@ task.spawn(function()
     end
 end)
 
--- ================= AUTO SELL GUI PRO =================
-local AutoSell = window:AddTab("Auto Sell")
+-- ================= AUTO SELL PRO =================
+local AutoSell = window:AddTab("AutoSell")
 
--- FOLDERS POR CALIDAD
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local SelectedPets = {}
+getgenv().AutoSellPets = false
+
+-- ================= CREAR FOLDERS =================
 local Master = AutoSell:AddFolder("Master Pets")
 local Mythic = AutoSell:AddFolder("Mythic Pets")
 local Limited = AutoSell:AddFolder("Limited Pets")
@@ -839,9 +845,7 @@ local Epic = AutoSell:AddFolder("Epic Pets")
 local Rare = AutoSell:AddFolder("Rare Pets")
 local Common = AutoSell:AddFolder("Common Pets")
 
-local SelectedPets = {}
-
--- CREAR SWITCH
+-- ================= CREAR SWITCH =================
 local function createPetSwitch(folder, petName)
     SelectedPets[petName] = false
 
@@ -897,50 +901,36 @@ createPetSwitch(Common, "RageSpike")
 createPetSwitch(Common, "Sprout")
 createPetSwitch(Common, "Fangor")
 
--- ================= FUNCION CLICK =================
-local function click(btn)
-    if btn and btn:IsA("TextButton") then
-        for _, v in pairs(getconnections(btn.MouseButton1Click)) do
-            v:Fire()
-        end
-    end
-end
+-- ================= SWITCH GENERAL =================
+AutoSell:AddSwitch("Activar Auto Sell", function(state)
+    getgenv().AutoSellPets = state
 
--- ================= AUTO SELL LOOP =================
-task.spawn(function()
-    while true do
-        local playerGui = player:WaitForChild("PlayerGui")
+    if state then
+        task.spawn(function()
+            while getgenv().AutoSellPets do
 
-        for _, gui in pairs(playerGui:GetDescendants()) do
-            if gui:IsA("TextLabel") and SelectedPets[gui.Text] then
-                
-                -- SELECCIONAR PET
-                local petButton = gui.Parent
-                if petButton then
-                    click(petButton)
-                    task.wait(0.12)
+                for petName, enabled in pairs(SelectedPets) do
+                    if enabled then
+                        
+                        -- 🔥 MÉTODOS DE VENTA (varios intentos)
+                        pcall(function()
+                            ReplicatedStorage.rEvents.sellPetEvent:FireServer("sellPet", petName)
+                        end)
 
-                    -- CLICK SELL (primer botón)
-                    for _, btn in pairs(playerGui:GetDescendants()) do
-                        if btn:IsA("TextButton") and btn.Text == "SELL" then
-                            click(btn)
-                            task.wait(0.12)
-                            break
-                        end
-                    end
+                        pcall(function()
+                            ReplicatedStorage.rEvents.sellPetEvent:FireServer(petName)
+                        end)
 
-                    -- CONFIRMAR SELL
-                    for _, btn in pairs(playerGui:GetDescendants()) do
-                        if btn:IsA("TextButton") and btn.Text == "SELL" then
-                            click(btn)
-                            task.wait(0.2)
-                            break
-                        end
+                        pcall(function()
+                            ReplicatedStorage.RemotesEvent.SellPetEvent:FireServer(petName)
+                        end)
+
+                        RunService.RenderStepped:Wait()
                     end
                 end
-            end
-        end
 
-        task.wait(0.5)
+                task.wait(0.2)
+            end
+        end)
     end
 end)
