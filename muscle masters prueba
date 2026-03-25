@@ -828,56 +828,73 @@ task.spawn(function()
 end)
 
 local AutoSell = window:AddTab("Sell Pets")
+
 -- ================= AUTO SELL PETS =================
 local SellRemote = ReplicatedStorage:WaitForChild("RemotesEvent"):WaitForChild("SellPetEvent")
 
-local function createSellButton(petName)
-    AutoSell:AddButton("Sell "..petName, function()
-        SellRemote:FireServer(petName)
+local SelectedPets = {}
+
+local function createPetSwitch(petName)
+    SelectedPets[petName] = false
+
+    AutoSell:AddSwitch(petName, function(state)
+        SelectedPets[petName] = state
     end)
 end
 
 -- MASTER
-createSellButton("Hedgehog")
-createSellButton("Bee")
-createSellButton("Panda")
-createSellButton("Kelpie")
+createPetSwitch("Hedgehog")
+createPetSwitch("Bee")
+createPetSwitch("Panda")
+createPetSwitch("Kelpie")
 
 -- MYTHIC
-createSellButton("Violet Fury")
-createSellButton("Ragehorn")
-createSellButton("RedHorn")
-createSellButton("Leviathos")
-createSellButton("Abyss Titan")
-createSellButton("Space Dragon")
+createPetSwitch("Violet Fury")
+createPetSwitch("Ragehorn")
+createPetSwitch("RedHorn")
+createPetSwitch("Leviathos")
+createPetSwitch("Abyss Titan")
+createPetSwitch("Space Dragon")
 
 -- LIMITED
-createSellButton("Dezz")
+createPetSwitch("Dezz")
 
 -- LEGENDARY
-createSellButton("Dragon")
-createSellButton("Mighty Bull")
-createSellButton("Pyroclaw")
-createSellButton("Farmer")
-createSellButton("Military")
+createPetSwitch("Dragon")
+createPetSwitch("Mighty Bull")
+createPetSwitch("Pyroclaw")
+createPetSwitch("Farmer")
+createPetSwitch("Military")
 
 -- EPIC
-createSellButton("Captain")
-createSellButton("Dino")
-createSellButton("NerthEye")
-createSellButton("Tiger")
-createSellButton("TigEye")
+createPetSwitch("Captain")
+createPetSwitch("Dino")
+createPetSwitch("NerthEye")
+createPetSwitch("Tiger")
+createPetSwitch("TigEye")
 
 -- RARE
-createSellButton("Hippopotamus")
-createSellButton("FrostKit")
-createSellButton("SparkPup")
-createSellButton("ShadowBun")
-createSellButton("Bubbles")
+createPetSwitch("Hippopotamus")
+createPetSwitch("FrostKit")
+createPetSwitch("SparkPup")
+createPetSwitch("ShadowBun")
+createPetSwitch("Bubbles")
 
 -- COMMON
-createSellButton("Whisker")
-createSellButton("Fox")
-createSellButton("RageSpike")
-createSellButton("Sprout")
-createSellButton("Fangor")
+createPetSwitch("Whisker")
+createPetSwitch("Fox")
+createPetSwitch("RageSpike")
+createPetSwitch("Sprout")
+createPetSwitch("Fangor")
+
+-- LOOP AUTO SELL
+task.spawn(function()
+    while true do
+        for pet, enabled in pairs(SelectedPets) do
+            if enabled then
+                SellRemote:FireServer(pet)
+            end
+        end
+        task.wait(0.5) -- velocidad segura
+    end
+end)
