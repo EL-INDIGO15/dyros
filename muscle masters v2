@@ -727,7 +727,7 @@ Misc:AddSwitch("Auto Claim Rewards", function(state)
     end
 end)
 
--- Auto Eat Chocolate 
+-- Auto Eat Chocolate (STOP CUANDO NO HAY)
 Misc:AddSwitch("Auto Eat Chocolate", function(state)
     autoEat = state
 
@@ -738,21 +738,32 @@ Misc:AddSwitch("Auto Eat Chocolate", function(state)
                 local backpack = player:FindFirstChild("Backpack")
                 local character = player.Character
 
+                local foundChocolate = false
+
                 if backpack and character then
                     for _, item in pairs(backpack:GetChildren()) do
                         if item.Name:lower():find("chocolate") then
+                            foundChocolate = true
                             
                             -- Equipar
                             item.Parent = character
-                            task.wait(0.1)
+                            task.wait(0.05)
 
                             -- Usar
                             item:Activate()
+                            task.wait(0.01)
                         end
                     end
                 end
 
-                task.wait(0.001)
+                -- 🚨 SI YA NO HAY CHOCOLATES, SE APAGA SOLO
+                if not foundChocolate then
+                    autoEat = false
+                    print("Ya no hay chocolates 🛑")
+                    break
+                end
+
+                task.wait(0.3)
             end
         end)
     end
