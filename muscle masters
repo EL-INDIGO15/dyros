@@ -231,27 +231,6 @@ end)
 local Killer = window:AddTab("Kill")
 
 
-Killer:AddSwitch("View Player", function(bool)
-    spying = bool
-    if not spying then
-        local cam = workspace.CurrentCamera
-        cam.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") or LocalPlayer
-        return
-    end
-    task.spawn(function()
-        while spying do
-            local target = Players:FindFirstChild(targetPlayerName)
-            if target and target ~= LocalPlayer then
-                local humanoid = target.Character and target.Character:FindFirstChild("Humanoid")
-                if humanoid then
-                    workspace.CurrentCamera.CameraSubject = humanoid
-                end
-            end
-            task.wait(0.1)
-        end
-    end)
-end)
-
 -- ================= AUTO KILL ALL =================
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
