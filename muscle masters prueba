@@ -841,7 +841,7 @@ task.spawn(function()
     while task.wait(0.3) do
         if SelectedPlayer then
 
-            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strength"}))
+            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strength","strongt"}))
             Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance"}))
             Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
             Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
