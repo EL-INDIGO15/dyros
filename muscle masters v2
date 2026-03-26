@@ -810,7 +810,7 @@ end)
 -- FORMATO
 local function FormatNumber(n)
     if typeof(n) ~= "number" then return tostring(n) end
-    local suffix = {"","K","M","B","T"}
+    local suffix = {"","K","M","B","T","Qa"}
     local i = 1
     while n >= 1000 and i < #suffix do
         n /= 1000
@@ -849,10 +849,10 @@ task.spawn(function()
         if SelectedPlayer then
 
             Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strong","strength"}))
-            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance","durability"}))
+            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance"}))
             Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
             Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
-            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill"}))
+            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill","kills"}))
             Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
 
             -- 🔥 ESTAS SON LAS QUE FALTABAN
