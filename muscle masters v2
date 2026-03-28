@@ -869,12 +869,15 @@ end)
 
 local StatsTab = window:AddTab("Tracker Pro")
 
--- 👇 ESPACIO (ajusta la cantidad)
 for i = 1,5 do
     StatsTab:AddLabel(" ")
 end
 
 local label = StatsTab:AddLabel("Cargando datos...")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
 -- 🔍 BUSCAR STAT AUTOMÁTICO
 local function findStat(names)
@@ -890,19 +893,18 @@ local function findStat(names)
     return nil
 end
 
--- Esperar a que carguen stats
 task.wait(2)
 
 local strengthStat = findStat({"strong","strength"})
 local enduranceStat = findStat({"endurance","durability"})
 local rebirthStat = findStat({"rebirth"})
 
--- Valores iniciales
-local startStrength = strengthStat and strengthStat.Value or 0
-local startEndurance = enduranceStat and enduranceStat.Value or 0
-local startRebirths = rebirthStat and rebirthStat.Value or 0
+-- Valores anteriores
+local lastStrength = strengthStat and strengthStat.Value or 0
+local lastEndurance = enduranceStat and enduranceStat.Value or 0
+local lastRebirths = rebirthStat and rebirthStat.Value or 0
 
-local startTime = tick()
+local lastTick = tick()
 
 -- 🔢 FORMATO BONITO
 local function format(n)
@@ -913,40 +915,44 @@ local function format(n)
     return tostring(math.floor(n))
 end
 
--- 📊 CALCULO
-local function calc(current, start, elapsed)
-    local gained = current - start
-    local perSec = gained / elapsed
-    return perSec, perSec*60, perSec*3600, perSec*86400
-end
+-- 🔥 LOOP ULTRA PRECISO
+RunService.Heartbeat:Connect(function()
+    if not strengthStat then return end
 
--- 🔥 LOOP PRINCIPAL
-task.spawn(function()
-    while true do
-        task.wait(1)
+    local now = tick()
+    local deltaTime = now - lastTick
+    if deltaTime <= 0 then return end
 
-        local elapsed = tick() - startTime
-        if elapsed <= 0 then continue end
+    local currentStrength = strengthStat and strengthStat.Value or 0
+    local currentEndurance = enduranceStat and enduranceStat.Value or 0
+    local currentRebirths = rebirthStat and rebirthStat.Value or 0
 
-        local currentStrength = strengthStat and strengthStat.Value or 0
-        local currentEndurance = enduranceStat and enduranceStat.Value or 0
-        local currentRebirths = rebirthStat and rebirthStat.Value or 0
+    -- Cambios reales
+    local strengthGain = currentStrength - lastStrength
+    local enduranceGain = currentEndurance - lastEndurance
+    local rebirthGain = currentRebirths - lastRebirths
 
-        local s_sec, s_min, s_hour, s_day = calc(currentStrength, startStrength, elapsed)
-        local e_sec, e_min, e_hour, e_day = calc(currentEndurance, startEndurance, elapsed)
-        local r_sec, r_min, r_hour, r_day = calc(currentRebirths, startRebirths, elapsed)
+    -- Velocidad EXACTA
+    local s_perSec = strengthGain / deltaTime
+    local e_perSec = enduranceGain / deltaTime
+    local r_perSec = rebirthGain / deltaTime
 
-        label.Text =
-            "💪 FUERZA\n"..
-            format(currentStrength)..
-            "\n⚡ "..format(s_min).."/min | "..format(s_hour).."/h | "..format(s_day).."/d\n\n"..
+    label.Text =
+        "💪 FUERZA\n"..
+        format(currentStrength)..
+        "\n⚡ "..format(s_perSec*60).."/min | "..format(s_perSec*3600).."/h | "..format(s_perSec*86400).."/d\n\n"..
 
-            "🛡️ DURABILIDAD\n"..
-            format(currentEndurance)..
-            "\n⚡ "..format(e_min).."/min | "..format(e_hour).."/h | "..format(e_day).."/d\n\n"..
+        "🛡️ DURABILIDAD\n"..
+        format(currentEndurance)..
+        "\n⚡ "..format(e_perSec*60).."/min | "..format(e_perSec*3600).."/h | "..format(e_perSec*86400).."/d\n\n"..
 
-            "🔄 RENACIMIENTOS\n"..
-            format(currentRebirths)..
-            "\n⚡ "..format(r_min).."/min | "..format(r_hour).."/h | "..format(r_day).."/d"
-    end
+        "🔄 RENACIMIENTOS\n"..
+        format(currentRebirths)..
+        "\n⚡ "..format(r_perSec*60).."/min | "..format(r_perSec*3600).."/h | "..format(r_perSec*86400).."/d"
+
+    -- Guardar valores anteriores
+    lastStrength = currentStrength
+    lastEndurance = currentEndurance
+    lastRebirths = currentRebirths
+    lastTick = now
 end)
