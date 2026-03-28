@@ -790,76 +790,44 @@ end
 local label = StatsTab:AddLabel("Cargando datos...")
 
 -- 🔍 BUSCAR STAT AUTOMÁTICO
-local function findStat(names)
-    for _, v in pairs(LocalPlayer:GetDescendants()) do
-        if v:IsA("NumberValue") or v:IsA("IntValue") then
-            for _, name in pairs(names) do
-                if v.Name:lower():find(name) then
-                    return v
-                end
-            end
-        end
-    end
-    return nil
-end
+local lastStrength = strengthStat and strengthStat.Value or 0
+local lastEndurance = enduranceStat and enduranceStat.Value or 0
+local lastRebirths = rebirthStat and rebirthStat.Value or 0
 
--- Esperar a que carguen stats
-task.wait(2)
-
-local strengthStat = findStat({"strong","strength"})
-local enduranceStat = findStat({"endurance","durability"})
-local rebirthStat = findStat({"rebirth"})
-
--- Valores iniciales
-local startStrength = strengthStat and strengthStat.Value or 0
-local startEndurance = enduranceStat and enduranceStat.Value or 0
-local startRebirths = rebirthStat and rebirthStat.Value or 0
-
-local startTime = tick()
-
--- 🔢 FORMATO BONITO
-local function format(n)
-    if n >= 1e12 then return string.format("%.2fT", n/1e12) end
-    if n >= 1e9 then return string.format("%.2fB", n/1e9) end
-    if n >= 1e6 then return string.format("%.2fM", n/1e6) end
-    if n >= 1e3 then return string.format("%.1fK", n/1e3) end
-    return tostring(math.floor(n))
-end
-
--- 📊 CALCULO
-local function calc(current, start, elapsed)
-    local gained = current - start
-    local perSec = gained / elapsed
-    return perSec, perSec*60, perSec*3600, perSec*86400
-end
-
--- 🔥 LOOP PRINCIPAL
 task.spawn(function()
     while true do
-        task.wait(1)
-
-        local elapsed = tick() - startTime
-        if elapsed <= 0 then continue end
+        task.wait(1) -- 🔥 EXACTO 1 SEGUNDO
 
         local currentStrength = strengthStat and strengthStat.Value or 0
         local currentEndurance = enduranceStat and enduranceStat.Value or 0
         local currentRebirths = rebirthStat and rebirthStat.Value or 0
 
-        local s_sec, s_min, s_hour, s_day = calc(currentStrength, startStrength, elapsed)
-        local e_sec, e_min, e_hour, e_day = calc(currentEndurance, startEndurance, elapsed)
-        local r_sec, r_min, r_hour, r_day = calc(currentRebirths, startRebirths, elapsed)
+        -- 🔥 GANANCIA DEL ÚLTIMO SEGUNDO
+        local s_gain = currentStrength - lastStrength
+        local e_gain = currentEndurance - lastEndurance
+        local r_gain = currentRebirths - lastRebirths
+
+        -- Guardar para siguiente ciclo
+        lastStrength = currentStrength
+        lastEndurance = currentEndurance
+        lastRebirths = currentRebirths
+
+        -- 🔥 ESCALAR
+        local s_min, s_hour, s_day = s_gain*60, s_gain*3600, s_gain*86400
+        local e_min, e_hour, e_day = e_gain*60, e_gain*3600, e_gain*86400
+        local r_min, r_hour, r_day = r_gain*60, r_gain*3600, r_gain*86400
 
         label.Text =
             "💪 FUERZA\n"..
             format(currentStrength)..
-            "\n⚡ "..format(s_min).."/min | "..format(s_hour).."/h | "..format(s_day).."/d\n\n"..
+            "\n⚡ "..format(s_gain).."/s | "..format(s_min).."/min | "..format(s_hour).."/h | "..format(s_day).."/d\n\n"..
 
             "🛡️ DURABILIDAD\n"..
             format(currentEndurance)..
-            "\n⚡ "..format(e_min).."/min | "..format(e_hour).."/h | "..format(e_day).."/d\n\n"..
+            "\n⚡ "..format(e_gain).."/s | "..format(e_min).."/min | "..format(e_hour).."/h | "..format(e_day).."/d\n\n"..
 
             "🔄 RENACIMIENTOS\n"..
             format(currentRebirths)..
-            "\n⚡ "..format(r_min).."/min | "..format(r_hour).."/h | "..format(r_day).."/d"
+            "\n⚡ "..format(r_gain).."/s | "..format(r_min).."/min | "..format(r_hour).."/h | "..format(r_day).."/d"
     end
 end)
