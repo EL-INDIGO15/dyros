@@ -30,7 +30,7 @@ task.spawn(function()
     end
 end)
 
-local AutoFarm = window:AddTab("Main+") 
+local AutoFarm = window:AddTab("FarmOP") 
 
 -- ================= VARIABLES =================
 local Players = game:GetService("Players")
@@ -102,12 +102,12 @@ local function startAutoFarm()
     table.insert(farmThreads, task.spawn(function()
         while AutoFarmEnabled do
             remote:FireServer()
-            task.wait(0.001)
+            task.wait(0.5)
         end
     end))
 end
 
-AutoFarm:AddSwitch("Auto Farm", function(state)
+AutoFarm:AddSwitch("Fast farm", function(state)
     AutoFarmEnabled = state
     stopThreads(farmThreads)
 
@@ -146,12 +146,12 @@ local function startAutoGlitch()
     table.insert(glitchThreads, task.spawn(function()
         while AutoGlitchEnabled do
             remote:FireServer()
-            task.wait(0.001)
+            task.wait(0.5)
         end
     end))
 end
 
-AutoFarm:AddSwitch("Auto Glitch", function(state)
+AutoFarm:AddSwitch("Fast Glitch", function(state)
     AutoGlitchEnabled = state
     stopThreads(glitchThreads)
 
@@ -161,7 +161,7 @@ AutoFarm:AddSwitch("Auto Glitch", function(state)
 end)
 
 -- ================= AUTO REBIRTH =================
-AutoFarm:AddSwitch("Auto Rebirth", function(state)
+AutoFarm:AddSwitch("Fast Rebirth", function(state)
     AutoRebirthEnabled = state
 end)
 
@@ -170,7 +170,7 @@ task.spawn(function()
         if AutoRebirthEnabled then
             ReplicatedStorage.RemotesEvent.RebirthEvent:FireServer()
         end
-        task.wait(0.03)
+        task.wait(0.5)
     end
 end)
 
@@ -214,7 +214,7 @@ AutoFarm:AddSwitch("Anti Lag", function()
 end) 
 
 
-local Killer = window:AddTab("Kill")
+local Killer = window:AddTab("KillsOP")
 
 
 -- ================= AUTO KILL ALL =================
@@ -270,7 +270,7 @@ local function killAllLoop()
 end
 
 -- 🔘 SWITCH EN TU GUI
-Killer:AddSwitch("Auto Kill All", function(state)
+Killer:AddSwitch("Auto Kill a todos", function(state)
     AutoKillAllEnabled = state
 
     if state then
@@ -317,7 +317,7 @@ local function followPlayer(targetPlayer)
 end
 
 -- 📌 Dropdown dinámico de jugadores
-local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
+local followDropdown = Killer:AddDropdown("Auto seguir jugador", function(selectedDisplayName)
     if selectedDisplayName and selectedDisplayName ~= "" then
         -- Buscar jugador por DisplayName
         local target = nil
@@ -485,7 +485,7 @@ Killer:AddSwitch("Auto Punch Fast", function(state)
                 punch:Activate()
             end
 
-            task.wait(0.000001)
+            task.wait(0.0011)
         end
     end)
 end)
