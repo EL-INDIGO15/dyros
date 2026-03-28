@@ -16,33 +16,19 @@ local options = {
 local window = library:AddWindow("HadesHubClanGHTONTOP|Bienvenid@ " .. displayName, options)
 
 -- LISTA DE COLORES PARA LA ANIMACIÓN (rojos + naranja + amarillo)
-local colores = {
-    Color3.fromRGB(220, 20, 60),   -- Rojo original (Crimson)
-    Color3.fromRGB(255, 102, 102), -- Rojo claro
-    Color3.fromRGB(255, 0, 0),     -- Rojo fuerte / puro
-    Color3.fromRGB(255, 140, 0),   -- Naranja oscuro (Dark Orange)
-    Color3.fromRGB(255, 165, 0),   -- Naranja normal
-    Color3.fromRGB(255, 215, 0),   -- Amarillo dorado
-    Color3.fromRGB(255, 255, 0),   -- Amarillo puro
-}
-
--- ANIMACIÓN DE COLOR (cambia suavemente entre todos los colores)
 task.spawn(function()
-    local indice = 1
+    local hue = 0
     while true do
-        local colorActual = colores[indice]
-        local colorSiguiente = colores[indice % #colores + 1]
-
-        -- Transición suave entre color actual y siguiente (50 pasos)
-        for i = 0, 50 do
-            local alpha = i / 50
-            options.main_color = colorActual:Lerp(colorSiguiente, alpha)
-            task.wait(0.05)  -- Velocidad de la animación (ajusta si quieres más rápido/lento)
+        hue = hue + 0.005
+        if hue > 1 then
+            hue = 0
         end
 
-        indice = indice % #colores + 1  -- Pasa al siguiente color
+        options.main_color = Color3.fromHSV(hue, 1, 1)
+
+        task.wait(0.03)
     end
-end) 
+end)
 
 local AutoFarm = window:AddTab("Main+") 
 
