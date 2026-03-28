@@ -781,6 +781,7 @@ Misc:AddSwitch("Anti AFK", function(state)
 end)
 
 local SpyStats = window:AddTab("Spy Stats")
+local spyPage = SpyStats -- 👈 IMPORTANTE
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -789,29 +790,49 @@ local selectedPlayer = nil
 local opened = false
 
 -- 🔴 BOTÓN
-local dropdownBtn = SpyStats:AddButton("SELECT PLAYER ▼", function() end)
+local dropdownBtn = Instance.new("TextButton", spyPage)
+dropdownBtn.Size = UDim2.new(1,-10,0,35)
+dropdownBtn.Position = UDim2.new(0,5,0,0)
+dropdownBtn.Text = "SELECT PLAYER  ▼"
+dropdownBtn.BackgroundColor3 = Color3.fromRGB(255,0,0)
+dropdownBtn.TextColor3 = Color3.new(1,1,1)
+dropdownBtn.Font = Enum.Font.GothamBold
+dropdownBtn.TextScaled = true
+Instance.new("UICorner", dropdownBtn)
 
--- 📜 SCROLL
-local listFrame = Instance.new("ScrollingFrame")
-listFrame.Size = UDim2.new(1,0,0,140)
-listFrame.CanvasSize = UDim2.new(0,0,0,0)
+-- 📜 LISTA
+local listFrame = Instance.new("ScrollingFrame", spyPage)
+listFrame.Position = UDim2.new(0,5,0,40)
+listFrame.Size = UDim2.new(1,-10,0,0)
+listFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 listFrame.ScrollBarThickness = 4
-listFrame.BackgroundTransparency = 0.2
-listFrame.Visible = false
-listFrame.Parent = dropdownBtn.Parent
-
-local layout = Instance.new("UIListLayout", listFrame)
-layout.Padding = UDim.new(0,4)
+listFrame.CanvasSize = UDim2.new(0,0,0,0)
+listFrame.Visible = true
+Instance.new("UICorner", listFrame)
 
 -- 📊 LABEL
-local statsLabel = SpyStats:AddLabel("Selecciona un jugador...")
+local statsLabel = Instance.new("TextLabel", spyPage)
+statsLabel.Position = UDim2.new(0,5,0,45)
+statsLabel.Size = UDim2.new(1,-10,0,150)
+statsLabel.BackgroundTransparency = 1
+statsLabel.TextColor3 = Color3.new(1,1,1)
+statsLabel.TextXAlignment = Enum.TextXAlignment.Left
+statsLabel.TextYAlignment = Enum.TextYAlignment.Top
+statsLabel.Font = Enum.Font.Gotham
+statsLabel.TextScaled = true
+statsLabel.Text = "Selecciona un jugador..."
 
--- 🔽 ABRIR / CERRAR
+-- 🔽 ABRIR/CERRAR
 dropdownBtn.MouseButton1Click:Connect(function()
     opened = not opened
-    listFrame.Visible = opened
 
-    dropdownBtn.Text = opened and "SELECT PLAYER ▲" or "SELECT PLAYER ▼"
+    if opened then
+        dropdownBtn.Text = "SELECT PLAYER ▲"
+        listFrame:TweenSize(UDim2.new(1,-10,0,140), "Out", "Quad", 0.2, true)
+    else
+        dropdownBtn.Text = "SELECT PLAYER ▼"
+        listFrame:TweenSize(UDim2.new(1,-10,0,0), "Out", "Quad", 0.2, true)
+    end
 end)
 
 -- 🔍 FORMATO
@@ -823,17 +844,30 @@ local function format(n)
     return tostring(math.floor(n))
 end
 
--- 📊 OBTENER STATS (MEJORADO PARA TU SCRIPT)
+-- 📊 STATS MEJORADO
 local function getData(plr)
+    local function findStat(nameList)
+        for _, v in pairs(plr:GetDescendants()) do
+            if v:IsA("NumberValue") or v:IsA("IntValue") then
+                for _, name in pairs(nameList) do
+                    if v.Name:lower():find(name:lower()) then
+                        return v.Value
+                    end
+                end
+            end
+        end
+        return 0
+    end
+
     return {
-        Strength = plr:FindFirstChild("Strong") and plr.Strong.Value or 0,
-        Rebirths = plr:FindFirstChild("Rebirths") and plr.Rebirths.Value or 0,
-        Emperor = plr:FindFirstChild("MuscleEmperorReps") and plr.MuscleEmperorReps.Value or 0,
-        Endurance = plr:FindFirstChild("Endurance") and plr.Endurance.Value or 0
+        Strength = findStat({"strong","strength"}),
+        Rebirths = findStat({"rebirth"}),
+        Emperor = findStat({"emperor"}),
+        Endurance = findStat({"endurance"})
     }
 end
 
--- 👤 CREAR BOTONES
+-- 👤 BOTONES
 local function createPlayer(plr)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1,0,0,25)
@@ -841,36 +875,38 @@ local function createPlayer(plr)
     btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
     btn.TextColor3 = Color3.new(1,1,1)
     btn.Parent = listFrame
-
     Instance.new("UICorner", btn)
 
     btn.MouseButton1Click:Connect(function()
         selectedPlayer = plr
         dropdownBtn.Text = plr.DisplayName.." ▼"
-        listFrame.Visible = false
-        opened = false
     end)
 end
 
 -- 🔁 REFRESH
 local function refresh()
     listFrame:ClearAllChildren()
+
+    local layout = Instance.new("UIListLayout")
     layout.Parent = listFrame
+    layout.Padding = UDim.new(0,4)
+
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        listFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+    end)
 
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
             createPlayer(plr)
         end
     end
-
-    listFrame.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 10)
 end
 
 refresh()
 Players.PlayerAdded:Connect(refresh)
 Players.PlayerRemoving:Connect(refresh)
 
--- 🔥 LOOP STATS
+-- 🔥 LOOP
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -878,9 +914,11 @@ task.spawn(function()
         if selectedPlayer then
             local data = getData(selectedPlayer)
 
+            statsLabel.Position = UDim2.new(0,5,0, 45 + listFrame.AbsoluteSize.Y + 5)
+
             statsLabel.Text =
                 "👤 "..selectedPlayer.Name..
-                "\n💪 Strength: "..format(data.Strength)..
+                "\n\n💪 Strength: "..format(data.Strength)..
                 "\n🔄 Rebirths: "..format(data.Rebirths)..
                 "\n👑 Emperor: "..format(data.Emperor)..
                 "\n🛡️ Endurance: "..format(data.Endurance)
