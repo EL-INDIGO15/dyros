@@ -867,7 +867,7 @@ end)
 
 
 
-local StatsTab = window:AddTab("Tracker Pro")
+local StatsTab = window:AddTab("Stats")
 
 for i = 1,5 do
     StatsTab:AddLabel(" ")
@@ -877,9 +877,8 @@ local label = StatsTab:AddLabel("Cargando datos...")
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
 
--- 🔍 BUSCAR STAT AUTOMÁTICO
+-- 🔍 BUSCAR STAT
 local function findStat(names)
     for _, v in pairs(LocalPlayer:GetDescendants()) do
         if v:IsA("NumberValue") or v:IsA("IntValue") then
@@ -899,14 +898,7 @@ local strengthStat = findStat({"strong","strength"})
 local enduranceStat = findStat({"endurance","durability"})
 local rebirthStat = findStat({"rebirth"})
 
--- Valores anteriores
-local lastStrength = strengthStat and strengthStat.Value or 0
-local lastEndurance = enduranceStat and enduranceStat.Value or 0
-local lastRebirths = rebirthStat and rebirthStat.Value or 0
-
-local lastTick = tick()
-
--- 🔢 FORMATO BONITO
+-- 🔢 FORMATO
 local function format(n)
     if n >= 1e12 then return string.format("%.2fT", n/1e12) end
     if n >= 1e9 then return string.format("%.2fB", n/1e9) end
@@ -915,44 +907,47 @@ local function format(n)
     return tostring(math.floor(n))
 end
 
--- 🔥 LOOP ULTRA PRECISO
-RunService.Heartbeat:Connect(function()
-    if not strengthStat then return end
+-- Variables de cálculo
+local lastStrength = strengthStat and strengthStat.Value or 0
+local lastEndurance = enduranceStat and enduranceStat.Value or 0
+local lastRebirths = rebirthStat and rebirthStat.Value or 0
+local lastTick = tick()
 
-    local now = tick()
-    local deltaTime = now - lastTick
-    if deltaTime <= 0 then return end
+-- 🔥 LOOP ESTABLE
+task.spawn(function()
+    while true do
+        task.wait(0.25) -- velocidad visual estable
 
-    local currentStrength = strengthStat and strengthStat.Value or 0
-    local currentEndurance = enduranceStat and enduranceStat.Value or 0
-    local currentRebirths = rebirthStat and rebirthStat.Value or 0
+        if not strengthStat then continue end
 
-    -- Cambios reales
-    local strengthGain = currentStrength - lastStrength
-    local enduranceGain = currentEndurance - lastEndurance
-    local rebirthGain = currentRebirths - lastRebirths
+        local now = tick()
+        local deltaTime = now - lastTick
+        if deltaTime <= 0 then continue end
 
-    -- Velocidad EXACTA
-    local s_perSec = strengthGain / deltaTime
-    local e_perSec = enduranceGain / deltaTime
-    local r_perSec = rebirthGain / deltaTime
+        local currentStrength = strengthStat and strengthStat.Value or 0
+        local currentEndurance = enduranceStat and enduranceStat.Value or 0
+        local currentRebirths = rebirthStat and rebirthStat.Value or 0
 
-    label.Text =
-        "💪 FUERZA\n"..
-        format(currentStrength)..
-        "\n⚡ "..format(s_perSec*60).."/min | "..format(s_perSec*3600).."/h | "..format(s_perSec*86400).."/d\n\n"..
+        local s_perSec = (currentStrength - lastStrength) / deltaTime
+        local e_perSec = (currentEndurance - lastEndurance) / deltaTime
+        local r_perSec = (currentRebirths - lastRebirths) / deltaTime
 
-        "🛡️ DURABILIDAD\n"..
-        format(currentEndurance)..
-        "\n⚡ "..format(e_perSec*60).."/min | "..format(e_perSec*3600).."/h | "..format(e_perSec*86400).."/d\n\n"..
+        label.Text =
+            "💪 FUERZA\n"..
+            format(currentStrength)..
+            "\n⚡ "..format(s_perSec*60).."/min | "..format(s_perSec*3600).."/h | "..format(s_perSec*86400).."/d\n\n"..
 
-        "🔄 RENACIMIENTOS\n"..
-        format(currentRebirths)..
-        "\n⚡ "..format(r_perSec*60).."/min | "..format(r_perSec*3600).."/h | "..format(r_perSec*86400).."/d"
+            "🛡️ DURABILIDAD\n"..
+            format(currentEndurance)..
+            "\n⚡ "..format(e_perSec*60).."/min | "..format(e_perSec*3600).."/h | "..format(e_perSec*86400).."/d\n\n"..
 
-    -- Guardar valores anteriores
-    lastStrength = currentStrength
-    lastEndurance = currentEndurance
-    lastRebirths = currentRebirths
-    lastTick = now
+            "🔄 RENACIMIENTOS\n"..
+            format(currentRebirths)..
+            "\n⚡ "..format(r_perSec*60).."/min | "..format(r_perSec*3600).."/h | "..format(r_perSec*86400).."/d"
+
+        lastStrength = currentStrength
+        lastEndurance = currentEndurance
+        lastRebirths = currentRebirths
+        lastTick = now
+    end
 end)
