@@ -782,7 +782,7 @@ end)
 
 local StatsTab = window:AddTab("Tracker Pro")
 
-for i = 1,5 do
+for i = 1,12 do -- más espacio arriba
     StatsTab:AddLabel(" ")
 end
 
