@@ -780,62 +780,42 @@ Misc:AddSwitch("Anti AFK", function(state)
     end
 end)
 
-local SpyStats = window:AddTab("Spy Stats")
-local spyPage = SpyStats -- 👈 IMPORTANTE
+local StatsTab = window:AddTab("Tracker Pro")
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local selectedPlayer = nil
-local opened = false
+local label = StatsTab:AddLabel("Cargando datos...")
 
--- 🔴 BOTÓN
-local dropdownBtn = Instance.new("TextButton", spyPage)
-dropdownBtn.Size = UDim2.new(1,-10,0,35)
-dropdownBtn.Position = UDim2.new(0,5,0,0)
-dropdownBtn.Text = "SELECT PLAYER  ▼"
-dropdownBtn.BackgroundColor3 = Color3.fromRGB(255,0,0)
-dropdownBtn.TextColor3 = Color3.new(1,1,1)
-dropdownBtn.Font = Enum.Font.GothamBold
-dropdownBtn.TextScaled = true
-Instance.new("UICorner", dropdownBtn)
-
--- 📜 LISTA
-local listFrame = Instance.new("ScrollingFrame", spyPage)
-listFrame.Position = UDim2.new(0,5,0,40)
-listFrame.Size = UDim2.new(1,-10,0,0)
-listFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
-listFrame.ScrollBarThickness = 4
-listFrame.CanvasSize = UDim2.new(0,0,0,0)
-listFrame.Visible = true
-Instance.new("UICorner", listFrame)
-
--- 📊 LABEL
-local statsLabel = Instance.new("TextLabel", spyPage)
-statsLabel.Position = UDim2.new(0,5,0,45)
-statsLabel.Size = UDim2.new(1,-10,0,150)
-statsLabel.BackgroundTransparency = 1
-statsLabel.TextColor3 = Color3.new(1,1,1)
-statsLabel.TextXAlignment = Enum.TextXAlignment.Left
-statsLabel.TextYAlignment = Enum.TextYAlignment.Top
-statsLabel.Font = Enum.Font.Gotham
-statsLabel.TextScaled = true
-statsLabel.Text = "Selecciona un jugador..."
-
--- 🔽 ABRIR/CERRAR
-dropdownBtn.MouseButton1Click:Connect(function()
-    opened = not opened
-
-    if opened then
-        dropdownBtn.Text = "SELECT PLAYER ▲"
-        listFrame:TweenSize(UDim2.new(1,-10,0,140), "Out", "Quad", 0.2, true)
-    else
-        dropdownBtn.Text = "SELECT PLAYER ▼"
-        listFrame:TweenSize(UDim2.new(1,-10,0,0), "Out", "Quad", 0.2, true)
+-- 🔍 BUSCAR STAT AUTOMÁTICO
+local function findStat(names)
+    for _, v in pairs(LocalPlayer:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name) then
+                    return v
+                end
+            end
+        end
     end
-end)
+    return nil
+end
 
--- 🔍 FORMATO
+-- Esperar a que carguen stats
+task.wait(2)
+
+local strengthStat = findStat({"strong","strength"})
+local enduranceStat = findStat({"endurance","durability"})
+local rebirthStat = findStat({"rebirth"})
+
+-- Valores iniciales
+local startStrength = strengthStat and strengthStat.Value or 0
+local startEndurance = enduranceStat and enduranceStat.Value or 0
+local startRebirths = rebirthStat and rebirthStat.Value or 0
+
+local startTime = tick()
+
+-- 🔢 FORMATO BONITO
 local function format(n)
     if n >= 1e12 then return string.format("%.2fT", n/1e12) end
     if n >= 1e9 then return string.format("%.2fB", n/1e9) end
@@ -844,84 +824,40 @@ local function format(n)
     return tostring(math.floor(n))
 end
 
--- 📊 STATS MEJORADO
-local function getData(plr)
-    local function findStat(nameList)
-        for _, v in pairs(plr:GetDescendants()) do
-            if v:IsA("NumberValue") or v:IsA("IntValue") then
-                for _, name in pairs(nameList) do
-                    if v.Name:lower():find(name:lower()) then
-                        return v.Value
-                    end
-                end
-            end
-        end
-        return 0
-    end
-
-    return {
-        Strength = findStat({"strong","strength"}),
-        Rebirths = findStat({"rebirth"}),
-        Emperor = findStat({"emperor"}),
-        Endurance = findStat({"endurance"})
-    }
+-- 📊 CALCULO
+local function calc(current, start, elapsed)
+    local gained = current - start
+    local perSec = gained / elapsed
+    return perSec, perSec*60, perSec*3600, perSec*86400
 end
 
--- 👤 BOTONES
-local function createPlayer(plr)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1,0,0,25)
-    btn.Text = plr.DisplayName .. " | " .. plr.Name
-    btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.Parent = listFrame
-    Instance.new("UICorner", btn)
-
-    btn.MouseButton1Click:Connect(function()
-        selectedPlayer = plr
-        dropdownBtn.Text = plr.DisplayName.." ▼"
-    end)
-end
-
--- 🔁 REFRESH
-local function refresh()
-    listFrame:ClearAllChildren()
-
-    local layout = Instance.new("UIListLayout")
-    layout.Parent = listFrame
-    layout.Padding = UDim.new(0,4)
-
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        listFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
-    end)
-
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer then
-            createPlayer(plr)
-        end
-    end
-end
-
-refresh()
-Players.PlayerAdded:Connect(refresh)
-Players.PlayerRemoving:Connect(refresh)
-
--- 🔥 LOOP
+-- 🔥 LOOP PRINCIPAL
 task.spawn(function()
     while true do
-        task.wait(0.5)
+        task.wait(1)
 
-        if selectedPlayer then
-            local data = getData(selectedPlayer)
+        local elapsed = tick() - startTime
+        if elapsed <= 0 then continue end
 
-            statsLabel.Position = UDim2.new(0,5,0, 45 + listFrame.AbsoluteSize.Y + 5)
+        local currentStrength = strengthStat and strengthStat.Value or 0
+        local currentEndurance = enduranceStat and enduranceStat.Value or 0
+        local currentRebirths = rebirthStat and rebirthStat.Value or 0
 
-            statsLabel.Text =
-                "👤 "..selectedPlayer.Name..
-                "\n\n💪 Strength: "..format(data.Strength)..
-                "\n🔄 Rebirths: "..format(data.Rebirths)..
-                "\n👑 Emperor: "..format(data.Emperor)..
-                "\n🛡️ Endurance: "..format(data.Endurance)
-        end
+        local s_sec, s_min, s_hour, s_day = calc(currentStrength, startStrength, elapsed)
+        local e_sec, e_min, e_hour, e_day = calc(currentEndurance, startEndurance, elapsed)
+        local r_sec, r_min, r_hour, r_day = calc(currentRebirths, startRebirths, elapsed)
+
+        label.Text =
+            "💪 FUERZA\n"..
+            format(currentStrength)..
+            "\n⚡ "..format(s_min).."/min | "..format(s_hour).."/h | "..format(s_day).."/d\n\n"..
+
+            "🛡️ DURABILIDAD\n"..
+            format(currentEndurance)..
+            "\n⚡ "..format(e_min).."/min | "..format(e_hour).."/h | "..format(e_day).."/d\n\n"..
+
+            "🔄 RENACIMIENTOS\n"..
+            format(currentRebirths)..
+            "\n⚡ "..format(r_min).."/min | "..format(r_hour).."/h | "..format(r_day).."/d"
     end
 end)
