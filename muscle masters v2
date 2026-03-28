@@ -867,9 +867,9 @@ end)
 
 
 
-local StatsTab = window:AddTab("Gain stats")
+local StatsTab = window:AddTab("Gain Stats")
 
-for i = 1,5 do
+for i = 1,8 do -- más espacio arriba
     StatsTab:AddLabel(" ")
 end
 
@@ -898,7 +898,7 @@ local strengthStat = findStat({"strong","strength"})
 local enduranceStat = findStat({"endurance","durability"})
 local rebirthStat = findStat({"rebirth"})
 
--- 🔢 FORMATO
+-- 🔢 FORMATO NUMEROS
 local function format(n)
     if n >= 1e12 then return string.format("%.2fT", n/1e12) end
     if n >= 1e9 then return string.format("%.2fB", n/1e9) end
@@ -907,15 +907,29 @@ local function format(n)
     return tostring(math.floor(n))
 end
 
+-- ⏱ FORMATO TIEMPO
+local function formatTime(seconds)
+    local h = math.floor(seconds / 3600)
+    local m = math.floor((seconds % 3600) / 60)
+    local s = math.floor(seconds % 60)
+    return string.format("%02d:%02d:%02d", h, m, s)
+end
+
 -- Variables base
 local lastStrength = strengthStat and strengthStat.Value or 0
 local lastEndurance = enduranceStat and enduranceStat.Value or 0
 local lastRebirths = rebirthStat and rebirthStat.Value or 0
 
--- 🔥 LOOP SUAVE (1 SEGUNDO)
+-- 🔥 ACUMULADORES REALES (NO SE RESETEAN)
+local totalStrength = 0
+local totalEndurance = 0
+local totalRebirths = 0
+
+local startTime = tick()
+
 task.spawn(function()
     while true do
-        task.wait(1) -- 🔥 ahora actualiza cada 1 segundo completo
+        task.wait(1)
 
         if not strengthStat then continue end
 
@@ -923,9 +937,22 @@ task.spawn(function()
         local currentEndurance = enduranceStat and enduranceStat.Value or 0
         local currentRebirths = rebirthStat and rebirthStat.Value or 0
 
+        -- Ganancia del último segundo
         local s_gain = currentStrength - lastStrength
         local e_gain = currentEndurance - lastEndurance
         local r_gain = currentRebirths - lastRebirths
+
+        -- 🔥 Si hiciste rebirth y bajó el valor, NO lo contamos negativo
+        if s_gain < 0 then s_gain = 0 end
+        if e_gain < 0 then e_gain = 0 end
+        if r_gain < 0 then r_gain = 0 end
+
+        -- Acumular total real
+        totalStrength += s_gain
+        totalEndurance += e_gain
+        totalRebirths += r_gain
+
+        local elapsed = tick() - startTime
 
         label.Text =
             "💪 FUERZA\n"..
@@ -938,7 +965,17 @@ task.spawn(function()
 
             "🔄 RENACIMIENTOS\n"..
             format(currentRebirths)..
-            "\n⚡ "..format(r_gain*60).."/min | "..format(r_gain*3600).."/h | "..format(r_gain*86400).."/d"
+            "\n⚡ "..format(r_gain*60).."/min | "..format(r_gain*3600).."/h | "..format(r_gain*86400).."/d\n\n"..
+
+            "━━━━━━━━━━━━━━━\n"..
+
+            "⏱ TIEMPO EN SERVER\n"..
+            formatTime(elapsed).."\n\n"..
+
+            "📈 FARMEADO TOTAL\n"..
+            "💪 "..format(totalStrength).."\n"..
+            "🛡️ "..format(totalEndurance).."\n"..
+            "🔄 "..format(totalRebirths)
 
         lastStrength = currentStrength
         lastEndurance = currentEndurance
