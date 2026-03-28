@@ -782,52 +782,116 @@ end)
 
 local StatsTab = window:AddTab("Tracker Pro")
 
--- 👇 ESPACIO (ajusta la cantidad)
 for i = 1,5 do
     StatsTab:AddLabel(" ")
 end
 
 local label = StatsTab:AddLabel("Cargando datos...")
 
--- 🔍 BUSCAR STAT AUTOMÁTICO
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- 🔍 BUSCAR STAT
+local function findStat(names)
+    for _, v in pairs(LocalPlayer:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name) then
+                    return v
+                end
+            end
+        end
+    end
+    return nil
+end
+
+task.wait(2)
+
+local strengthStat = findStat({"strong","strength"})
+local enduranceStat = findStat({"endurance","durability"})
+local rebirthStat = findStat({"rebirth"})
+
+-- 🔢 FORMATO NUMEROS
+local function format(n)
+    if n >= 1e12 then return string.format("%.2fT", n/1e12) end
+    if n >= 1e9 then return string.format("%.2fB", n/1e9) end
+    if n >= 1e6 then return string.format("%.2fM", n/1e6) end
+    if n >= 1e3 then return string.format("%.1fK", n/1e3) end
+    return tostring(math.floor(n))
+end
+
+-- ⏱ FORMATO TIEMPO
+local function formatTime(seconds)
+    local h = math.floor(seconds / 3600)
+    local m = math.floor((seconds % 3600) / 60)
+    local s = math.floor(seconds % 60)
+    return string.format("%02d:%02d:%02d", h, m, s)
+end
+
+-- Variables base
 local lastStrength = strengthStat and strengthStat.Value or 0
 local lastEndurance = enduranceStat and enduranceStat.Value or 0
 local lastRebirths = rebirthStat and rebirthStat.Value or 0
 
+-- 🔥 ACUMULADORES REALES (NO SE RESETEAN)
+local totalStrength = 0
+local totalEndurance = 0
+local totalRebirths = 0
+
+local startTime = tick()
+
 task.spawn(function()
     while true do
-        task.wait(1) -- 🔥 EXACTO 1 SEGUNDO
+        task.wait(1)
 
-        local currentStrength = strengthStat and strengthStat.Value or 0
+        if not strengthStat then continue end
+
+        local currentStrength = strengthStat.Value
         local currentEndurance = enduranceStat and enduranceStat.Value or 0
         local currentRebirths = rebirthStat and rebirthStat.Value or 0
 
-        -- 🔥 GANANCIA DEL ÚLTIMO SEGUNDO
+        -- Ganancia del último segundo
         local s_gain = currentStrength - lastStrength
         local e_gain = currentEndurance - lastEndurance
         local r_gain = currentRebirths - lastRebirths
 
-        -- Guardar para siguiente ciclo
-        lastStrength = currentStrength
-        lastEndurance = currentEndurance
-        lastRebirths = currentRebirths
+        -- 🔥 Si hiciste rebirth y bajó el valor, NO lo contamos negativo
+        if s_gain < 0 then s_gain = 0 end
+        if e_gain < 0 then e_gain = 0 end
+        if r_gain < 0 then r_gain = 0 end
 
-        -- 🔥 ESCALAR
-        local s_min, s_hour, s_day = s_gain*60, s_gain*3600, s_gain*86400
-        local e_min, e_hour, e_day = e_gain*60, e_gain*3600, e_gain*86400
-        local r_min, r_hour, r_day = r_gain*60, r_gain*3600, r_gain*86400
+        -- Acumular total real
+        totalStrength += s_gain
+        totalEndurance += e_gain
+        totalRebirths += r_gain
+
+        local elapsed = tick() - startTime
 
         label.Text =
             "💪 FUERZA\n"..
             format(currentStrength)..
-            "\n⚡ "..format(s_gain).."/s | "..format(s_min).."/min | "..format(s_hour).."/h | "..format(s_day).."/d\n\n"..
+            "\n⚡ "..format(s_gain*60).."/min | "..format(s_gain*3600).."/h | "..format(s_gain*86400).."/d\n\n"..
 
             "🛡️ DURABILIDAD\n"..
             format(currentEndurance)..
-            "\n⚡ "..format(e_gain).."/s | "..format(e_min).."/min | "..format(e_hour).."/h | "..format(e_day).."/d\n\n"..
+            "\n⚡ "..format(e_gain*60).."/min | "..format(e_gain*3600).."/h | "..format(e_gain*86400).."/d\n\n"..
 
             "🔄 RENACIMIENTOS\n"..
             format(currentRebirths)..
-            "\n⚡ "..format(r_gain).."/s | "..format(r_min).."/min | "..format(r_hour).."/h | "..format(r_day).."/d"
+            "\n⚡ "..format(r_gain*60).."/min | "..format(r_gain*3600).."/h | "..format(r_gain*86400).."/d\n\n"..
+
+            "━━━━━━━━━━━━━━━\n"..
+
+            "⏱ TIEMPO EN SERVER\n"..
+            formatTime(elapsed).."\n\n"..
+
+            "📈 FARMEADO TOTAL\n"..
+            "💪 "..format(totalStrength).."\n"..
+            "🛡️ "..format(totalEndurance).."\n"..
+            "🔄 "..format(totalRebirths)
+
+        lastStrength = currentStrength
+        lastEndurance = currentEndurance
+        lastRebirths = currentRebirths
     end
 end)
