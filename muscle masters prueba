@@ -780,78 +780,110 @@ Misc:AddSwitch("Anti AFK", function(state)
     end
 end)
 
-local estadisticas = window:AddTab("Stats Jugadores")
+local SpyStats = window:AddTab("Spy Stats")
 
-local SelectPlayerName = ""
-local SelectedPlayer = nil
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
--- DROPDOWN
-local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
-    SelectPlayerName = Value:match("| (.+)")
-    SelectedPlayer = game.Players:FindFirstChild(SelectPlayerName)
+local selectedPlayer = nil
+local opened = false
+
+-- 🔴 BOTÓN
+local dropdownBtn = SpyStats:AddButton("SELECT PLAYER ▼", function() end)
+
+-- 📜 SCROLL
+local listFrame = Instance.new("ScrollingFrame")
+listFrame.Size = UDim2.new(1,0,0,140)
+listFrame.CanvasSize = UDim2.new(0,0,0,0)
+listFrame.ScrollBarThickness = 4
+listFrame.BackgroundTransparency = 0.2
+listFrame.Visible = false
+listFrame.Parent = dropdownBtn.Parent
+
+local layout = Instance.new("UIListLayout", listFrame)
+layout.Padding = UDim.new(0,4)
+
+-- 📊 LABEL
+local statsLabel = SpyStats:AddLabel("Selecciona un jugador...")
+
+-- 🔽 ABRIR / CERRAR
+dropdownBtn.MouseButton1Click:Connect(function()
+    opened = not opened
+    listFrame.Visible = opened
+
+    dropdownBtn.Text = opened and "SELECT PLAYER ▲" or "SELECT PLAYER ▼"
 end)
 
--- PLAYERS
-for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
-    PlayerDrop:Add(Plr.DisplayName .. " | " .. Plr.Name)
+-- 🔍 FORMATO
+local function format(n)
+    if n >= 1e12 then return string.format("%.2fT", n/1e12) end
+    if n >= 1e9 then return string.format("%.2fB", n/1e9) end
+    if n >= 1e6 then return string.format("%.2fM", n/1e6) end
+    if n >= 1e3 then return string.format("%.1fK", n/1e3) end
+    return tostring(math.floor(n))
 end
 
-game.Players.PlayerAdded:Connect(function(plr)
-    PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
-end)
-
--- FORMATO
-local function FormatNumber(n)
-    if typeof(n) ~= "number" then return tostring(n) end
-    local suffix = {"","K","M","B","T"}
-    local i = 1
-    while n >= 1000 and i < #suffix do
-        n /= 1000
-        i += 1
-    end
-    return string.format("%.2f", n) .. suffix[i]
+-- 📊 OBTENER STATS (MEJORADO PARA TU SCRIPT)
+local function getData(plr)
+    return {
+        Strength = plr:FindFirstChild("Strong") and plr.Strong.Value or 0,
+        Rebirths = plr:FindFirstChild("Rebirths") and plr.Rebirths.Value or 0,
+        Emperor = plr:FindFirstChild("MuscleEmperorReps") and plr.MuscleEmperorReps.Value or 0,
+        Endurance = plr:FindFirstChild("Endurance") and plr.Endurance.Value or 0
+    }
 end
 
--- LABELS
-local Strong = estadisticas:AddLabel("")
-local Endurance = estadisticas:AddLabel("")
-local Mobility = estadisticas:AddLabel("")
-local Rebirths = estadisticas:AddLabel("")
-local Kills = estadisticas:AddLabel("")
-local Coins = estadisticas:AddLabel("")
-local Emperor = estadisticas:AddLabel("")
-local Device = estadisticas:AddLabel("")
+-- 👤 CREAR BOTONES
+local function createPlayer(plr)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1,0,0,25)
+    btn.Text = plr.DisplayName .. " | " .. plr.Name
+    btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Parent = listFrame
 
--- BUSCAR STAT MEJORADO 🔥
-local function findStat(plr, names)
-    for _, v in pairs(plr:GetDescendants()) do
-        if v:IsA("NumberValue") or v:IsA("StringValue") or v:IsA("IntValue") then
-            for _, name in pairs(names) do
-                if v.Name:lower():find(name:lower()) then
-                    return v.Value
-                end
-            end
+    Instance.new("UICorner", btn)
+
+    btn.MouseButton1Click:Connect(function()
+        selectedPlayer = plr
+        dropdownBtn.Text = plr.DisplayName.." ▼"
+        listFrame.Visible = false
+        opened = false
+    end)
+end
+
+-- 🔁 REFRESH
+local function refresh()
+    listFrame:ClearAllChildren()
+    layout.Parent = listFrame
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            createPlayer(plr)
         end
     end
-    return "N/A"
+
+    listFrame.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 10)
 end
 
--- LOOP
+refresh()
+Players.PlayerAdded:Connect(refresh)
+Players.PlayerRemoving:Connect(refresh)
+
+-- 🔥 LOOP STATS
 task.spawn(function()
-    while task.wait(0.3) do
-        if SelectedPlayer then
+    while true do
+        task.wait(0.5)
 
-            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strength","strongt"}))
-            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance"}))
-            Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
-            Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
-            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill"}))
-            Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
+        if selectedPlayer then
+            local data = getData(selectedPlayer)
 
-            -- 🔥 ESTAS SON LAS QUE FALTABAN
-            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"Muscle Emperor Reps","muscle emperor reps","MuscleEmperorReps"}))
-            Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
-
+            statsLabel.Text =
+                "👤 "..selectedPlayer.Name..
+                "\n💪 Strength: "..format(data.Strength)..
+                "\n🔄 Rebirths: "..format(data.Rebirths)..
+                "\n👑 Emperor: "..format(data.Emperor)..
+                "\n🛡️ Endurance: "..format(data.Endurance)
         end
     end
 end)
