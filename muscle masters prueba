@@ -13,7 +13,7 @@ local options = {
 }
 
 -- VENTANA PRINCIPAL
-local window = library:AddWindow("HadesHubV4|Bienvenid@ " .. displayName, options)
+local window = library:AddWindow("HadesHubV5|Bienvenid@ " .. displayName, options)
 
 -- LISTA DE COLORES PARA LA ANIMACIÓN (rojos + naranja + amarillo)
 local colores = {
@@ -782,7 +782,7 @@ end)
 
 local StatsTab = window:AddTab("Tracker Pro")
 
-for i = 1,12 do -- más espacio arriba
+for i = 1,8 do -- más espacio arriba
     StatsTab:AddLabel(" ")
 end
 
