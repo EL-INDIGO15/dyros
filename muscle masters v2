@@ -867,10 +867,12 @@ end)
 
 
 
-local StatsTab = window:AddTab("stats")
+local StatsTab = window:AddTab("Tracker Pro")
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+-- 👇 ESPACIO (ajusta la cantidad)
+for i = 1,5 do
+    StatsTab:AddLabel(" ")
+end
 
 local label = StatsTab:AddLabel("Cargando datos...")
 
