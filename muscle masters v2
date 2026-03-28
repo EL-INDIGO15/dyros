@@ -867,7 +867,7 @@ end)
 
 
 
-local StatsTab = window:AddTab("Stats")
+local StatsTab = window:AddTab("Gain stats")
 
 for i = 1,5 do
     StatsTab:AddLabel(" ")
@@ -907,47 +907,41 @@ local function format(n)
     return tostring(math.floor(n))
 end
 
--- Variables de cálculo
+-- Variables base
 local lastStrength = strengthStat and strengthStat.Value or 0
 local lastEndurance = enduranceStat and enduranceStat.Value or 0
 local lastRebirths = rebirthStat and rebirthStat.Value or 0
-local lastTick = tick()
 
--- 🔥 LOOP ESTABLE
+-- 🔥 LOOP SUAVE (1 SEGUNDO)
 task.spawn(function()
     while true do
-        task.wait(0.25) -- velocidad visual estable
+        task.wait(1) -- 🔥 ahora actualiza cada 1 segundo completo
 
         if not strengthStat then continue end
 
-        local now = tick()
-        local deltaTime = now - lastTick
-        if deltaTime <= 0 then continue end
-
-        local currentStrength = strengthStat and strengthStat.Value or 0
+        local currentStrength = strengthStat.Value
         local currentEndurance = enduranceStat and enduranceStat.Value or 0
         local currentRebirths = rebirthStat and rebirthStat.Value or 0
 
-        local s_perSec = (currentStrength - lastStrength) / deltaTime
-        local e_perSec = (currentEndurance - lastEndurance) / deltaTime
-        local r_perSec = (currentRebirths - lastRebirths) / deltaTime
+        local s_gain = currentStrength - lastStrength
+        local e_gain = currentEndurance - lastEndurance
+        local r_gain = currentRebirths - lastRebirths
 
         label.Text =
             "💪 FUERZA\n"..
             format(currentStrength)..
-            "\n⚡ "..format(s_perSec*60).."/min | "..format(s_perSec*3600).."/h | "..format(s_perSec*86400).."/d\n\n"..
+            "\n⚡ "..format(s_gain*60).."/min | "..format(s_gain*3600).."/h | "..format(s_gain*86400).."/d\n\n"..
 
             "🛡️ DURABILIDAD\n"..
             format(currentEndurance)..
-            "\n⚡ "..format(e_perSec*60).."/min | "..format(e_perSec*3600).."/h | "..format(e_perSec*86400).."/d\n\n"..
+            "\n⚡ "..format(e_gain*60).."/min | "..format(e_gain*3600).."/h | "..format(e_gain*86400).."/d\n\n"..
 
             "🔄 RENACIMIENTOS\n"..
             format(currentRebirths)..
-            "\n⚡ "..format(r_perSec*60).."/min | "..format(r_perSec*3600).."/h | "..format(r_perSec*86400).."/d"
+            "\n⚡ "..format(r_gain*60).."/min | "..format(r_gain*3600).."/h | "..format(r_gain*86400).."/d"
 
         lastStrength = currentStrength
         lastEndurance = currentEndurance
         lastRebirths = currentRebirths
-        lastTick = now
     end
 end)
