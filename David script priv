@@ -505,3 +505,262 @@ Killer:AddSwitch("Auto Punch Fast", function(state)
 end)
 
 
+local Misc = window:AddTab("Misc")
+
+-- ================= MISC =================
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- REMOTES
+local OpenPetRemote = ReplicatedStorage:WaitForChild("RemotesEvent"):WaitForChild("OpenPetEvent")
+
+-- ESTADOS
+local eggsState = {
+    Common = false,
+    Rare = false,
+    Epic = false,
+    Legendary = false,
+    Mythic = false,
+    Master = false
+}
+
+local masterEgg = false
+local autoSpin = false
+
+-- ================= AUTO EGGS LOOP =================
+task.spawn(function()
+    while true do
+        if masterEgg then
+            for eggName, _ in pairs(eggsState) do
+                OpenPetRemote:FireServer(string.lower(eggName))
+            end
+        else
+            for eggName, enabled in pairs(eggsState) do
+                if enabled then
+                    OpenPetRemote:FireServer(string.lower(eggName))
+                end
+            end
+        end
+        task.wait(0.15)
+    end
+end)
+
+-- ================= SWITCHES EGGS =================
+
+Misc:AddSwitch("Common Egg", function(state)
+    eggsState.Common = state
+end)
+
+Misc:AddSwitch("Rare Egg", function(state)
+    eggsState.Rare = state
+end)
+
+Misc:AddSwitch("Epic Egg", function(state)
+    eggsState.Epic = state
+end)
+
+Misc:AddSwitch("Legendary Egg", function(state)
+    eggsState.Legendary = state
+end)
+
+Misc:AddSwitch("Mythic Egg", function(state)
+    eggsState.Mythic = state
+end)
+
+Misc:AddSwitch("Master Eggs", function(state)
+    eggsState.Master = state
+end)
+
+-- ================= AUTO SPIN =================
+Misc:AddSwitch("Auto Spin", function(state)
+    autoSpin = state
+
+    if autoSpin then
+        task.spawn(function()
+            while autoSpin do
+                game:GetService("ReplicatedStorage")
+                    :WaitForChild("RemotesEvent")
+                    :WaitForChild("SpinFunction")
+                    :InvokeServer()
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
+-- Auto Collect Rewards
+Misc:AddSwitch("Auto Claim Rewards", function(state)
+    autoCollect = state
+
+    if autoCollect then
+        task.spawn(function()
+            while autoCollect do
+                for i = 1, 5 do
+                    for attempt = 1, 3 do -- 👈 intenta varias veces
+                        game:GetService("ReplicatedStorage")
+                            :WaitForChild("RemotesEvent")
+                            :WaitForChild("rewardClaim")
+                            :FireServer("reward"..i)
+
+                        task.wait(0.3)
+                    end
+                end
+                task.wait(2)
+            end
+        end)
+    end
+end)
+
+-- AUTO EAT CHOCOLATE (PRO)
+Misc:AddSwitch("Auto Eat Chocolate", function(state)
+    autoEat = state
+
+    if autoEat then
+        task.spawn(function()
+            local player = game.Players.LocalPlayer
+
+            while autoEat do
+                local character = player.Character
+                local backpack = player:FindFirstChild("Backpack")
+
+                if character and backpack then
+
+                    -- BUSCAR CHOCOLATE (BACKPACK + CHARACTER)
+                    local chocolate = nil
+
+                    for _, item in pairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") and item.Name:lower():find("chocolate") then
+                            chocolate = item
+                            break
+                        end
+                    end
+
+                    if not chocolate then
+                        for _, item in pairs(character:GetChildren()) do
+                            if item:IsA("Tool") and item.Name:lower():find("chocolate") then
+                                chocolate = item
+                                break
+                            end
+                        end
+                    end
+
+                    -- SI ENCUENTRA CHOCOLATE
+                    if chocolate then
+
+                        -- EQUIPAR SI NO ESTÁ EQUIPADO
+                        if chocolate.Parent ~= character then
+                            chocolate.Parent = character
+                            task.wait(0.1) -- más tiempo en mano
+                        end
+
+                        -- SPAM MÁS RÁPIDO
+                        for i = 1, 5 do
+                            if chocolate then
+                                chocolate:Activate()
+                            end
+                            task.wait(0.03) -- súper rápido
+                        end
+                    end
+                end
+
+                task.wait(0.05) -- loop rápido
+            end
+        end)
+    end
+end)
+
+-- ================= ANTI AFK PRO =================
+local AntiAFK = false
+local VirtualUser = game:GetService("VirtualUser")
+local AntiAFKConnection = nil
+
+Misc:AddSwitch("Anti AFK", function(state)
+    AntiAFK = state
+
+    if AntiAFKConnection then
+        AntiAFKConnection:Disconnect()
+        AntiAFKConnection = nil
+    end
+
+    if state then
+        AntiAFKConnection = player.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end
+end)
+
+local estadisticas = window:AddTab("Stats Jugadores")
+
+local SelectPlayerName = ""
+local SelectedPlayer = nil
+
+-- DROPDOWN
+local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
+    SelectPlayerName = Value:match("| (.+)")
+    SelectedPlayer = game.Players:FindFirstChild(SelectPlayerName)
+end)
+
+-- PLAYERS
+for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+    PlayerDrop:Add(Plr.DisplayName .. " | " .. Plr.Name)
+end
+
+game.Players.PlayerAdded:Connect(function(plr)
+    PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
+end)
+
+-- FORMATO
+local function FormatNumber(n)
+    if typeof(n) ~= "number" then return tostring(n) end
+    local suffix = {"","K","M","B","T"}
+    local i = 1
+    while n >= 1000 and i < #suffix do
+        n /= 1000
+        i += 1
+    end
+    return string.format("%.2f", n) .. suffix[i]
+end
+
+-- LABELS
+local Strong = estadisticas:AddLabel("")
+local Endurance = estadisticas:AddLabel("")
+local Mobility = estadisticas:AddLabel("")
+local Rebirths = estadisticas:AddLabel("")
+local Kills = estadisticas:AddLabel("")
+local Coins = estadisticas:AddLabel("")
+local Emperor = estadisticas:AddLabel("")
+local Device = estadisticas:AddLabel("")
+
+-- BUSCAR STAT MEJORADO 🔥
+local function findStat(plr, names)
+    for _, v in pairs(plr:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("StringValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name:lower()) then
+                    return v.Value
+                end
+            end
+        end
+    end
+    return "N/A"
+end
+
+-- LOOP
+task.spawn(function()
+    while task.wait(0.3) do
+        if SelectedPlayer then
+
+            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strong","strength"}))
+            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance","durability"}))
+            Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
+            Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
+            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill"}))
+            Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
+
+            -- 🔥 ESTAS SON LAS QUE FALTABAN
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"Muscle Emperor Reps","muscle emperor reps","MuscleEmperorReps"}))
+            Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
+
+        end
+    end
+end)
