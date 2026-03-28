@@ -787,6 +787,8 @@ Misc:AddSwitch("Anti AFK", function(state)
     end
 end)
 
+
+
 local estadisticas = window:AddTab("Stats Jugadores")
 
 local SelectPlayerName = ""
@@ -860,5 +862,89 @@ task.spawn(function()
             Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
 
         end
+    end
+end)
+
+
+
+local StatsTab = window:AddTab("stats")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local label = StatsTab:AddLabel("Cargando datos...")
+
+-- 🔍 BUSCAR STAT AUTOMÁTICO
+local function findStat(names)
+    for _, v in pairs(LocalPlayer:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name) then
+                    return v
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- Esperar a que carguen stats
+task.wait(2)
+
+local strengthStat = findStat({"strong","strength"})
+local enduranceStat = findStat({"endurance","durability"})
+local rebirthStat = findStat({"rebirth"})
+
+-- Valores iniciales
+local startStrength = strengthStat and strengthStat.Value or 0
+local startEndurance = enduranceStat and enduranceStat.Value or 0
+local startRebirths = rebirthStat and rebirthStat.Value or 0
+
+local startTime = tick()
+
+-- 🔢 FORMATO BONITO
+local function format(n)
+    if n >= 1e12 then return string.format("%.2fT", n/1e12) end
+    if n >= 1e9 then return string.format("%.2fB", n/1e9) end
+    if n >= 1e6 then return string.format("%.2fM", n/1e6) end
+    if n >= 1e3 then return string.format("%.1fK", n/1e3) end
+    return tostring(math.floor(n))
+end
+
+-- 📊 CALCULO
+local function calc(current, start, elapsed)
+    local gained = current - start
+    local perSec = gained / elapsed
+    return perSec, perSec*60, perSec*3600, perSec*86400
+end
+
+-- 🔥 LOOP PRINCIPAL
+task.spawn(function()
+    while true do
+        task.wait(1)
+
+        local elapsed = tick() - startTime
+        if elapsed <= 0 then continue end
+
+        local currentStrength = strengthStat and strengthStat.Value or 0
+        local currentEndurance = enduranceStat and enduranceStat.Value or 0
+        local currentRebirths = rebirthStat and rebirthStat.Value or 0
+
+        local s_sec, s_min, s_hour, s_day = calc(currentStrength, startStrength, elapsed)
+        local e_sec, e_min, e_hour, e_day = calc(currentEndurance, startEndurance, elapsed)
+        local r_sec, r_min, r_hour, r_day = calc(currentRebirths, startRebirths, elapsed)
+
+        label.Text =
+            "💪 FUERZA\n"..
+            format(currentStrength)..
+            "\n⚡ "..format(s_min).."/min | "..format(s_hour).."/h | "..format(s_day).."/d\n\n"..
+
+            "🛡️ DURABILIDAD\n"..
+            format(currentEndurance)..
+            "\n⚡ "..format(e_min).."/min | "..format(e_hour).."/h | "..format(e_day).."/d\n\n"..
+
+            "🔄 RENACIMIENTOS\n"..
+            format(currentRebirths)..
+            "\n⚡ "..format(r_min).."/min | "..format(r_hour).."/h | "..format(r_day).."/d"
     end
 end)
