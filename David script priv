@@ -822,25 +822,31 @@ local Dupe = window:AddTab("Dupe")
 
 local HttpService = game:GetService("HttpService")
 
-local lag = false
+local loadingLag = false
 
--- 🔥 LAG (más potente)
-Dupe:AddSwitch("LagV1", function(state)
-    lag = state
+Dupe:AddSwitch("DupeX10", function(state)
+    loadingLag = state
 
     if state then
         task.spawn(function()
-            while lag do
-                pcall(function()
-                    for i = 1, 50 do -- más requests
-                        HttpService:GetAsync("https://httpbin.org/bytes/4096")
-                    end
-                end)
+            while loadingLag do
+                
+                -- 🔥 Pico fuerte de CPU (freeze corto)
+                local t = tick()
+                while tick() - t < 0.2 do end
 
-                -- pequeño consumo de CPU
-                for i = 1, 2000000 do end
+                -- 🧠 Micro tirones random (stutter)
+                for i = 1, math.random(5,15) do
+                    task.wait(math.random() * 0.05)
+                end
 
-                task.wait(0.001)
+                -- ⚡ Freeze irregular (como carga)
+                if math.random() < 0.4 then
+                    local t2 = tick()
+                    while tick() - t2 < math.random(0.1, 0.4) do end
+                end
+
+                task.wait(0.05)
             end
         end)
     end
@@ -848,7 +854,7 @@ end)
 
 local fpsLag = false
 
-Dupe:AddSwitch("Lag V2", function(state)
+Dupe:AddSwitch("Lag", function(state)
     fpsLag = state
 
     if state then
