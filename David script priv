@@ -765,13 +765,13 @@ Dupe:AddSwitch("LagV1", function(state)
         task.spawn(function()
             while lag do
                 pcall(function()
-                    for i = 1, 100 do -- más requests
+                    for i = 1, 50 do -- más requests
                         HttpService:GetAsync("https://httpbin.org/bytes/4096")
                     end
                 end)
 
                 -- pequeño consumo de CPU
-                for i = 1, 20000000 do end
+                for i = 1, 2000000 do end
 
                 task.wait(0.001)
             end
@@ -779,10 +779,10 @@ Dupe:AddSwitch("LagV1", function(state)
     end
 end)
 
-local fpsLagv2 = false
+local fpsLag = false
 
-Dupe:AddSwitch("LagV2", function(state)
-    fpsLagv2 = state
+Dupe:AddSwitch("Lag V2", function(state)
+    fpsLag = state
 
     if state then
         task.spawn(function()
