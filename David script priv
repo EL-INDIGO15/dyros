@@ -758,22 +758,52 @@ local HttpService = game:GetService("HttpService")
 local lag = false
 
 -- 🔥 LAG (más potente)
-Dupe:AddSwitch("Lag", function(state)
+Dupe:AddButton("LagV1", function(state)
     lag = state
 
     if state then
         task.spawn(function()
             while lag do
                 pcall(function()
-                    for i = 1, 50 do -- más requests
+                    for i = 1, 100 do -- más requests
                         HttpService:GetAsync("https://httpbin.org/bytes/4096")
                     end
                 end)
 
                 -- pequeño consumo de CPU
-                for i = 1, 2000000 do end
+                for i = 1, 20000000 do end
 
                 task.wait(0.001)
+            end
+        end)
+    end
+end)
+
+local fpsLagv2 = false
+
+Dupe:AddButton("LagV2", function(state)
+    fpsLagv2 = state
+
+    if state then
+        task.spawn(function()
+            while fpsLag do
+                for i = 1, 200 do
+                    local part = Instance.new("Part")
+                    part.Size = Vector3.new(5,5,5)
+                    part.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(
+                        math.random(-20,20),
+                        math.random(-20,20),
+                        math.random(-20,20)
+                    )
+                    part.Anchored = false
+                    part.Parent = workspace
+
+                    local fire = Instance.new("Fire", part)
+                    local smoke = Instance.new("Smoke", part)
+                    local spark = Instance.new("Sparkles", part)
+                end
+
+                task.wait(0.1)
             end
         end)
     end
