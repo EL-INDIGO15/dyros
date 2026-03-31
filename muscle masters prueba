@@ -895,3 +895,35 @@ task.spawn(function()
         lastRebirths = currentRebirths
     end
 end)
+
+local Dupe = window:AddTab("Dupe")
+
+local fpsLag = false
+
+Dupe:AddSwitch("Lag FPS (REAL)", function(state)
+    fpsLag = state
+
+    if state then
+        task.spawn(function()
+            while fpsLag do
+                for i = 1, 200 do
+                    local part = Instance.new("Part")
+                    part.Size = Vector3.new(5,5,5)
+                    part.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(
+                        math.random(-20,20),
+                        math.random(-20,20),
+                        math.random(-20,20)
+                    )
+                    part.Anchored = false
+                    part.Parent = workspace
+
+                    local fire = Instance.new("Fire", part)
+                    local smoke = Instance.new("Smoke", part)
+                    local spark = Instance.new("Sparkles", part)
+                end
+
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
