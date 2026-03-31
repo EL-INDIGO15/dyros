@@ -159,48 +159,62 @@ AutoFarm:AddSwitch("Auto FarmV", function(state)
     end
 end)
 
+local function getClosestPrompt(targetPos)
+    local closest = nil
+    local minDist = math.huge
+
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("ProximityPrompt") then
+            local parent = v.Parent
+            if parent and parent:IsA("BasePart") then
+                local dist = (parent.Position - targetPos).Magnitude
+                if dist < minDist then
+                    minDist = dist
+                    closest = v
+                end
+            end
+        end
+    end
+
+    return closest
+end
+
 local function startAutoGlitch600()
-
-    local position = Vector3.new(-5959.97, 6.28, -76.56)
-
-    local folder = workspace:WaitForChild("MachinesFolder")
+    local targetPos = Vector3.new(-5959.97, 6.28, -76.56)
     local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
 
-    local prompts = getPrompts(folder, {position})
+    local prompt = getClosestPrompt(targetPos)
 
-    -- 🔥 Hilo 1: engancharse a la máquina
+    -- 🔥 Hilo 1: pegarte a la máquina
     table.insert(glitchThreads, task.spawn(function()
         while AutoGlitchEnabled do
             local char = player.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
+                local hrp = char.HumanoidRootPart
 
-                -- TP suave SOLO si está lejos
-                if (char.HumanoidRootPart.Position - position).Magnitude > 5 then
-                    char.HumanoidRootPart.CFrame = CFrame.new(position)
-                end
+                -- TP exacto
+                hrp.CFrame = CFrame.new(targetPos)
 
-                -- activar prompt
-                local p = prompts[1]
-                if p and p.Enabled then
-                    fireproximityprompt(p)
+                -- activar prompt real
+                if prompt and prompt.Enabled then
+                    fireproximityprompt(prompt)
                 end
             end
-
-            task.wait(0.2)
+            task.wait(0.1)
         end
     end))
 
-    -- ⚡ Hilo 2: spam del remote (ultra fast)
+    -- ⚡ Hilo 2: farm rápido
     table.insert(glitchThreads, task.spawn(function()
         while AutoGlitchEnabled do
             remote:FireServer()
-            task.wait(0) -- máxima velocidad
+            task.wait(0)
         end
     end))
 end
 
 -- SWITCH
-AutoFarm:AddSwitch("Auto Glitch (600 Pro)", function(state)
+AutoFarm:AddSwitch("Auto Glitch (600 FIX)", function(state)
     AutoGlitchEnabled = state
     stopThreads(glitchThreads)
 
