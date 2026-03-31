@@ -159,55 +159,53 @@ AutoFarm:AddSwitch("Auto FarmV", function(state)
     end
 end)
 
-local AutoGlitchTP = false
-local glitchThread
+local function startAutoGlitch600()
 
-AutoFarm:AddSwitch("Auto Glitch (600 Rebirths)", function(state)
-    AutoGlitchTP = state
+    local position = Vector3.new(-5959.97, 6.28, -76.56)
 
-    if state then
-        glitchThread = task.spawn(function()
+    local folder = workspace:WaitForChild("MachinesFolder")
+    local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
 
-            local player = game.Players.LocalPlayer
-            local ReplicatedStorage = game:GetService("ReplicatedStorage")
-            local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
+    local prompts = getPrompts(folder, {position})
 
-            while AutoGlitchTP do
-                local char = player.Character
-                if char and char:FindFirstChild("HumanoidRootPart") then
+    -- 🔥 Hilo 1: engancharse a la máquina
+    table.insert(glitchThreads, task.spawn(function()
+        while AutoGlitchEnabled do
+            local char = player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
 
-                    -- 📍 TP A LA MÁQUINA
-                    char.HumanoidRootPart.CFrame = CFrame.new(
-                        -5959.97,
-                        6.28,
-                        -76.56
-                    )
-
-                    -- 🔥 ACTIVAR MÁQUINA (remote)
-                    pcall(function()
-                        remote:FireServer()
-                    end)
-
-                    -- 🔘 ACTIVAR PROXIMITY SI EXISTE
-                    for _, v in pairs(workspace:GetDescendants()) do
-                        if v:IsA("ProximityPrompt") then
-                            local parent = v.Parent
-                            if parent and (parent.Position - Vector3.new(-5959.97, 6.28, -76.56)).Magnitude < 10 then
-                                fireproximityprompt(v)
-                            end
-                        end
-                    end
-
+                -- TP suave SOLO si está lejos
+                if (char.HumanoidRootPart.Position - position).Magnitude > 5 then
+                    char.HumanoidRootPart.CFrame = CFrame.new(position)
                 end
 
-                task.wait(0.05) -- ⚡ velocidad alta
+                -- activar prompt
+                local p = prompts[1]
+                if p and p.Enabled then
+                    fireproximityprompt(p)
+                end
             end
-        end)
-    else
-        if glitchThread then
-            task.cancel(glitchThread)
-            glitchThread = nil
+
+            task.wait(0.2)
         end
+    end))
+
+    -- ⚡ Hilo 2: spam del remote (ultra fast)
+    table.insert(glitchThreads, task.spawn(function()
+        while AutoGlitchEnabled do
+            remote:FireServer()
+            task.wait(0) -- máxima velocidad
+        end
+    end))
+end
+
+-- SWITCH
+AutoFarm:AddSwitch("Auto Glitch (600 Pro)", function(state)
+    AutoGlitchEnabled = state
+    stopThreads(glitchThreads)
+
+    if state then
+        startAutoGlitch600()
     end
 end)
 
