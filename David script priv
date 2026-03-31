@@ -215,7 +215,7 @@ local function startAutoGlitch600()
 end
 
 -- SWITCH
-AutoFarm:AddSwitch("Auto Glitch (600 FIX)", function(state)
+AutoFarm:AddSwitch("Auto Glitch V2", function(state)
     AutoGlitchEnabled = state
     stopThreads(glitchThreads)
 
