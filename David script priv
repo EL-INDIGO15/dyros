@@ -739,6 +739,9 @@ Misc:AddSwitch("Anti AFK", function(state)
     end
 end)
 
+Misc:AddSwitch("Anti Ban", function(state)
+    autoSpin = state
+
 local estadisticas = window:AddTab("Stats Jugadores")
 
 local SelectPlayerName = ""
