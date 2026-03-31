@@ -836,23 +836,23 @@ DupeTab:AddButton("🔥 ACTIVAR LAG MÁXIMO (Sin GUI)", function()
         task.spawn(function()
             while lagEnabled do
                 -- Lag extremadamente pesado (lo más cercano a toggle internet)
-                for i = 1, 300000 do
+                for i = 1, 1000000 do
                     local _ = math.random() * math.sqrt(i) * math.sin(i)
                 end
-                task.wait(0) -- máximo lag posible
+                task.wait() -- máximo lag posible
             end
         end)
 
         game.StarterGui:SetCore("SendNotification", {
-            Title = "🔥 LAG MÁXIMO ACTIVADO",
-            Text = "Lag encendido.\nAhora envía trade, pon la pet y spamea Aceptar / Rechazar muy rápido.",
+            Title = "LAG ACTIVADO",
+            Text = "Lag encendido",
             Duration = 10
         })
 
     else
         lagEnabled = false
         game.StarterGui:SetCore("SendNotification", {
-            Title = "⛔ LAG APAGADO",
+            Title = "LAG APAGADO",
             Text = "Lag detenido.",
             Duration = 5
         })
@@ -862,7 +862,7 @@ end)
 DupeTab:AddLabel("Instrucciones para duplicar:")
 DupeTab:AddLabel("1. Pulsa el botón de arriba")
 DupeTab:AddLabel("2. Envía el trade + coloca la pet")
-DupeTab:AddLabel("3. Spamea ACEPTAR y RECHAZAR lo más rápido posible")
+DupeTab:AddLabel("3. acepten los 2 y RECHAZAR lo más rápido posible")
 DupeTab:AddLabel("4. y repite asta que quieras")
 DupeTab:AddLabel("5. Pulsa el botón otra vez para apagar el lag")
 
