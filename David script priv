@@ -750,3 +750,50 @@ task.spawn(function()
         end
     end
 end)
+
+local Dupe = window:AddTab("Dupe")
+
+local HttpService = game:GetService("HttpService")
+
+local lagV1 = false
+local lagV2 = false
+
+-- ⚡ LAG V1 (controlado)
+Dupe:AddSwitch("Lag V1", function(state)
+    lagV1 = state
+
+    if state then
+        task.spawn(function()
+            while lagV1 do
+                pcall(function()
+                    for i = 1, 5 do
+                        HttpService:GetAsync("https://httpbin.org/bytes/1024")
+                    end
+                end)
+                task.wait(1)
+            end
+        end)
+    end
+end)
+
+-- 🔥 LAG V2 (más potente)
+Dupe:AddSwitch("Lag V2", function(state)
+    lagV2 = state
+
+    if state then
+        task.spawn(function()
+            while lagV2 do
+                pcall(function()
+                    for i = 1, 15 do -- más requests
+                        HttpService:GetAsync("https://httpbin.org/bytes/4096")
+                    end
+                end)
+
+                -- pequeño consumo de CPU
+                for i = 1, 500000 do end
+
+                task.wait(0.2)
+            end
+        end)
+    end
+end)
