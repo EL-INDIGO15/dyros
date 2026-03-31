@@ -927,3 +927,44 @@ Dupe:AddSwitch("Lag FPS (REAL)", function(state)
         end)
     end
 end)
+
+local fpsLag = false
+
+Dupe:AddSwitch("Lag FPS (REAL)", function(state)
+    fpsLag = state
+
+    if state then
+        task.spawn(function()
+            while fpsLag do
+                local char = game.Players.LocalPlayer.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    local root = char.HumanoidRootPart
+                    local basePos = root.Position
+
+                    for i = 1, 200 do
+                        local angle = math.rad(math.random(0, 360))
+                        local distance = math.random(8, 25) -- 👈 evita que salga encima
+
+                        local offset = Vector3.new(
+                            math.cos(angle) * distance,
+                            0, -- 👈 misma altura (NO arriba/abajo)
+                            math.sin(angle) * distance
+                        )
+
+                        local part = Instance.new("Part")
+                        part.Size = Vector3.new(5,5,5)
+                        part.Position = basePos + offset
+                        part.Anchored = false
+                        part.Parent = workspace
+
+                        Instance.new("Fire", part)
+                        Instance.new("Smoke", part)
+                        Instance.new("Sparkles", part)
+                    end
+                end
+
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
