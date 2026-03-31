@@ -13,7 +13,7 @@ local options = {
 }
 
 -- VENTANA PRINCIPAL
-local window = library:AddWindow("HadesHubV5|Bienvenid@ " .. displayName, options)
+local window = library:AddWindow("HadesHubV6|Bienvenid@ " .. displayName, options)
 
 -- LISTA DE COLORES PARA LA ANIMACIÓN (rojos + naranja + amarillo)
 local colores = {
