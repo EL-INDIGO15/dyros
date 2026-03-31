@@ -816,68 +816,103 @@ task.spawn(function()
     end
 end)
 
-local Dupe = window:AddTab("Dupe")
+-- =============================================
+-- AGREGA ESTE CÓDIGO AL FINAL DE TU SCRIPT
+-- (justo antes del último "window:SelectTab(1)" o al final)
+-- =============================================
 
-local HttpService = game:GetService("HttpService")
+local DupeTab = window:AddTab("Dupe")
 
-local loadingLag = false
+local lagEnabled = false
+local dupeGui = nil
 
-Dupe:AddSwitch("DupeX10", function(state)
-    loadingLag = state
+DupeTab:AddButton("Lag para dupe", function()
+    lagEnabled = not lagEnabled
 
-    if state then
+    if lagEnabled then
+        -- ================= CREA LA VENTANA FALSA DE DELTA =================
+        dupeGui = Instance.new("ScreenGui")
+        dupeGui.Name = "DeltaDupeLoading"
+        dupeGui.ResetOnSpawn = false
+        dupeGui.Parent = game:GetService("CoreGui")
+
+        local mainFrame = Instance.new("Frame")
+        mainFrame.Size = UDim2.new(0, 420, 0, 220)
+        mainFrame.Position = UDim2.new(0.5, -210, 0.5, -110)
+        mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        mainFrame.BorderSizePixel = 0
+        mainFrame.Parent = dupeGui
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 12)
+        corner.Parent = mainFrame
+
+        -- Logo Delta (grande y rojo como el real)
+        local logo = Instance.new("TextLabel")
+        logo.Size = UDim2.new(1, 0, 0.6, 0)
+        logo.BackgroundTransparency = 1
+        logo.Text = "Δ"
+        logo.TextColor3 = Color3.fromRGB(255, 0, 80)
+        logo.TextScaled = true
+        logo.Font = Enum.Font.GothamBold
+        logo.TextStrokeTransparency = 0
+        logo.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        logo.Parent = mainFrame
+
+        local title = Instance.new("TextLabel")
+        title.Size = UDim2.new(1, 0, 0.4, 0)
+        title.Position = UDim2.new(0, 0, 0.6, 0)
+        title.BackgroundTransparency = 1
+        title.Text = "DELTA LOADING..."
+        title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        title.TextScaled = true
+        title.Font = Enum.Font.GothamBold
+        title.Parent = mainFrame
+
+        -- ================= LAG INFINITO (el que buguea el trade) =================
         task.spawn(function()
-            while loadingLag do
-                
-                -- 🔥 Pico fuerte de CPU (freeze corto)
-                local t = tick()
-                while tick() - t < 0.2 do end
-
-                -- 🧠 Micro tirones random (stutter)
-                for i = 1, math.random(5,15) do
-                    task.wait(math.random() * 0.05)
+            while lagEnabled do
+                -- Loop pesado que congela el cliente (igual que cuando Delta carga)
+                for i = 1, 75000 do
+                    -- nada, solo consume CPU
                 end
-
-                -- ⚡ Freeze irregular (como carga)
-                if math.random() < 0.4 then
-                    local t2 = tick()
-                    while tick() - t2 < math.random(0.1, 0.4) do end
-                end
-
-                task.wait(0.05)
+                task.wait(0) -- sin esperar nada = máximo lag
+            end
+            if dupeGui then
+                dupeGui:Destroy()
+                dupeGui = nil
             end
         end)
+
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "✅ Delta Dupe Lag ACTIVADO",
+            Text = "Ahora envía el trade, pon la pet y spamea Aceptar/Cancelar.\nCuanto más lo hagas, más se dupeará.",
+            Duration = 10
+        })
+
+    else
+        lagEnabled = false
+        if dupeGui then
+            dupeGui:Destroy()
+            dupeGui = nil
+        end
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "⛔ Delta Dupe Lag DESACTIVADO",
+            Text = "Lag detenido",
+            Duration = 4
+        })
     end
 end)
 
-local fpsLag = false
+DupeTab:AddLabel("Cómo usarlo:")
+DupeTab:AddLabel("1. Pulsa el botón ")
+DupeTab:AddLabel("2. Envía trade + pon la pet")
+DupeTab:AddLabel("3. Que acepte el otro")
+DupeTab:AddLabel("4. Spammea aceptar y cancelar")
+DupeTab:AddLabel("5. Desactiva el botón cuando termines")
 
-Dupe:AddSwitch("Lag", function(state)
-    fpsLag = state
-
-    if state then
-        task.spawn(function()
-            while fpsLag do
-                for i = 1, 200 do
-                    local part = Instance.new("Part")
-                    part.Size = Vector3.new(5,5,5)
-                    part.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(
-                        math.random(-20,20),
-                        math.random(-20,20),
-                        math.random(-20,20)
-                    )
-                    part.Anchored = false
-                    part.Parent = workspace
-
-                    local fire = Instance.new("Fire", part)
-                    local smoke = Instance.new("Smoke", part)
-                    local spark = Instance.new("Sparkles", part)
-                end
-
-                task.wait(0.1)
-            end
-        end)
-    end
-end)
+-- ================= RECUERDA =================
+-- Este método es el mismo que usa Delta cuando está "cargando".
+-- Funciona porque el cliente se congela y el servidor acepta las dos acciones.
 
 Dupe:AddSwitch("Anti Ban")
