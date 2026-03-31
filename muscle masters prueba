@@ -159,6 +159,58 @@ AutoFarm:AddSwitch("Auto FarmV", function(state)
     end
 end)
 
+local AutoGlitchTP = false
+local glitchThread
+
+AutoFarm:AddSwitch("Auto Glitch (600 Rebirths)", function(state)
+    AutoGlitchTP = state
+
+    if state then
+        glitchThread = task.spawn(function()
+
+            local player = game.Players.LocalPlayer
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
+
+            while AutoGlitchTP do
+                local char = player.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+
+                    -- 📍 TP A LA MÁQUINA
+                    char.HumanoidRootPart.CFrame = CFrame.new(
+                        -5959.97,
+                        6.28,
+                        -76.56
+                    )
+
+                    -- 🔥 ACTIVAR MÁQUINA (remote)
+                    pcall(function()
+                        remote:FireServer()
+                    end)
+
+                    -- 🔘 ACTIVAR PROXIMITY SI EXISTE
+                    for _, v in pairs(workspace:GetDescendants()) do
+                        if v:IsA("ProximityPrompt") then
+                            local parent = v.Parent
+                            if parent and (parent.Position - Vector3.new(-5959.97, 6.28, -76.56)).Magnitude < 10 then
+                                fireproximityprompt(v)
+                            end
+                        end
+                    end
+
+                end
+
+                task.wait(0.05) -- ⚡ velocidad alta
+            end
+        end)
+    else
+        if glitchThread then
+            task.cancel(glitchThread)
+            glitchThread = nil
+        end
+    end
+end)
+
 -- ================= AUTO GLITCH =================
 local function startAutoGlitch()
     local rebirths = player.leaderstats.Rebirths.Value
