@@ -797,3 +797,23 @@ Dupe:AddSwitch("Lag V2", function(state)
         end)
     end
 end)
+
+-- 🔥 LAG V3 (más potente)
+Dupe:AddSwitch("Lag V3", function(state)
+    lagV3 = state
+local HttpService = game:GetService("HttpService")
+
+while true do
+pcall(function()
+for i = 1, 50 do
+HttpService:GetAsync("https://httpbin.org/bytes/65536")
+end
+end)
+
+for i = 1, 2000000 do end  
+  
+task.wait(0.001)
+
+end
+
+Que hace este script
