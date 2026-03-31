@@ -869,3 +869,17 @@ DupeTab:AddLabel("5. Pulsa el botón otra vez para apagar el lag")
 DupeTab:AddLabel(" ")
 DupeTab:AddLabel("Este lag es el más fuerte posible sin usar programas externos.")
 DupeTab:AddSwitch("Anti Ban")
+
+local noteTab = window:AddTab("Creditos")
+
+-- Add a decorative header with centered text
+noteTab:AddLabel("David OWNER")
+
+-- Add spacers for better layout
+noteTab:AddLabel("Próximas actualizaciones:")
+
+-- This gives better control over formatting
+noteTab:AddLabel("Dupe")
+
+-- This gives better control over formatting
+noteTab:AddLabel("Hades")
