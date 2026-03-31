@@ -755,65 +755,26 @@ local Dupe = window:AddTab("Dupe")
 
 local HttpService = game:GetService("HttpService")
 
-local lagV1 = false
-local lagV2 = false
+local lag = false
 
--- ⚡ LAG V1 (controlado)
-Dupe:AddSwitch("Lag V1", function(state)
-    lagV1 = state
-
-    if state then
-        task.spawn(function()
-            while lagV1 do
-                pcall(function()
-                    for i = 1, 5 do
-                        HttpService:GetAsync("https://httpbin.org/bytes/1024")
-                    end
-                end)
-                task.wait(1)
-            end
-        end)
-    end
-end)
-
--- 🔥 LAG V2 (más potente)
-Dupe:AddSwitch("Lag V2", function(state)
-    lagV2 = state
+-- 🔥 LAG (más potente)
+Dupe:AddSwitch("Lag", function(state)
+    lag = state
 
     if state then
         task.spawn(function()
-            while lagV2 do
+            while lag do
                 pcall(function()
-                    for i = 1, 15 do -- más requests
+                    for i = 1, 50 do -- más requests
                         HttpService:GetAsync("https://httpbin.org/bytes/4096")
                     end
                 end)
 
                 -- pequeño consumo de CPU
-                for i = 1, 500000 do end
+                for i = 1, 2000000 do end
 
-                task.wait(0.2)
+                task.wait(0.001)
             end
         end)
     end
 end)
-
--- 🔥 LAG V3 (más potente)
-Dupe:AddSwitch("Lag V3", function(state)
-    lagV3 = state
-local HttpService = game:GetService("HttpService")
-
-while true do
-pcall(function()
-for i = 1, 50 do
-HttpService:GetAsync("https://httpbin.org/bytes/65536")
-end
-end)
-
-for i = 1, 2000000 do end  
-  
-task.wait(0.001)
-
-end
-
-Que hace este script
