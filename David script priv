@@ -829,14 +829,14 @@ local DupeTab = window:AddTab("Dupe")
 
 local lagEnabled = false
 
-DupeTab:AddButton("🔥 ACTIVAR LAG MÁXIMO (Sin GUI)", function()
+DupeTab:AddButton("Lag", function()
     lagEnabled = not lagEnabled
 
     if lagEnabled then
         task.spawn(function()
             while lagEnabled do
                 -- Lag extremadamente pesado (lo más cercano a toggle internet)
-                for i = 1, 1000000 do
+                for i = 1, 9000000 do
                     local _ = math.random() * math.sqrt(i) * math.sin(i)
                 end
                 task.wait() -- máximo lag posible
@@ -875,11 +875,11 @@ local noteTab = window:AddTab("Creditos")
 -- Add a decorative header with centered text
 noteTab:AddLabel("David OWNER")
 
+-- This gives better control over formatting
+noteTab:AddLabel("Hades")
+
 -- Add spacers for better layout
 noteTab:AddLabel("Próximas actualizaciones:")
 
 -- This gives better control over formatting
 noteTab:AddLabel("Dupe")
-
--- This gives better control over formatting
-noteTab:AddLabel("Hades")
