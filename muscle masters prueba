@@ -930,8 +930,8 @@ end)
 
 local fpsLag = false
 
-Dupe:AddSwitch("Lag FPS (REAL)", function(state)
-    fpsLag = state
+Dupe:AddSwitch("Lag V2", function(state)
+    fpsLagv1 = state
 
     if state then
         task.spawn(function()
