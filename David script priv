@@ -160,6 +160,70 @@ AutoFarm:AddSwitch("Fast Glitch", function(state)
     end
 end)
 
+local function getClosestPrompt(targetPos)
+    local closest = nil
+    local minDist = math.huge
+
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("ProximityPrompt") then
+            local parent = v.Parent
+            if parent and parent:IsA("BasePart") then
+                local dist = (parent.Position - targetPos).Magnitude
+                if dist < minDist then
+                    minDist = dist
+                    closest = v
+                end
+            end
+        end
+    end
+
+    return closest
+end
+
+local function startAutoGlitch600()
+    local targetPos = Vector3.new(-5959.97, 6.28, -76.56)
+    local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
+
+    local prompt = getClosestPrompt(targetPos)
+
+    -- 🔥 Hilo 1: pegarte a la máquina
+    table.insert(glitchThreads, task.spawn(function()
+        while AutoGlitchEnabled do
+            local char = player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local hrp = char.HumanoidRootPart
+
+                -- TP exacto
+                hrp.CFrame = CFrame.new(targetPos)
+
+                -- activar prompt real
+                if prompt and prompt.Enabled then
+                    fireproximityprompt(prompt)
+                end
+            end
+            task.wait(0.1)
+        end
+    end))
+
+    -- ⚡ Hilo 2: farm rápido
+    table.insert(glitchThreads, task.spawn(function()
+        while AutoGlitchEnabled do
+            remote:FireServer()
+            task.wait(0)
+        end
+    end))
+end
+
+-- SWITCH
+AutoFarm:AddSwitch("Auto Glitch (600 FIX)", function(state)
+    AutoGlitchEnabled = state
+    stopThreads(glitchThreads)
+
+    if state then
+        startAutoGlitch600()
+    end
+end)
+
 -- ================= AUTO REBIRTH =================
 AutoFarm:AddSwitch("Fast Rebirth", function(state)
     AutoRebirthEnabled = state
