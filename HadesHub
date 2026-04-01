@@ -107,7 +107,7 @@ local function startAutoFarm()
     end))
 end
 
-AutoFarm:AddSwitch("Fast farm", function(state)
+AutoFarm:AddSwitch("farm", function(state)
     AutoFarmEnabled = state
     stopThreads(farmThreads)
 
@@ -151,7 +151,7 @@ local function startAutoGlitch()
     end))
 end
 
-AutoFarm:AddSwitch("Fast Glitch", function(state)
+AutoFarm:AddSwitch("Glitch", function(state)
     AutoGlitchEnabled = state
     stopThreads(glitchThreads)
 
@@ -215,7 +215,7 @@ local function startAutoGlitch600()
 end
 
 -- SWITCH
-AutoFarm:AddSwitch("Auto Glitch V2", function(state)
+AutoFarm:AddSwitch("Fast Glicht", function(state)
     AutoGlitchEnabled = state
     stopThreads(glitchThreads)
 
