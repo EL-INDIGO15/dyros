@@ -1,0 +1,301 @@
+-- CARGA DE LIBRERÍA 
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/EL-INDIGO15/dyros/refs/heads/main/libreria"))() 
+
+-- OBTENER NOMBRE DEL JUGADOR 
+local player = game.Players.LocalPlayer 
+local displayName = player.DisplayName or player.Name 
+
+-- OPCIONES DE LA VENTANA 
+local options = {
+    main_color = Color3.fromRGB(220, 20, 60),
+    min_size = Vector2.new(600, 820),
+    can_resize = false,
+}
+
+local window = library:AddWindow("HadesHubClanGHTONTOP|Scythe Masters - AutoFarm - Bienvenid@ " .. displayName, options)
+
+-- ANIMACIÓN DE COLOR 
+local colores = {
+    Color3.fromRGB(220, 20, 60), Color3.fromRGB(255, 102, 102), Color3.fromRGB(255, 0, 0),
+    Color3.fromRGB(255, 140, 0), Color3.fromRGB(255, 165, 0), Color3.fromRGB(255, 215, 0), Color3.fromRGB(255, 255, 0)
+}
+
+task.spawn(function()
+    local indice = 1
+    while true do
+        local colorActual = colores[indice]
+        local colorSiguiente = colores[indice % #colores + 1]
+        for i = 0, 50 do
+            local alpha = i / 50
+            options.main_color = colorActual:Lerp(colorSiguiente, alpha)
+            task.wait(0.05)
+        end
+        indice = indice % #colores + 1
+    end
+end)
+
+local MainTab = window:AddTab("AutoFarm")
+
+-- ================= VARIABLES =================
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = game.Players.LocalPlayer
+
+local AutoSwingEnabled = false
+local AutoRebirth3Enabled = false
+local AutoRebirth30Enabled = false
+local AutoRebirth300Enabled = false
+local AutoRebirth3kEnabled = false
+local NoVisualEnabled = false
+
+local swingThread = nil
+local currentScythe = nil
+local rebirthRemote = nil   -- ← Aquí guardaremos el remote que encuentre automáticamente
+
+-- ================= FUNCIÓN PARA BUSCAR EL REMOTE DE REBIRTH AUTOMÁTICAMENTE =================
+local function findRebirthRemote()
+    -- 1. Primero probamos el remote que usaba en Muscle Masters (el que ya te funcionaba antes)
+    local possible = {
+        ReplicatedStorage:FindFirstChild("RemotesEvent") and ReplicatedStorage.RemotesEvent:FindFirstChild("RebirthEvent"),
+        ReplicatedStorage:FindFirstChild("RemotesEvent") and ReplicatedStorage.RemotesEvent:FindFirstChild("Rebirth"),
+        ReplicatedStorage:FindFirstChild("RebirthEvent"),
+        ReplicatedStorage:FindFirstChild("Rebirth"),
+        ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Rebirth"),
+    }
+    
+    for _, remote in ipairs(possible) do
+        if remote and remote:IsA("RemoteEvent") then
+            rebirthRemote = remote
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "✅ Rebirth Remote Encontrado",
+                Text = "Usando: " .. remote.Name .. " (en " .. (remote.Parent and remote.Parent.Name or "ReplicatedStorage") .. ")",
+                Duration = 6
+            })
+            return
+        end
+    end
+
+    -- 2. Búsqueda profunda automática en todo ReplicatedStorage (si no encontró el anterior)
+    for _, obj in ipairs(ReplicatedStorage:GetDescendants()) do
+        if obj:IsA("RemoteEvent") and (obj.Name:lower():find("rebirth") or obj.Name:lower():find("mega") or obj.Name:lower():find("reset")) then
+            rebirthRemote = obj
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "✅ Rebirth Remote Encontrado (Búsqueda profunda)",
+                Text = "Nombre: " .. obj.Name .. "\nRuta: " .. obj:GetFullName(),
+                Duration = 8
+            })
+            return
+        end
+    end
+
+    -- Si no encontró nada
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "⚠️ Rebirth Remote NO encontrado",
+        Text = "No se detectó ningún remote con 'rebirth'. Prueba activar los switches de rebirth de todos modos o dime qué ves en la consola.",
+        Duration = 8
+    })
+end
+
+-- Ejecutamos la búsqueda automática al cargar el script
+task.spawn(findRebirthRemote)
+
+-- ================= AUTO SWING (versión que ya te funcionaba) =================
+local function updateScythe()
+    if LocalPlayer.Character then
+        for _, tool in ipairs(LocalPlayer.Character:GetChildren()) do
+            if tool:IsA("Tool") and tool:FindFirstChild("Handle") and tool.Handle:FindFirstChild("Script") then
+                currentScythe = tool
+                return
+            end
+        end
+    end
+    currentScythe = nil
+end
+
+local function startAutoSwing()
+    updateScythe()
+    if swingThread then task.cancel(swingThread) end
+    
+    swingThread = task.spawn(function()
+        while AutoSwingEnabled do
+            if currentScythe and currentScythe.Parent == LocalPlayer.Character then
+                local remote = currentScythe.Handle.Script:FindFirstChild("RemoteEvent")
+                if remote then
+                    pcall(function()
+                        remote:FireServer()
+                    end)
+                end
+            else
+                updateScythe()
+            end
+            game:GetService("RunService").Heartbeat:Wait()
+        end
+    end)
+end
+
+MainTab:AddSwitch("Auto Swing (Strength Farm)", function(state)
+    AutoSwingEnabled = state
+    if state then
+        startAutoSwing()
+    else
+        if swingThread then task.cancel(swingThread) end
+    end
+end)
+
+-- Reinicio automático del swing después de renacer
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1.5)
+    updateScythe()
+    if AutoSwingEnabled then
+        startAutoSwing()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "AutoFarm", Text = "✅ Auto Swing reiniciado después del rebirth", Duration = 4
+        })
+    end
+    -- También re-buscar el remote de rebirth por si acaso
+    task.wait(2)
+    if not rebirthRemote then findRebirthRemote() end
+end)
+
+-- ================= NO VISUALS =================
+MainTab:AddSwitch("No Visuals (Sin partículas)", function(state)
+    NoVisualEnabled = state
+    pcall(function()
+        LocalPlayer.PlayerGui.AddValues.Enabled = not state
+    end)
+end)
+
+-- ================= AUTO REBIRTH OP (VERSIÓN MEJORADA) =================
+
+local AutoRebirth3Enabled = false
+local AutoRebirth30Enabled = false
+local AutoRebirth300Enabled = false
+local AutoRebirth3kEnabled = false
+
+local rebirthRemote = nil
+
+-- 🔍 BUSCADOR MEJORADO (RemoteEvent + RemoteFunction)
+local function findRebirthRemote()
+    for _, obj in ipairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
+        if (obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction")) then
+            local name = obj.Name:lower()
+            if name:find("rebirth") or name:find("reset") or name:find("mega") then
+                rebirthRemote = obj
+
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "✅ Rebirth Detectado",
+                    Text = "Usando: " .. obj.Name,
+                    Duration = 5
+                })
+
+                return
+            end
+        end
+    end
+
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "❌ No encontrado",
+        Text = "No se detectó el remote de rebirth",
+        Duration = 5
+    })
+end
+
+-- Ejecutar búsqueda
+task.spawn(findRebirthRemote)
+
+-- ================= SWITCHES =================
+MainTab:AddSwitch("Auto 3 Rebirth", function(state)
+    AutoRebirth3Enabled = state
+end)
+
+MainTab:AddSwitch("Auto 30 Rebirth", function(state)
+    AutoRebirth30Enabled = state
+end)
+
+MainTab:AddSwitch("Auto 300 Rebirth", function(state)
+    AutoRebirth300Enabled = state
+end)
+
+MainTab:AddSwitch("Auto 3k Rebirth", function(state)
+    AutoRebirth3kEnabled = state
+end)
+
+-- ================= LOOP INTELIGENTE =================
+task.spawn(function()
+    while true do
+        if rebirthRemote then
+            pcall(function()
+
+                local amounts = {}
+
+                if AutoRebirth3Enabled then table.insert(amounts, 3) end
+                if AutoRebirth30Enabled then table.insert(amounts, 30) end
+                if AutoRebirth300Enabled then table.insert(amounts, 300) end
+                if AutoRebirth3kEnabled then table.insert(amounts, 3000) end
+
+                for _, amount in ipairs(amounts) do
+
+                    -- 🔥 Intento 1: RemoteEvent normal
+                    if rebirthRemote:IsA("RemoteEvent") then
+                        rebirthRemote:FireServer(amount)
+                    end
+
+                    -- 🔥 Intento 2: RemoteFunction
+                    if rebirthRemote:IsA("RemoteFunction") then
+                        rebirthRemote:InvokeServer(amount)
+                    end
+
+                    -- 🔥 Intento 3: con string
+                    if rebirthRemote:IsA("RemoteEvent") then
+                        rebirthRemote:FireServer("rebirth", amount)
+                    end
+
+                    -- 🔥 Intento 4: solo string
+                    if rebirthRemote:IsA("RemoteEvent") then
+                        rebirthRemote:FireServer("rebirth")
+                    end
+
+                end
+            end)
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- 🔘 BOTÓN PARA RE-BUSCAR
+MainTab:AddButton("🔍 Buscar Rebirth Otra Vez", function()
+    rebirthRemote = nil
+    findRebirthRemote()
+end)
+-- ================= ANTI LAG =================
+MainTab:AddSwitch("Anti Lag (Full Optimization)", function()
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then v.Enabled = false end
+    end
+
+    local lighting = game:GetService("Lighting")
+    lighting.GlobalShadows = false
+    lighting.FogEnd = 9e9
+    lighting.Brightness = 0
+    settings().Rendering.QualityLevel = 1
+
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("Decal") or v:IsA("Texture") then v.Transparency = 1
+        elseif v:IsA("BasePart") and not v:IsA("MeshPart") then
+            v.Material = Enum.Material.SmoothPlastic
+            v.Reflectance = 0
+        end
+    end
+
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Anti Lag Activado",
+        Text = "Optimización completa para Scythe Masters!",
+        Duration = 5
+    })
+end)
+
+-- ¡SCRIPT LISTO!
+-- ✅ Ahora el script **solo busca automáticamente** el remote de rebirth (primero el que ya te funcionaba en Muscle Masters + búsqueda profunda).
+-- ✅ Te avisa con notificación el nombre y la ruta exacta del remote que encontró.
+-- ✅ Si no lo encuentra, te dice y puedes pulsar el botón "🔍 Buscar Rebirth Remote Ahora".
+-- Prueba activando Auto Swing + uno de los Auto Rebirth. Dime qué notificación te sale sobre el "Rebirth Remote Encontrado" y si ahora sí renace.
+-- Copia y pega completo. ¡Esta versión debería solucionarlo! 🔥
