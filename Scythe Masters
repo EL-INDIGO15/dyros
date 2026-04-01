@@ -84,45 +84,48 @@ MainTab:AddSwitch("Auto Swing", function(state)
 end)
 
 
--- ================= AUTO REBIRTH SWITCHES (FIX REAL) =================
+-- ================= AUTO FARM + REBIRTH REAL =================
 
+local AutoFarm = false
 local AutoRebirth3 = false
 local AutoRebirth30 = false
 local AutoRebirth300 = false
-local AutoRebirth3k = false
 
+-- AUTO SWING MÁS RÁPIDO
+task.spawn(function()
+    while true do
+        if AutoFarm then
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+                if v:IsA("Tool") then
+                    local remote = v:FindFirstChildWhichIsA("RemoteEvent", true)
+                    if remote then
+                        pcall(function()
+                            remote:FireServer()
+                        end)
+                    end
+                end
+            end
+        end
+        task.wait(0.01) -- MÁS RÁPIDO 🔥
+    end
+end)
+
+-- AUTO REBIRTH REAL (BOTONES)
 local function clickRebirth()
     for _, v in pairs(game:GetDescendants()) do
-        if v:IsA("TextButton") then
+        if v:IsA("TextButton") and v.Text == "Rebirth" then
+            
+            local textLabel = v.Parent:FindFirstChildWhichIsA("TextLabel")
+            if textLabel then
+                local txt = textLabel.Text:lower()
 
-            local parentText = ""
-            if v.Parent and v.Parent:FindFirstChildWhichIsA("TextLabel") then
-                parentText = v.Parent:FindFirstChildWhichIsA("TextLabel").Text:lower()
-            end
-
-            -- 🔥 detectar botón verde (activo)
-            if v.Text == "Rebirth" and v.AutoButtonColor == true then
-
-                -- 🔥 3
-                if AutoRebirth3 and parentText:find("3 rebirth") and not parentText:find("30") then
-                    pcall(function() v:Activate() end)
+                if AutoRebirth3 and txt:find("3 rebirth") then
+                    v:Activate()
+                elseif AutoRebirth30 and txt:find("30 rebirth") then
+                    v:Activate()
+                elseif AutoRebirth300 and txt:find("300 rebirth") then
+                    v:Activate()
                 end
-
-                -- 🔥 30
-                if AutoRebirth30 and parentText:find("30 rebirth") then
-                    pcall(function() v:Activate() end)
-                end
-
-                -- 🔥 300
-                if AutoRebirth300 and parentText:find("300 rebirth") then
-                    pcall(function() v:Activate() end)
-                end
-
-                -- 🔥 3K
-                if AutoRebirth3k and (parentText:find("3k rebirth") or parentText:find("3000")) then
-                    pcall(function() v:Activate() end)
-                end
-
             end
         end
     end
@@ -130,14 +133,16 @@ end
 
 task.spawn(function()
     while true do
-        if AutoRebirth3 or AutoRebirth30 or AutoRebirth300 or AutoRebirth3k then
-            clickRebirth()
-        end
-        task.wait(0.4)
+        clickRebirth()
+        task.wait(0.3)
     end
 end)
 
--- ================= SWITCHES =================
+-- SWITCHES
+MainTab:AddSwitch("Auto Farm (FAST)", function(v)
+    AutoFarm = v
+end)
+
 MainTab:AddSwitch("Auto Rebirth 3", function(v)
     AutoRebirth3 = v
 end)
@@ -148,8 +153,4 @@ end)
 
 MainTab:AddSwitch("Auto Rebirth 300", function(v)
     AutoRebirth300 = v
-end)
-
-MainTab:AddSwitch("Auto Rebirth 3K", function(v)
-    AutoRebirth3k = v
 end)
