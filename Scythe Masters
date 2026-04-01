@@ -84,47 +84,72 @@ MainTab:AddSwitch("Auto Swing", function(state)
 end)
 
 
--- ================= AUTO REBIRTH INTELIGENTE =================
+-- ================= AUTO REBIRTH SWITCHES (FIX REAL) =================
 
-local AutoRebirthEnabled = false
+local AutoRebirth3 = false
+local AutoRebirth30 = false
+local AutoRebirth300 = false
+local AutoRebirth3k = false
 
-local function isButtonGreen(button)
-    if button:FindFirstChild("BackgroundColor3") then
-        return button.BackgroundColor3.G > 0.5 -- verde
-    end
-    
-    -- alternativa (más confiable)
-    return button.AutoButtonColor == true
-end
-
-local function clickBestRebirth()
-    local bestButton = nil
-
+local function clickRebirth()
     for _, v in pairs(game:GetDescendants()) do
-        if v:IsA("TextButton") and v.Text == "Rebirth" then
-            
-            if isButtonGreen(v) then
-                bestButton = v -- toma el mejor disponible
+        if v:IsA("TextButton") then
+
+            local parentText = ""
+            if v.Parent and v.Parent:FindFirstChildWhichIsA("TextLabel") then
+                parentText = v.Parent:FindFirstChildWhichIsA("TextLabel").Text:lower()
+            end
+
+            -- 🔥 detectar botón verde (activo)
+            if v.Text == "Rebirth" and v.AutoButtonColor == true then
+
+                -- 🔥 3
+                if AutoRebirth3 and parentText:find("3 rebirth") and not parentText:find("30") then
+                    pcall(function() v:Activate() end)
+                end
+
+                -- 🔥 30
+                if AutoRebirth30 and parentText:find("30 rebirth") then
+                    pcall(function() v:Activate() end)
+                end
+
+                -- 🔥 300
+                if AutoRebirth300 and parentText:find("300 rebirth") then
+                    pcall(function() v:Activate() end)
+                end
+
+                -- 🔥 3K
+                if AutoRebirth3k and (parentText:find("3k rebirth") or parentText:find("3000")) then
+                    pcall(function() v:Activate() end)
+                end
+
             end
         end
-    end
-
-    if bestButton then
-        pcall(function()
-            bestButton:Activate()
-        end)
     end
 end
 
 task.spawn(function()
     while true do
-        if AutoRebirthEnabled then
-            clickBestRebirth()
+        if AutoRebirth3 or AutoRebirth30 or AutoRebirth300 or AutoRebirth3k then
+            clickRebirth()
         end
         task.wait(0.4)
     end
 end)
 
-MainTab:AddSwitch("Auto Rebirth (Smart)", function(v)
-    AutoRebirthEnabled = v
+-- ================= SWITCHES =================
+MainTab:AddSwitch("Auto Rebirth 3", function(v)
+    AutoRebirth3 = v
+end)
+
+MainTab:AddSwitch("Auto Rebirth 30", function(v)
+    AutoRebirth30 = v
+end)
+
+MainTab:AddSwitch("Auto Rebirth 300", function(v)
+    AutoRebirth300 = v
+end)
+
+MainTab:AddSwitch("Auto Rebirth 3K", function(v)
+    AutoRebirth3k = v
 end)
