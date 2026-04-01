@@ -84,68 +84,78 @@ MainTab:AddSwitch("Auto Swing", function(state)
 end)
 
 
--- ================= ULTRA FAST FARM =================
+-- ================= ULTRA FAST FARM v2 =================
 
 local AutoFarmUltra = false
-local AutoEquipBest = false
-
 local player = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
--- 🔥 AUTO EQUIP MEJOR SCYTHE
-local function equipBestTool()
-    local backpack = player:FindFirstChild("Backpack")
-    local bestTool = nil
+-- 🔥 CACHE DEL TOOL (para no buscar cada frame)
+local currentTool = nil
 
-    if backpack then
-        for _, tool in pairs(backpack:GetChildren()) do
-            if tool:IsA("Tool") then
-                bestTool = tool -- toma la última (normalmente la mejor)
+local function updateTool()
+    local char = player.Character
+    if char then
+        for _, v in pairs(char:GetChildren()) do
+            if v:IsA("Tool") then
+                currentTool = v
+                return
             end
         end
     end
-
-    if bestTool and player.Character then
-        player.Character.Humanoid:EquipTool(bestTool)
-    end
+    currentTool = nil
 end
+
+-- actualizar cuando respawneas
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    updateTool()
+end)
 
 task.spawn(function()
     while true do
-        if AutoEquipBest then
-            pcall(equipBestTool)
-        end
+        updateTool()
         task.wait(1)
     end
 end)
 
--- 🔥 ULTRA AUTO SWING (SIN DELAY)
-task.spawn(function()
-    while true do
-        if AutoFarmUltra then
-            local char = player.Character
-            if char then
-                for _, tool in pairs(char:GetChildren()) do
-                    if tool:IsA("Tool") then
-                        
-                        local remote = tool:FindFirstChildWhichIsA("RemoteEvent", true)
+-- 🔥 ULTRA SPAM (MUCHO MÁS RÁPIDO)
+RunService.RenderStepped:Connect(function()
+    if not AutoFarmUltra then return end
 
-                        if remote then
-                            for i = 1, 10 do -- 🔥 MULTI HIT
-                                pcall(function()
-                                    remote:FireServer()
-                                end)
-                            end
-                        end
+    if currentTool and currentTool.Parent == player.Character then
+        local remote = currentTool:FindFirstChildWhichIsA("RemoteEvent", true)
 
-                    end
-                end
+        if remote then
+            -- 🔥 SPAM MASIVO
+            for i = 1, 25 do
+                pcall(function()
+                    remote:FireServer()
+                end)
             end
         end
-        task.wait() -- sin delay 🔥
     end
 end)
 
--- 🔥 ANTI DELAY (QUITAR COOLDOWN VISUAL)
+-- 🔥 EXTRA LOOP (doble velocidad)
+task.spawn(function()
+    while true do
+        if AutoFarmUltra and currentTool then
+            local remote = currentTool:FindFirstChildWhichIsA("RemoteEvent", true)
+
+            if remote then
+                for i = 1, 15 do
+                    pcall(function()
+                        remote:FireServer()
+                    end)
+                end
+            end
+        end
+        task.wait() -- sin delay
+    end
+end)
+
+-- 🔥 ANTI COOLDOWN
 task.spawn(function()
     while true do
         if AutoFarmUltra and player.Character then
@@ -155,16 +165,11 @@ task.spawn(function()
                 end
             end
         end
-        task.wait(0.1)
+        task.wait(0.05)
     end
 end)
 
--- ================= SWITCHES =================
-
-MainTab:AddSwitch("🔥 Ultra Fast Farm", function(v)
+-- ================= SWITCH =================
+MainTab:AddSwitch("🔥 Ultra Fast Farm v2", function(v)
     AutoFarmUltra = v
-end)
-
-MainTab:AddSwitch("⚔️ Auto Equip Best", function(v)
-    AutoEquipBest = v
 end)
