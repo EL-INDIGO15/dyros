@@ -82,3 +82,43 @@ MainTab:AddSwitch("Auto Swing", function(state)
     AutoSwingEnabled = state
     if state then startAutoSwing() end
 end)
+
+
+-- ================= AUTO REBIRTH REAL (PROXIMITY METHOD) =================
+
+local function triggerRebirthWorld()
+    for _, v in pairs(workspace:GetDescendants()) do
+        
+        -- 🔥 ProximityPrompt (lo más común)
+        if v:IsA("ProximityPrompt") then
+            local name = v.Name:lower()
+            local action = (v.ActionText or ""):lower()
+
+            if name:find("rebirth") or action:find("rebirth") then
+                pcall(function()
+                    fireproximityprompt(v)
+                end)
+            end
+        end
+
+        -- 🔥 ClickDetector (por si acaso)
+        if v:IsA("ClickDetector") then
+            local name = v.Name:lower()
+            if name:find("rebirth") then
+                pcall(function()
+                    fireclickdetector(v)
+                end)
+            end
+        end
+
+    end
+end
+
+task.spawn(function()
+    while true do
+        if AutoRebirth3Enabled or AutoRebirth30Enabled or AutoRebirth300Enabled or AutoRebirth3kEnabled then
+            triggerRebirthWorld()
+        end
+        task.wait(0.5)
+    end
+end)
