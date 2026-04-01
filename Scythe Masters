@@ -166,3 +166,110 @@ end)
 PlayerFarmTab:AddSwitch("💀 Auto Player Farm (1s)", function(v)
     AutoPlayerFarm = v
 end)
+
+-- ================= TARGET PLAYER FARM =================
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local TargetTab = window:AddTab("Target Player")
+
+local following = false
+local followTarget = nil
+
+-- 🔥 TELEPORT DETRÁS REAL
+local function followPlayer(targetPlayer)
+    local myChar = LocalPlayer.Character
+    local targetChar = targetPlayer.Character
+
+    if not (myChar and targetChar) then return end
+
+    local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+    local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+
+    if myHRP and targetHRP then
+        local behindPos = targetHRP.Position - (targetHRP.CFrame.LookVector * 4)
+        myHRP.CFrame = CFrame.new(behindPos, targetHRP.Position)
+    end
+end
+
+-- 🔥 ATAQUE
+local function attack()
+    local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+    if tool then
+        local remote = tool:FindFirstChildWhichIsA("RemoteEvent", true)
+        if remote then
+            for i = 1, 8 do
+                pcall(function()
+                    remote:FireServer()
+                end)
+            end
+        end
+    end
+end
+
+-- ================= DROPDOWN =================
+
+local dropdown = TargetTab:AddDropdown("🎯 Elegir Jugador", function(selectedName)
+    if selectedName then
+        local target = Players:FindFirstChild(selectedName)
+        if target then
+            followTarget = target
+            following = true
+
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Target Seleccionado",
+                Text = target.Name,
+                Duration = 4
+            })
+        end
+    end
+end)
+
+-- 🔥 CARGAR JUGADORES
+local function refreshPlayers()
+    dropdown:Clear()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            dropdown:Add(plr.Name) -- usamos Name para evitar bugs
+        end
+    end
+end
+
+refreshPlayers()
+
+Players.PlayerAdded:Connect(refreshPlayers)
+Players.PlayerRemoving:Connect(function(plr)
+    refreshPlayers()
+    if followTarget == plr then
+        followTarget = nil
+        following = false
+    end
+end)
+
+-- ================= BOTÓN STOP =================
+TargetTab:AddButton("⛔ Dejar de seguir", function()
+    following = false
+    followTarget = nil
+end)
+
+-- ================= LOOP =================
+task.spawn(function()
+    while true do
+        if following and followTarget then
+            pcall(function()
+                followPlayer(followTarget)
+                attack()
+            end)
+        end
+        task.wait(0.01)
+    end
+end)
+
+-- 🔁 RESPAWN FIX
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if following and followTarget then
+        followPlayer(followTarget)
+    end
+end)
