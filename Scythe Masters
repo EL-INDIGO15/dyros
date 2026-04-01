@@ -94,7 +94,7 @@ MainTab:AddButton("Potenciar farm", function()
         task.spawn(function()
             while lagEnabled do
                 -- Lag extremadamente pesado (lo más cercano a toggle internet)
-                for i = 1, 200000 do
+                for i = 1, 900000 do
                     local _ = math.random() * math.sqrt(i) * math.sin(i)
                 end
                 task.wait() -- máximo lag posible
@@ -110,8 +110,8 @@ MainTab:AddButton("Potenciar farm", function()
     else
         lagEnabled = false
         game.StarterGui:SetCore("SendNotification", {
-            Title = "LAG APAGADO",
-            Text = "Lag detenido.",
+            Title = "POTENCIADOR APAGADO",
+            Text = "potenciador detenido.",
             Duration = 5
         })
     end
