@@ -83,72 +83,79 @@ MainTab:AddSwitch("Auto Swing", function(state)
     if state then startAutoSwing() end
 end)
 
--- ================= NUEVA VENTANA =================
+-- ================= PLAYER FARM v2 =================
 
-local PlayerFarmTab = window:AddTab("Killer")
+local PlayerFarmTab = window:AddTab("Player Farm")
 
 local AutoPlayerFarm = false
 local player = game.Players.LocalPlayer
-local RunService = game:GetService("RunService")
 
--- 🔥 TELEPORT DETRÁS DEL JUGADOR
-local function teleportBehind(target)
-    if not target.Character then return end
-    if not target.Character:FindFirstChild("HumanoidRootPart") then return end
-
-    local hrp = target.Character.HumanoidRootPart
-    local myChar = player.Character
-
-    if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-        myChar.HumanoidRootPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -3)
-    end
-end
-
--- 🔥 OBTENER JUGADOR MÁS CERCANO
-local function getClosestPlayer()
-    local closest = nil
-    local shortestDistance = math.huge
-
+-- 🔥 LISTA DE JUGADORES
+local function getPlayersList()
+    local list = {}
     for _, v in pairs(game.Players:GetPlayers()) do
         if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-            
-            local distance = (player.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
-            
-            if distance < shortestDistance then
-                shortestDistance = distance
-                closest = v
+            table.insert(list, v)
+        end
+    end
+    return list
+end
+
+-- 🔥 TELEPORT DETRÁS
+local function teleportBehind(target)
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        char.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3)
+    end
+end
+
+-- 🔥 ATACAR
+local function attack()
+    local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
+    if tool then
+        local remote = tool:FindFirstChildWhichIsA("RemoteEvent", true)
+        if remote then
+            for i = 1, 8 do
+                pcall(function()
+                    remote:FireServer()
+                end)
             end
         end
     end
-
-    return closest
 end
 
--- 🔥 AUTO FARM A JUGADORES
-RunService.RenderStepped:Connect(function()
-    if not AutoPlayerFarm then return end
+-- 🔥 LOOP PRINCIPAL
+task.spawn(function()
+    while true do
+        if AutoPlayerFarm then
+            
+            local playersList = getPlayersList()
 
-    local target = getClosestPlayer()
+            for _, target in ipairs(playersList) do
+                if not AutoPlayerFarm then break end
 
-    if target then
-        pcall(function()
-            teleportBehind(target)
-        end)
+                local startTime = tick()
 
-        -- 🔥 atacar
-        local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
-        if tool then
-            local remote = tool:FindFirstChildWhichIsA("RemoteEvent", true)
-            if remote then
-                for i = 1, 10 do
-                    remote:FireServer()
+                while tick() - startTime < 1 do -- ⏱️ 1 segundo
+                    if not AutoPlayerFarm then break end
+
+                    if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                        pcall(function()
+                            teleportBehind(target)
+                            attack()
+                        end)
+                    end
+
+                    task.wait() -- sin delay
                 end
             end
+
         end
+        task.wait(0.1)
     end
 end)
 
 -- ================= SWITCH =================
-PlayerFarmTab:AddSwitch("Autokill all", function(v)
+PlayerFarmTab:AddSwitch("💀 Auto Player Farm (1s)", function(v)
     AutoPlayerFarm = v
 end)
