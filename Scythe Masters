@@ -103,9 +103,16 @@ end
 
 -- 🔥 TELEPORT DETRÁS
 local function teleportBehind(target)
-    local char = player.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        char.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3)
+    local char = game.Players.LocalPlayer.Character
+    if not char then return end
+
+    local myHRP = char:FindFirstChild("HumanoidRootPart")
+    local targetHRP = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+
+    if myHRP and targetHRP then
+        local behindPosition = targetHRP.Position - (targetHRP.CFrame.LookVector * 4)
+
+        myHRP.CFrame = CFrame.new(behindPosition, targetHRP.Position)
     end
 end
 
