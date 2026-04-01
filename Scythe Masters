@@ -84,73 +84,54 @@ MainTab:AddSwitch("Auto Swing", function(state)
 end)
 
 
--- ================= AUTO FARM + REBIRTH REAL =================
+-- ================= DETECTOR DE REBIRTH LISTO =================
 
-local AutoFarm = false
-local AutoRebirth3 = false
-local AutoRebirth30 = false
-local AutoRebirth300 = false
+local RebirthNotifier = false
 
--- AUTO SWING MÁS RÁPIDO
-task.spawn(function()
-    while true do
-        if AutoFarm then
-            for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
-                if v:IsA("Tool") then
-                    local remote = v:FindFirstChildWhichIsA("RemoteEvent", true)
-                    if remote then
-                        pcall(function()
-                            remote:FireServer()
-                        end)
-                    end
-                end
-            end
-        end
-        task.wait(0.01) -- MÁS RÁPIDO 🔥
-    end
-end)
+local function highlightButton(button)
+    if not button then return end
+    
+    pcall(function()
+        button.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- verde fuerte
+        button.Text = "READY!"
+    end)
+end
 
--- AUTO REBIRTH REAL (BOTONES)
-local function clickRebirth()
+local function checkRebirthReady()
     for _, v in pairs(game:GetDescendants()) do
         if v:IsA("TextButton") and v.Text == "Rebirth" then
             
-            local textLabel = v.Parent:FindFirstChildWhichIsA("TextLabel")
-            if textLabel then
-                local txt = textLabel.Text:lower()
+            -- Detectar si el botón está activo
+            if v.AutoButtonColor == true then
+                
+                -- 🔥 Notificación
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "🔥 Rebirth Listo",
+                    Text = "Ya puedes renacer!",
+                    Duration = 4
+                })
 
-                if AutoRebirth3 and txt:find("3 rebirth") then
-                    v:Activate()
-                elseif AutoRebirth30 and txt:find("30 rebirth") then
-                    v:Activate()
-                elseif AutoRebirth300 and txt:find("300 rebirth") then
-                    v:Activate()
-                end
+                -- 🔥 Resaltar botón
+                highlightButton(v)
+
+                return true
             end
         end
     end
+    return false
 end
 
+-- LOOP
 task.spawn(function()
     while true do
-        clickRebirth()
-        task.wait(0.3)
+        if RebirthNotifier then
+            checkRebirthReady()
+        end
+        task.wait(1)
     end
 end)
 
--- SWITCHES
-MainTab:AddSwitch("Auto Farm (FAST)", function(v)
-    AutoFarm = v
-end)
-
-MainTab:AddSwitch("Auto Rebirth 3", function(v)
-    AutoRebirth3 = v
-end)
-
-MainTab:AddSwitch("Auto Rebirth 30", function(v)
-    AutoRebirth30 = v
-end)
-
-MainTab:AddSwitch("Auto Rebirth 300", function(v)
-    AutoRebirth300 = v
+-- SWITCH
+MainTab:AddSwitch("Detector Rebirth", function(v)
+    RebirthNotifier = v
 end)
