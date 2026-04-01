@@ -13,7 +13,7 @@ local options = {
 }
 
 -- VENTANA PRINCIPAL
-local window = library:AddWindow("David|Bienvenid@ " .. displayName, options)
+local window = library:AddWindow("HadesHubPrivDupe|Bienvenid@ " .. displayName, options)
 
 -- LISTA DE COLORES PARA LA ANIMACIÓN (rojos + naranja + amarillo)
 task.spawn(function()
@@ -30,7 +30,7 @@ task.spawn(function()
     end
 end)
 
-local AutoFarm = window:AddTab("FarmOP") 
+local AutoFarm = window:AddTab("Farm+") 
 
 -- ================= VARIABLES =================
 local Players = game:GetService("Players")
@@ -102,7 +102,7 @@ local function startAutoFarm()
     table.insert(farmThreads, task.spawn(function()
         while AutoFarmEnabled do
             remote:FireServer()
-            task.wait(0.05)
+            task.wait(0)
         end
     end))
 end
@@ -146,7 +146,7 @@ local function startAutoGlitch()
     table.insert(glitchThreads, task.spawn(function()
         while AutoGlitchEnabled do
             remote:FireServer()
-            task.wait(0.05)
+            task.wait(0)
         end
     end))
 end
@@ -234,7 +234,7 @@ task.spawn(function()
         if AutoRebirthEnabled then
             ReplicatedStorage.RemotesEvent.RebirthEvent:FireServer()
         end
-        task.wait(0.05)
+        task.wait(0)
     end
 end)
 
@@ -278,7 +278,7 @@ AutoFarm:AddSwitch("Anti Lag", function()
 end) 
 
 
-local Killer = window:AddTab("KillsOP")
+local Killer = window:AddTab("Kills")
 
 
 -- ================= AUTO KILL ALL =================
@@ -497,3 +497,389 @@ Killer:AddSwitch("Auto Punch", function(state)
             local humanoid = char:FindFirstChildOfClass("Humanoid")
             local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
                 or char:FindFirstChild("Punch")
+
+            if punch and humanoid then
+                -- 🔥 Forzar equipar bien (mejor que parent)
+                if punch.Parent ~= char then
+                    humanoid:EquipTool(punch)
+                    task.wait(0.1)
+                end
+
+                -- 🔥 Evitar que se desequipe
+                if not char:FindFirstChild("Punch") then
+                    humanoid:EquipTool(punch)
+                end
+
+                -- 🔥 Golpear (forma más confiable)
+                punch:Activate()
+            end
+
+            task.wait(1)
+        end
+    end)
+end)
+
+local autoPunchfastSafe = false
+
+Killer:AddSwitch("Auto Punch Fast", function(state)
+    autoPunchSafe = state
+
+    task.spawn(function()
+        while autoPunchSafe do
+            local char = LocalPlayer.Character
+            if not char then task.wait() continue end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
+                or char:FindFirstChild("Punch")
+
+            if punch and humanoid then
+                -- 🔥 Forzar equipar bien (mejor que parent)
+                if punch.Parent ~= char then
+                    humanoid:EquipTool(punch)
+                    task.wait(0.1)
+                end
+
+                -- 🔥 Evitar que se desequipe
+                if not char:FindFirstChild("Punch") then
+                    humanoid:EquipTool(punch)
+                end
+
+                -- 🔥 Golpear (forma más confiable)
+                punch:Activate()
+            end
+
+            task.wait(0.0011)
+        end
+    end)
+end)
+
+
+local Misc = window:AddTab("Misc++")
+
+-- ================= MISC =================
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- REMOTES
+local OpenPetRemote = ReplicatedStorage:WaitForChild("RemotesEvent"):WaitForChild("OpenPetEvent")
+
+-- ESTADOS
+local eggsState = {
+    Common = false,
+    Rare = false,
+    Epic = false,
+    Legendary = false,
+    Mythic = false,
+    Master = false
+}
+
+local masterEgg = false
+local autoSpin = false
+
+-- ================= AUTO EGGS LOOP =================
+task.spawn(function()
+    while true do
+        if masterEgg then
+            for eggName, _ in pairs(eggsState) do
+                OpenPetRemote:FireServer(string.lower(eggName))
+            end
+        else
+            for eggName, enabled in pairs(eggsState) do
+                if enabled then
+                    OpenPetRemote:FireServer(string.lower(eggName))
+                end
+            end
+        end
+        task.wait(0.15)
+    end
+end)
+
+-- ================= SWITCHES EGGS =================
+
+Misc:AddSwitch("Common Egg", function(state)
+    eggsState.Common = state
+end)
+
+Misc:AddSwitch("Rare Egg", function(state)
+    eggsState.Rare = state
+end)
+
+Misc:AddSwitch("Epic Egg", function(state)
+    eggsState.Epic = state
+end)
+
+Misc:AddSwitch("Legendary Egg", function(state)
+    eggsState.Legendary = state
+end)
+
+Misc:AddSwitch("Mythic Egg", function(state)
+    eggsState.Mythic = state
+end)
+
+Misc:AddSwitch("Master Eggs", function(state)
+    eggsState.Master = state
+end)
+
+-- ================= AUTO SPIN =================
+Misc:AddSwitch("Auto Spin", function(state)
+    autoSpin = state
+
+    if autoSpin then
+        task.spawn(function()
+            while autoSpin do
+                game:GetService("ReplicatedStorage")
+                    :WaitForChild("RemotesEvent")
+                    :WaitForChild("SpinFunction")
+                    :InvokeServer()
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
+-- Auto Collect Rewards
+Misc:AddSwitch("Auto Claim Rewards", function(state)
+    autoCollect = state
+
+    if autoCollect then
+        task.spawn(function()
+            while autoCollect do
+                for i = 1, 5 do
+                    for attempt = 1, 3 do -- 👈 intenta varias veces
+                        game:GetService("ReplicatedStorage")
+                            :WaitForChild("RemotesEvent")
+                            :WaitForChild("rewardClaim")
+                            :FireServer("reward"..i)
+
+                        task.wait(0.3)
+                    end
+                end
+                task.wait(2)
+            end
+        end)
+    end
+end)
+
+-- AUTO EAT CHOCOLATE (PRO)
+Misc:AddSwitch("Auto Eat Chocolate", function(state)
+    autoEat = state
+
+    if autoEat then
+        task.spawn(function()
+            local player = game.Players.LocalPlayer
+
+            while autoEat do
+                local character = player.Character
+                local backpack = player:FindFirstChild("Backpack")
+
+                if character and backpack then
+
+                    -- BUSCAR CHOCOLATE (BACKPACK + CHARACTER)
+                    local chocolate = nil
+
+                    for _, item in pairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") and item.Name:lower():find("chocolate") then
+                            chocolate = item
+                            break
+                        end
+                    end
+
+                    if not chocolate then
+                        for _, item in pairs(character:GetChildren()) do
+                            if item:IsA("Tool") and item.Name:lower():find("chocolate") then
+                                chocolate = item
+                                break
+                            end
+                        end
+                    end
+
+                    -- SI ENCUENTRA CHOCOLATE
+                    if chocolate then
+
+                        -- EQUIPAR SI NO ESTÁ EQUIPADO
+                        if chocolate.Parent ~= character then
+                            chocolate.Parent = character
+                            task.wait(0.1) -- más tiempo en mano
+                        end
+
+                        -- SPAM MÁS RÁPIDO
+                        for i = 1, 5 do
+                            if chocolate then
+                                chocolate:Activate()
+                            end
+                            task.wait(0.03) -- súper rápido
+                        end
+                    end
+                end
+
+                task.wait(0.05) -- loop rápido
+            end
+        end)
+    end
+end)
+
+-- ================= ANTI AFK PRO =================
+local AntiAFK = false
+local VirtualUser = game:GetService("VirtualUser")
+local AntiAFKConnection = nil
+
+Misc:AddSwitch("Anti AFK", function(state)
+    AntiAFK = state
+
+    if AntiAFKConnection then
+        AntiAFKConnection:Disconnect()
+        AntiAFKConnection = nil
+    end
+
+    if state then
+        AntiAFKConnection = player.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end
+end)
+
+
+local estadisticas = window:AddTab("Stats Jugadores")
+
+local SelectPlayerName = ""
+local SelectedPlayer = nil
+
+-- DROPDOWN
+local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
+    SelectPlayerName = Value:match("| (.+)")
+    SelectedPlayer = game.Players:FindFirstChild(SelectPlayerName)
+end)
+
+-- PLAYERS
+for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+    PlayerDrop:Add(Plr.DisplayName .. " | " .. Plr.Name)
+end
+
+game.Players.PlayerAdded:Connect(function(plr)
+    PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
+end)
+
+-- FORMATO
+local function FormatNumber(n)
+    if typeof(n) ~= "number" then return tostring(n) end
+    local suffix = {"","K","M","B","T"}
+    local i = 1
+    while n >= 1000 and i < #suffix do
+        n /= 1000
+        i += 1
+    end
+    return string.format("%.2f", n) .. suffix[i]
+end
+
+-- LABELS
+local Strong = estadisticas:AddLabel("")
+local Endurance = estadisticas:AddLabel("")
+local Mobility = estadisticas:AddLabel("")
+local Rebirths = estadisticas:AddLabel("")
+local Kills = estadisticas:AddLabel("")
+local Coins = estadisticas:AddLabel("")
+local Emperor = estadisticas:AddLabel("")
+local Device = estadisticas:AddLabel("")
+
+-- BUSCAR STAT MEJORADO 🔥
+local function findStat(plr, names)
+    for _, v in pairs(plr:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("StringValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name:lower()) then
+                    return v.Value
+                end
+            end
+        end
+    end
+    return "N/A"
+end
+
+-- LOOP
+task.spawn(function()
+    while task.wait(0.3) do
+        if SelectedPlayer then
+
+            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strong","strength"}))
+            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance","durability"}))
+            Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
+            Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
+            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill"}))
+            Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
+
+            -- 🔥 ESTAS SON LAS QUE FALTABAN
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"Muscle Emperor Reps","muscle emperor reps","MuscleEmperorReps"}))
+            Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
+
+        end
+    end
+end)
+
+-- =============================================
+-- AGREGA ESTE CÓDIGO AL FINAL DE TU SCRIPT
+-- (justo antes del último "window:SelectTab(1)" o al final)
+-- =============================================
+
+-- =============================================
+-- DUPE LAG ULTRA FUERTE - SIN GUI DE DELTA
+-- =============================================
+
+local DupeTab = window:AddTab("Dupe")
+
+local lagEnabled = false
+
+DupeTab:AddButton("Dupe", function()
+    lagEnabled = not lagEnabled
+
+    if lagEnabled then
+        task.spawn(function()
+            while lagEnabled do
+                -- Lag extremadamente pesado (lo más cercano a toggle internet)
+                for i = 1, 100000 do
+                    local _ = math.random() * math.sqrt(i) * math.sin(i)
+                end
+                task.wait() -- máximo lag posible
+            end
+        end)
+
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Dupe activado",
+            Text = "Dupe apagado",
+            Duration = 10
+        })
+
+    else
+        lagEnabled = false
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Dupe activado",
+            Text = "Lag apagado",
+            Duration = 5
+        })
+    end
+end)
+
+DupeTab:AddLabel("Instrucciones para duplicar:")
+DupeTab:AddLabel("1. Entra al server donde está tu segunda cuenta o tu ayudante")
+DupeTab:AddLabel("2. Mientras entras apaga y prende tu internet cuando entres déjalo prendido")
+DupeTab:AddLabel("3. Executa el script y activa la función dupe")
+DupeTab:AddLabel("4. Manda trade y acepten los 2, spammea rechazar")
+DupeTab:AddLabel("5. y repite asta que quieras, (recuerda solo clonar 1 pet por trade)")
+
+DupeTab:AddLabel(" ")
+DupeTab:AddLabel(" ")
+DupeTab:AddSwitch("Anti Ban")
+
+local noteTab = window:AddTab("Creditos")
+
+-- Add a decorative header with centered text
+noteTab:AddLabel("HadesHubPriv")
+
+-- This gives better control over formatting
+noteTab:AddLabel("By Hades")
+
+-- Add spacers for better layout
+noteTab:AddLabel("Próximas actualizaciones:")
+
+-- This gives better control over formatting
+noteTab:AddLabel("Dupe")
