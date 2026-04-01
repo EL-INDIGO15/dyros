@@ -84,54 +84,87 @@ MainTab:AddSwitch("Auto Swing", function(state)
 end)
 
 
--- ================= DETECTOR DE REBIRTH LISTO =================
+-- ================= ULTRA FAST FARM =================
 
-local RebirthNotifier = false
+local AutoFarmUltra = false
+local AutoEquipBest = false
 
-local function highlightButton(button)
-    if not button then return end
-    
-    pcall(function()
-        button.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- verde fuerte
-        button.Text = "READY!"
-    end)
-end
+local player = game.Players.LocalPlayer
 
-local function checkRebirthReady()
-    for _, v in pairs(game:GetDescendants()) do
-        if v:IsA("TextButton") and v.Text == "Rebirth" then
-            
-            -- Detectar si el botón está activo
-            if v.AutoButtonColor == true then
-                
-                -- 🔥 Notificación
-                game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "🔥 Rebirth Listo",
-                    Text = "Ya puedes renacer!",
-                    Duration = 4
-                })
+-- 🔥 AUTO EQUIP MEJOR SCYTHE
+local function equipBestTool()
+    local backpack = player:FindFirstChild("Backpack")
+    local bestTool = nil
 
-                -- 🔥 Resaltar botón
-                highlightButton(v)
-
-                return true
+    if backpack then
+        for _, tool in pairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                bestTool = tool -- toma la última (normalmente la mejor)
             end
         end
     end
-    return false
+
+    if bestTool and player.Character then
+        player.Character.Humanoid:EquipTool(bestTool)
+    end
 end
 
--- LOOP
 task.spawn(function()
     while true do
-        if RebirthNotifier then
-            checkRebirthReady()
+        if AutoEquipBest then
+            pcall(equipBestTool)
         end
         task.wait(1)
     end
 end)
 
--- SWITCH
-MainTab:AddSwitch("Detector Rebirth", function(v)
-    RebirthNotifier = v
+-- 🔥 ULTRA AUTO SWING (SIN DELAY)
+task.spawn(function()
+    while true do
+        if AutoFarmUltra then
+            local char = player.Character
+            if char then
+                for _, tool in pairs(char:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        
+                        local remote = tool:FindFirstChildWhichIsA("RemoteEvent", true)
+
+                        if remote then
+                            for i = 1, 10 do -- 🔥 MULTI HIT
+                                pcall(function()
+                                    remote:FireServer()
+                                end)
+                            end
+                        end
+
+                    end
+                end
+            end
+        end
+        task.wait() -- sin delay 🔥
+    end
+end)
+
+-- 🔥 ANTI DELAY (QUITAR COOLDOWN VISUAL)
+task.spawn(function()
+    while true do
+        if AutoFarmUltra and player.Character then
+            for _, v in pairs(player.Character:GetDescendants()) do
+                if v:IsA("NumberValue") and v.Name:lower():find("cooldown") then
+                    v.Value = 0
+                end
+            end
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- ================= SWITCHES =================
+
+MainTab:AddSwitch("🔥 Ultra Fast Farm", function(v)
+    AutoFarmUltra = v
+end)
+
+MainTab:AddSwitch("⚔️ Auto Equip Best", function(v)
+    AutoEquipBest = v
 end)
