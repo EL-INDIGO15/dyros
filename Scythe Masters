@@ -82,37 +82,3 @@ MainTab:AddSwitch("Auto Swing", function(state)
     AutoSwingEnabled = state
     if state then startAutoSwing() end
 end)
-
---lag para potenciar --------
-
-local lagEnabled = false
-
-MainTab:AddButton("Potenciar farm", function()
-    lagEnabled = not lagEnabled
-
-    if lagEnabled then
-        task.spawn(function()
-            while lagEnabled do
-                -- Lag extremadamente pesado (lo más cercano a toggle internet)
-                for i = 1, 900000 do
-                    local _ = math.random() * math.sqrt(i) * math.sin(i)
-                end
-                task.wait() -- máximo lag posible
-            end
-        end)
-
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "LAG ACTIVADO",
-            Text = "Lag encendido",
-            Duration = 10
-        })
-
-    else
-        lagEnabled = false
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "POTENCIADOR APAGADO",
-            Text = "potenciador detenido.",
-            Duration = 5
-        })
-    end
-end)
