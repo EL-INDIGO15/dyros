@@ -844,9 +844,84 @@ Misc:AddSwitch("Anti AFK", function(state)
     end
 end)
 
-local StatsTab = window:AddTab("Tracker Pro")
+local estadisticas = window:AddTab("Stats Jugadores")
 
-for i = 1,8 do -- más espacio arriba
+local SelectPlayerName = ""
+local SelectedPlayer = nil
+
+-- DROPDOWN
+local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
+    local split = string.split(Value, " | ")
+    SelectPlayerName = split[2]
+    SelectedPlayer = game.Players:FindFirstChild(SelectPlayerName)
+end)
+
+-- PLAYERS
+for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+    PlayerDrop:Add(Plr.DisplayName .. " | " .. Plr.Name)
+end
+
+game.Players.PlayerAdded:Connect(function(plr)
+    PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
+end)
+
+-- FORMATO
+local function FormatNumber(n)
+    if typeof(n) ~= "number" then return tostring(n) end
+    local suffix = {"","K","M","B","T","Qa"}
+    local i = 1
+    while n >= 1000 and i < #suffix do
+        n /= 1000
+        i += 1
+    end
+    return string.format("%.2f", n) .. suffix[i]
+end
+
+-- LABELS
+local Strong = estadisticas:AddLabel("")
+local Endurance = estadisticas:AddLabel("")
+local Mobility = estadisticas:AddLabel("")
+local Rebirths = estadisticas:AddLabel("")
+local Kills = estadisticas:AddLabel("")
+local Coins = estadisticas:AddLabel("")
+local Emperor = estadisticas:AddLabel("")
+local Device = estadisticas:AddLabel("")
+
+-- BUSCAR STAT SOLO EN LEADERSTATS
+local function findStat(plr, names)
+    local leaderstats = plr:FindFirstChild("leaderstats")
+    if not leaderstats then return "N/A" end
+
+    for _, name in pairs(names) do
+        local stat = leaderstats:FindFirstChild(name)
+        if stat and (stat:IsA("NumberValue") or stat:IsA("IntValue")) then
+            return stat.Value
+        end
+    end
+
+    return "N/A"
+end
+
+-- LOOP
+task.spawn(function()
+    while task.wait(0.5) do
+        if SelectedPlayer then
+            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"Strength","Strong"}))
+            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"Endurance"}))
+            Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"Mobility","Agility"}))
+            Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"Rebirths"}))
+            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"Kills"}))
+            Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"Coins","Cash"}))
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"MuscleEmperorReps"}))
+            Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"Device"}))
+        end
+    end
+end)
+
+
+local StatsTab = window:AddTab("Gain Stats")
+
+for i = 1,8 do
     StatsTab:AddLabel(" ")
 end
 
@@ -855,27 +930,23 @@ local label = StatsTab:AddLabel("Cargando datos...")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- 🔍 BUSCAR STAT
-local function findStat(names)
-    for _, v in pairs(LocalPlayer:GetDescendants()) do
-        if v:IsA("NumberValue") or v:IsA("IntValue") then
-            for _, name in pairs(names) do
-                if v.Name:lower():find(name) then
-                    return v
-                end
-            end
-        end
+-- ESPERAR leaderstats
+local leaderstats = LocalPlayer:WaitForChild("leaderstats")
+
+-- BUSCAR STAT CORRECTA
+local function getStat(name)
+    local stat = leaderstats:FindFirstChild(name)
+    if stat and (stat:IsA("NumberValue") or stat:IsA("IntValue")) then
+        return stat
     end
     return nil
 end
 
-task.wait(2)
+local strengthStat = getStat("Strength") or getStat("Strong")
+local enduranceStat = getStat("Endurance")
+local rebirthStat = getStat("Rebirths")
 
-local strengthStat = findStat({"strong","strength"})
-local enduranceStat = findStat({"endurance","durability"})
-local rebirthStat = findStat({"rebirth"})
-
--- 🔢 FORMATO NUMEROS
+-- FORMATO NUMEROS
 local function format(n)
     if n >= 1e12 then return string.format("%.2fT", n/1e12) end
     if n >= 1e9 then return string.format("%.2fB", n/1e9) end
@@ -884,7 +955,7 @@ local function format(n)
     return tostring(math.floor(n))
 end
 
--- ⏱ FORMATO TIEMPO
+-- FORMATO TIEMPO
 local function formatTime(seconds)
     local h = math.floor(seconds / 3600)
     local m = math.floor((seconds % 3600) / 60)
@@ -892,12 +963,10 @@ local function formatTime(seconds)
     return string.format("%02d:%02d:%02d", h, m, s)
 end
 
--- Variables base
 local lastStrength = strengthStat and strengthStat.Value or 0
 local lastEndurance = enduranceStat and enduranceStat.Value or 0
 local lastRebirths = rebirthStat and rebirthStat.Value or 0
 
--- 🔥 ACUMULADORES REALES (NO SE RESETEAN)
 local totalStrength = 0
 local totalEndurance = 0
 local totalRebirths = 0
@@ -914,17 +983,10 @@ task.spawn(function()
         local currentEndurance = enduranceStat and enduranceStat.Value or 0
         local currentRebirths = rebirthStat and rebirthStat.Value or 0
 
-        -- Ganancia del último segundo
-        local s_gain = currentStrength - lastStrength
-        local e_gain = currentEndurance - lastEndurance
-        local r_gain = currentRebirths - lastRebirths
+        local s_gain = math.max(0, currentStrength - lastStrength)
+        local e_gain = math.max(0, currentEndurance - lastEndurance)
+        local r_gain = math.max(0, currentRebirths - lastRebirths)
 
-        -- 🔥 Si hiciste rebirth y bajó el valor, NO lo contamos negativo
-        if s_gain < 0 then s_gain = 0 end
-        if e_gain < 0 then e_gain = 0 end
-        if r_gain < 0 then r_gain = 0 end
-
-        -- Acumular total real
         totalStrength += s_gain
         totalEndurance += e_gain
         totalRebirths += r_gain
@@ -957,78 +1019,5 @@ task.spawn(function()
         lastStrength = currentStrength
         lastEndurance = currentEndurance
         lastRebirths = currentRebirths
-    end
-end)
-
-local Dupe = window:AddTab("Dupe")
-
-local fpsLag = false
-
-Dupe:AddSwitch("Lag FPS (REAL)", function(state)
-    fpsLag = state
-
-    if state then
-        task.spawn(function()
-            while fpsLag do
-                for i = 1, 200 do
-                    local part = Instance.new("Part")
-                    part.Size = Vector3.new(5,5,5)
-                    part.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(
-                        math.random(-20,20),
-                        math.random(-20,20),
-                        math.random(-20,20)
-                    )
-                    part.Anchored = false
-                    part.Parent = workspace
-
-                    local fire = Instance.new("Fire", part)
-                    local smoke = Instance.new("Smoke", part)
-                    local spark = Instance.new("Sparkles", part)
-                end
-
-                task.wait(0.1)
-            end
-        end)
-    end
-end)
-
-local fpsLag = false
-
-Dupe:AddSwitch("Lag V2", function(state)
-    fpsLagv1 = state
-
-    if state then
-        task.spawn(function()
-            while fpsLag do
-                local char = game.Players.LocalPlayer.Character
-                if char and char:FindFirstChild("HumanoidRootPart") then
-                    local root = char.HumanoidRootPart
-                    local basePos = root.Position
-
-                    for i = 1, 200 do
-                        local angle = math.rad(math.random(0, 360))
-                        local distance = math.random(8, 25) -- 👈 evita que salga encima
-
-                        local offset = Vector3.new(
-                            math.cos(angle) * distance,
-                            0, -- 👈 misma altura (NO arriba/abajo)
-                            math.sin(angle) * distance
-                        )
-
-                        local part = Instance.new("Part")
-                        part.Size = Vector3.new(5,5,5)
-                        part.Position = basePos + offset
-                        part.Anchored = false
-                        part.Parent = workspace
-
-                        Instance.new("Fire", part)
-                        Instance.new("Smoke", part)
-                        Instance.new("Sparkles", part)
-                    end
-                end
-
-                task.wait(0.1)
-            end
-        end)
     end
 end)
