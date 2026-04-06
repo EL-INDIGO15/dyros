@@ -907,10 +907,10 @@ task.spawn(function()
     while task.wait(0.5) do
         if SelectedPlayer then
             Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"Strength","Strong"}))
-            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"Endurance"}))
+            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"Endurance","durability"}))
             Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"Mobility","Agility"}))
             Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"Rebirths"}))
-            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"Kills"}))
+            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"Kills,"kill","Kills"}))
             Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"Coins","Cash"}))
             Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"MuscleEmperorReps"}))
             Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"Device"}))
