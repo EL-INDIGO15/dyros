@@ -795,7 +795,7 @@ Misc:AddSwitch("Auto Eat Chocolate", function(state)
 end)
 
 -- ================= ANTI AFK PRO =================
-local AntiAFK = false
+local AntiAFK = enabled
 local VirtualUser = game:GetService("VirtualUser")
 local AntiAFKConnection = nil
 
