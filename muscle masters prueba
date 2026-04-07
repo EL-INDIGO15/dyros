@@ -871,7 +871,7 @@ task.spawn(function()
             Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
             Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill"}))
             Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
-            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"emperor"}))
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"MuscleEmperorReps"}))
             Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
         end
     end
