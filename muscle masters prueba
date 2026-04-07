@@ -13,7 +13,7 @@ local options = {
 }
 
 -- VENTANA PRINCIPAL
-local window = library:AddWindow("HadesHubV7|Bienvenid@ " .. displayName, options)
+local window = library:AddWindow("HadesHub|Bienvenid@ I love you Lider GHT " .. displayName, options)
 
 -- LISTA DE COLORES PARA LA ANIMACIÓN (rojos + naranja + amarillo)
 local colores = {
@@ -102,124 +102,31 @@ local function startAutoFarm()
 
     local folder = workspace:WaitForChild("MachinesFolder")
     local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
+
     local prompts = getPrompts(folder, positions)
-
-    -- 🔥 CICLO PERSONALIZADO
-    local cycle = {
-        {lag = 10, rest = 1},
-        {lag = 5,  rest = 2},
-        {lag = 2,  rest = 0.5},
-        {lag = 10, rest = 1},
-        {lag = 5,  rest = 2}
-    }
-
-    local index = 1
 
     table.insert(farmThreads, task.spawn(function()
         while AutoFarmEnabled do
-            local phase = cycle[index]
-
-            local startTime = tick()
-
-            -- 💀 FASE LAG (ULTRA FARM)
-            while tick() - startTime < phase.lag and AutoFarmEnabled do
-                local p = prompts[rng:NextInteger(1, #prompts)]
-                if p and p.Enabled then
-                    fireproximityprompt(p)
-                end
-
-                remote:FireServer()
-
-                -- 🔥 VELOCIDAD EXTREMA
-                task.wait()
-            end
-
-            -- ⚡ FASE DESCANSO (para que cargue todo)
-            local restStart = tick()
-            while tick() - restStart < phase.rest and AutoFarmEnabled do
-                remote:FireServer()
-                task.wait(0.05)
-            end
-
-            -- 🔁 SIGUIENTE
-            index += 1
-            if index > #cycle then
-                index = 1
-            end
-        end
-    end))
-end
-
-AutoFarm:AddSwitch("Auto FarmV", function(state)
-    AutoFarmEnabled = state
-    stopThreads(farmThreads)
-
-    if state then
-        startAutoFarm()
-    end
-end)
-
-local function getClosestPrompt(targetPos)
-    local closest = nil
-    local minDist = math.huge
-
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("ProximityPrompt") then
-            local parent = v.Parent
-            if parent and parent:IsA("BasePart") then
-                local dist = (parent.Position - targetPos).Magnitude
-                if dist < minDist then
-                    minDist = dist
-                    closest = v
-                end
-            end
-        end
-    end
-
-    return closest
-end
-
-local function startAutoGlitch600()
-    local targetPos = Vector3.new(-5959.97, 6.28, -76.56)
-    local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
-
-    local prompt = getClosestPrompt(targetPos)
-
-    -- 🔥 Hilo 1: pegarte a la máquina
-    table.insert(glitchThreads, task.spawn(function()
-        while AutoGlitchEnabled do
-            local char = player.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local hrp = char.HumanoidRootPart
-
-                -- TP exacto
-                hrp.CFrame = CFrame.new(targetPos)
-
-                -- activar prompt real
-                if prompt and prompt.Enabled then
-                    fireproximityprompt(prompt)
-                end
-            end
-            task.wait(0.1)
+            local p = prompts[rng:NextInteger(1, #prompts)]
+            if p and p.Enabled then fireproximityprompt(p) end
+            task.wait(0.5)
         end
     end))
 
-    -- ⚡ Hilo 2: farm rápido
-    table.insert(glitchThreads, task.spawn(function()
-        while AutoGlitchEnabled do
+    table.insert(farmThreads, task.spawn(function()
+        while AutoFarmEnabled do
             remote:FireServer()
             task.wait(0)
         end
     end))
 end
 
--- SWITCH
-AutoFarm:AddSwitch("Auto Glitch (600 FIX)", function(state)
-    AutoGlitchEnabled = state
-    stopThreads(glitchThreads)
+AutoFarm:AddSwitch("Auto Farm", function(state)
+    AutoFarmEnabled = state
+    stopThreads(farmThreads)
 
     if state then
-        startAutoGlitch600()
+        startAutoFarm()
     end
 end)
 
@@ -253,7 +160,7 @@ local function startAutoGlitch()
     table.insert(glitchThreads, task.spawn(function()
         while AutoGlitchEnabled do
             remote:FireServer()
-            task.wait(0.03)
+            task.wait(0)
         end
     end))
 end
@@ -277,10 +184,9 @@ task.spawn(function()
         if AutoRebirthEnabled then
             ReplicatedStorage.RemotesEvent.RebirthEvent:FireServer()
         end
-        task.wait(0.05)
+        task.wait(0)
     end
 end)
-
 
 AutoFarm:AddSwitch("Anti Lag", function() 
     for _, v in pairs(game:GetDescendants()) do 
@@ -365,41 +271,6 @@ end)
 
 local Killer = window:AddTab("Kill")
 
-local spyTargetDropdownItems = {}
-local targetPlayerName = nil
-
-local spyTargetDropdown = Killer:AddDropdown("Select View Target", function(displayName)
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player.DisplayName == displayName then
-            targetPlayerName = player.Name
-            break
-        end
-    end
-end)
-
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        spyTargetDropdown:Add(player.DisplayName)
-        spyTargetDropdownItems[player.Name] = player.DisplayName
-    end
-end
-
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        spyTargetDropdown:Add(player.DisplayName)
-        spyTargetDropdownItems[player.Name] = player.DisplayName
-    end
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    if player ~= LocalPlayer then
-        spyTargetDropdownItems[player.Name] = nil
-        spyTargetDropdown:Clear()
-        for _, displayName in pairs(spyTargetDropdownItems) do
-            spyTargetDropdown:Add(displayName)
-        end
-    end
-end)
 
 Killer:AddSwitch("View Player", function(bool)
     spying = bool
@@ -558,6 +429,23 @@ Players.PlayerAdded:Connect(function(player)
     end
 end)
 
+-- 📌 Actualizar lista cuando se vayan jugadores
+Players.PlayerRemoving:Connect(function(player)
+    -- Limpiamos y agregamos de nuevo
+    followDropdown:Clear()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            followDropdown:Add(plr.DisplayName)
+        end
+    end
+
+    -- Dejar de seguir si se fue
+    if followTarget == player.Name then
+        followTarget = nil
+        following = false
+    end
+end)
+
 -- Cuando se va alguien
 Players.PlayerRemoving:Connect(function(player)
     if targetDropdownItems[player.Name] then
@@ -575,22 +463,6 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- 📌 Actualizar lista cuando se vayan jugadores
-Players.PlayerRemoving:Connect(function(player)
-    -- Limpiamos y agregamos de nuevo
-    followDropdown:Clear()
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer then
-            followDropdown:Add(plr.DisplayName)
-        end
-    end
-
-    -- Dejar de seguir si se fue
-    if followTarget == player.Name then
-        followTarget = nil
-        following = false
-    end
-end)
 
 -- 📌 Botón para dejar de seguir
 Killer:AddButton("Dejar de Seguir", function()
@@ -658,6 +530,77 @@ Killer:AddSwitch("Auto Punch", function(state)
         end
     end)
 end)
+
+local autoPunchfastSafe = false
+
+Killer:AddSwitch("Auto Punch Fast", function(state)
+    autoPunchSafe = state
+
+    task.spawn(function()
+        while autoPunchSafe do
+            local char = LocalPlayer.Character
+            if not char then task.wait() continue end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
+                or char:FindFirstChild("Punch")
+
+            if punch and humanoid then
+                -- 🔥 Forzar equipar bien (mejor que parent)
+                if punch.Parent ~= char then
+                    humanoid:EquipTool(punch)
+                    task.wait(0.1)
+                end
+
+                -- 🔥 Evitar que se desequipe
+                if not char:FindFirstChild("Punch") then
+                    humanoid:EquipTool(punch)
+                end
+
+                -- 🔥 Golpear (forma más confiable)
+                punch:Activate()
+            end
+
+            task.wait(0.000001)
+        end
+    end)
+end)
+
+local autoPunchultrafastSafe = false
+
+Killer:AddSwitch("Auto Punch Ultra Fast", function(state)
+    autoPunchSafe = state
+
+    task.spawn(function()
+        while autoPunchSafe do
+            local char = LocalPlayer.Character
+            if not char then task.wait() continue end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
+                or char:FindFirstChild("Punch")
+
+            if punch and humanoid then
+                -- 🔥 Forzar equipar bien (mejor que parent)
+                if punch.Parent ~= char then
+                    humanoid:EquipTool(punch)
+                    task.wait(0.1)
+                end
+
+                -- 🔥 Evitar que se desequipe
+                if not char:FindFirstChild("Punch") then
+                    humanoid:EquipTool(punch)
+                end
+
+                -- 🔥 Golpear (forma más confiable)
+                punch:Activate()
+            end
+
+            task.wait(0)
+        end
+    end)
+end)
+
 
 
 local Misc = window:AddTab("Misc")
@@ -844,6 +787,8 @@ Misc:AddSwitch("Anti AFK", function(state)
     end
 end)
 
+
+
 local estadisticas = window:AddTab("Stats Jugadores")
 
 local SelectPlayerName = ""
@@ -851,8 +796,7 @@ local SelectedPlayer = nil
 
 -- DROPDOWN
 local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
-    local split = string.split(Value, " | ")
-    SelectPlayerName = split[2]
+    SelectPlayerName = Value:match("| (.+)")
     SelectedPlayer = game.Players:FindFirstChild(SelectPlayerName)
 end)
 
@@ -887,41 +831,45 @@ local Coins = estadisticas:AddLabel("")
 local Emperor = estadisticas:AddLabel("")
 local Device = estadisticas:AddLabel("")
 
--- BUSCAR STAT SOLO EN LEADERSTATS
+-- BUSCAR STAT MEJORADO 🔥
 local function findStat(plr, names)
-    local leaderstats = plr:FindFirstChild("leaderstats")
-    if not leaderstats then return "N/A" end
-
-    for _, name in pairs(names) do
-        local stat = leaderstats:FindFirstChild(name)
-        if stat and (stat:IsA("NumberValue") or stat:IsA("IntValue")) then
-            return stat.Value
+    for _, v in pairs(plr:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("StringValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name:lower()) then
+                    return v.Value
+                end
+            end
         end
     end
-
     return "N/A"
 end
 
 -- LOOP
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(0.3) do
         if SelectedPlayer then
-            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"Strength","Strong"}))
-            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"Endurance","durability"}))
-            Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"Mobility","Agility"}))
-            Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"Rebirths"}))
-            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"Kill"}))
-            Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"Coins","Cash"}))
-            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"MuscleEmperorReps"}))
-            Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"Device"}))
+
+            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strong","strength"}))
+            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance"}))
+            Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
+            Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
+            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill","kills"}))
+            Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
+
+            -- 🔥 ESTAS SON LAS QUE FALTABAN
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"Muscle Emperor Reps","muscle emperor reps","MuscleEmperorReps"}))
+            Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
+
         end
     end
 end)
 
 
+
 local StatsTab = window:AddTab("Gain Stats")
 
-for i = 1,8 do
+for i = 1,8 do -- más espacio arriba
     StatsTab:AddLabel(" ")
 end
 
@@ -930,23 +878,27 @@ local label = StatsTab:AddLabel("Cargando datos...")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- ESPERAR leaderstats
-local leaderstats = LocalPlayer:WaitForChild("leaderstats")
-
--- BUSCAR STAT CORRECTA
-local function getStat(name)
-    local stat = leaderstats:FindFirstChild(name)
-    if stat and (stat:IsA("NumberValue") or stat:IsA("IntValue")) then
-        return stat
+-- 🔍 BUSCAR STAT
+local function findStat(names)
+    for _, v in pairs(LocalPlayer:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name) then
+                    return v
+                end
+            end
+        end
     end
     return nil
 end
 
-local strengthStat = getStat("Strength") or getStat("Strong")
-local enduranceStat = getStat("Endurance")
-local rebirthStat = getStat("Rebirths")
+task.wait(2)
 
--- FORMATO NUMEROS
+local strengthStat = findStat({"strong","strength"})
+local enduranceStat = findStat({"endurance","durability"})
+local rebirthStat = findStat({"rebirth"})
+
+-- 🔢 FORMATO NUMEROS
 local function format(n)
     if n >= 1e12 then return string.format("%.2fT", n/1e12) end
     if n >= 1e9 then return string.format("%.2fB", n/1e9) end
@@ -955,7 +907,7 @@ local function format(n)
     return tostring(math.floor(n))
 end
 
--- FORMATO TIEMPO
+-- ⏱ FORMATO TIEMPO
 local function formatTime(seconds)
     local h = math.floor(seconds / 3600)
     local m = math.floor((seconds % 3600) / 60)
@@ -963,10 +915,12 @@ local function formatTime(seconds)
     return string.format("%02d:%02d:%02d", h, m, s)
 end
 
+-- Variables base
 local lastStrength = strengthStat and strengthStat.Value or 0
 local lastEndurance = enduranceStat and enduranceStat.Value or 0
 local lastRebirths = rebirthStat and rebirthStat.Value or 0
 
+-- 🔥 ACUMULADORES REALES (NO SE RESETEAN)
 local totalStrength = 0
 local totalEndurance = 0
 local totalRebirths = 0
@@ -983,10 +937,17 @@ task.spawn(function()
         local currentEndurance = enduranceStat and enduranceStat.Value or 0
         local currentRebirths = rebirthStat and rebirthStat.Value or 0
 
-        local s_gain = math.max(0, currentStrength - lastStrength)
-        local e_gain = math.max(0, currentEndurance - lastEndurance)
-        local r_gain = math.max(0, currentRebirths - lastRebirths)
+        -- Ganancia del último segundo
+        local s_gain = currentStrength - lastStrength
+        local e_gain = currentEndurance - lastEndurance
+        local r_gain = currentRebirths - lastRebirths
 
+        -- 🔥 Si hiciste rebirth y bajó el valor, NO lo contamos negativo
+        if s_gain < 0 then s_gain = 0 end
+        if e_gain < 0 then e_gain = 0 end
+        if r_gain < 0 then r_gain = 0 end
+
+        -- Acumular total real
         totalStrength += s_gain
         totalEndurance += e_gain
         totalRebirths += r_gain
