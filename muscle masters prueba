@@ -789,21 +789,21 @@ end)
 
 
 
--- ================= TAB STATS =================
-local StatsTab = Window:AddTab("Stats")
+local StatsTab = window:AddTab("Gain Stats")
 
-local StatsSection = StatsTab:AddSection("Player Stats")
+for i = 1,8 do
+    StatsTab:AddLabel(" ")
+end
 
-local StatsLabel = StatsSection:AddLabel("Cargando stats...")
+local label = StatsTab:AddLabel("Cargando datos...")
 
--- ================= SAFE FORMAT =================
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- SAFE FORMAT 🔥
 local function safeFormat(n)
-	if typeof(n) ~= "number" then
+	if typeof(n) ~= "number" or n ~= n or n < 0 then
 		return "0"
-	end
-	
-	if n ~= n or n == math.huge or n < 0 then
-		n = 0
 	end
 
 	if n >= 1e12 then
@@ -819,51 +819,74 @@ local function safeFormat(n)
 	end
 end
 
--- ================= TRACKER =================
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local function formatTime(seconds)
+	local h = math.floor(seconds / 3600)
+	local m = math.floor((seconds % 3600) / 60)
+	local s = math.floor(seconds % 60)
+	return string.format("%02d:%02d:%02d", h, m, s)
+end
 
-local lastStrength = 0
-local lastEndurance = 0
-local lastRebirths = 0
+task.wait(2)
+
+local leaderstats = LocalPlayer:WaitForChild("leaderstats")
+
+local strengthStat = leaderstats:WaitForChild("Strength")
+local enduranceStat = leaderstats:WaitForChild("Endurance")
+local rebirthStat = leaderstats:WaitForChild("Rebirths")
+
+local lastStrength = strengthStat.Value
+local lastEndurance = enduranceStat.Value
+local lastRebirths = rebirthStat.Value
+
+local totalStrength = 0
+local totalEndurance = 0
+local totalRebirths = 0
+
+local startTime = tick()
 
 task.spawn(function()
-	while task.wait(1) do
-		
-		local leaderstats = player:FindFirstChild("leaderstats")
-		if not leaderstats then
-			StatsLabel:Set("Esperando leaderstats...")
-			continue
-		end
+	while true do
+		task.wait(1)
 
-		local strength = leaderstats:FindFirstChild("Strength")
-		local endurance = leaderstats:FindFirstChild("Endurance")
-		local rebirths = leaderstats:FindFirstChild("Rebirths")
-
-		if not strength or not endurance or not rebirths then
-			StatsLabel:Set("Esperando stats...")
-			continue
-		end
-
-		local currentStrength = tonumber(strength.Value) or 0
-		local currentEndurance = tonumber(endurance.Value) or 0
-		local currentRebirths = tonumber(rebirths.Value) or 0
+		local currentStrength = strengthStat.Value
+		local currentEndurance = enduranceStat.Value
+		local currentRebirths = rebirthStat.Value
 
 		local s_gain = math.max(0, currentStrength - lastStrength)
 		local e_gain = math.max(0, currentEndurance - lastEndurance)
 		local r_gain = math.max(0, currentRebirths - lastRebirths)
 
+		totalStrength += s_gain
+		totalEndurance += e_gain
+		totalRebirths += r_gain
+
+		local elapsed = tick() - startTime
+
+		label.Text =
+			"💪 FUERZA\n"..
+			safeFormat(currentStrength)..
+			"\n⚡ "..safeFormat(s_gain*60).."/min | "..safeFormat(s_gain*3600).."/h | "..safeFormat(s_gain*86400).."/d\n\n"..
+
+			"🛡️ ENDURANCE\n"..
+			safeFormat(currentEndurance)..
+			"\n⚡ "..safeFormat(e_gain*60).."/min | "..safeFormat(e_gain*3600).."/h | "..safeFormat(e_gain*86400).."/d\n\n"..
+
+			"🔄 REBIRTHS\n"..
+			safeFormat(currentRebirths)..
+			"\n⚡ "..safeFormat(r_gain*60).."/min | "..safeFormat(r_gain*3600).."/h | "..safeFormat(r_gain*86400).."/d\n\n"..
+
+			"━━━━━━━━━━━━━━━\n"..
+
+			"⏱ TIEMPO EN SERVER\n"..
+			formatTime(elapsed).."\n\n"..
+
+			"📈 FARMEADO TOTAL\n"..
+			"💪 "..safeFormat(totalStrength).."\n"..
+			"🛡️ "..safeFormat(totalEndurance).."\n"..
+			"🔄 "..safeFormat(totalRebirths)
+
 		lastStrength = currentStrength
 		lastEndurance = currentEndurance
 		lastRebirths = currentRebirths
-
-		StatsLabel:Set(
-			"💪 FUERZA: " .. safeFormat(currentStrength) ..
-			"\n⚡ +" .. safeFormat(s_gain*60) .. "/min" ..
-			"\n\n🛡 ENDURANCE: " .. safeFormat(currentEndurance) ..
-			"\n⚡ +" .. safeFormat(e_gain*60) .. "/min" ..
-			"\n\n🔁 REBIRTHS: " .. safeFormat(currentRebirths) ..
-			"\n⚡ +" .. safeFormat(r_gain*60) .. "/min"
-		)
 	end
 end)
