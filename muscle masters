@@ -801,7 +801,7 @@ local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
 
-local AntiAFKEnabled = true
+local AntiAFKEnabled = false
 local AntiAFKConnection = nil
 local AntiAFK_GUI = nil
 local AntiAFK_SwitchRef = nil
@@ -976,6 +976,14 @@ end
 
 -- 🔥 SWITCH EN LIBRARY
 AntiAFK_SwitchRef = Misc:AddSwitch("Anti AFK GUI", function(state)
+    AntiAFKEnabled = state
+
+    if state then
+        EnableAntiAFK()
+    else
+        DisableAntiAFK()
+    end
+end, true) -- 👈 ESTE TRUE LO PRENDE AUTOMÁTICAMENTE
     AntiAFKEnabled = state
 
     if state then
