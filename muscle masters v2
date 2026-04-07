@@ -789,18 +789,20 @@ end)
 
 
 
+-- =========================
+-- 📊 STATS JUGADORES FIX
+-- =========================
+
 local estadisticas = window:AddTab("Stats Jugadores")
 
 local SelectPlayerName = ""
 local SelectedPlayer = nil
 
--- DROPDOWN
 local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
     SelectPlayerName = Value:match("| (.+)")
     SelectedPlayer = game.Players:FindFirstChild(SelectPlayerName)
 end)
 
--- PLAYERS
 for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
     PlayerDrop:Add(Plr.DisplayName .. " | " .. Plr.Name)
 end
@@ -809,16 +811,44 @@ game.Players.PlayerAdded:Connect(function(plr)
     PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
 end)
 
--- FORMATO
+-- 🔢 FORMATO
 local function FormatNumber(n)
     if typeof(n) ~= "number" then return tostring(n) end
-    local suffix = {"","K","M","B","T","Qa"}
+    local suffix = {"","K","M","B","T"}
     local i = 1
     while n >= 1000 and i < #suffix do
         n /= 1000
         i += 1
     end
     return string.format("%.2f", n) .. suffix[i]
+end
+
+-- 🔍 FIND STAT FIXED
+local function findStat(plr, names)
+    if not plr then return "N/A" end
+
+    local leader = plr:FindFirstChild("leaderstats")
+    if leader then
+        for _, stat in pairs(leader:GetChildren()) do
+            for _, name in pairs(names) do
+                if stat.Name:lower():find(name:lower()) then
+                    return stat.Value
+                end
+            end
+        end
+    end
+
+    for _, v in pairs(plr:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name:lower()) then
+                    return v.Value
+                end
+            end
+        end
+    end
+
+    return "N/A"
 end
 
 -- LABELS
@@ -831,45 +861,30 @@ local Coins = estadisticas:AddLabel("")
 local Emperor = estadisticas:AddLabel("")
 local Device = estadisticas:AddLabel("")
 
--- BUSCAR STAT MEJORADO 🔥
-local function findStat(plr, names)
-    for _, v in pairs(plr:GetDescendants()) do
-        if v:IsA("NumberValue") or v:IsA("StringValue") or v:IsA("IntValue") then
-            for _, name in pairs(names) do
-                if v.Name:lower():find(name:lower()) then
-                    return v.Value
-                end
-            end
-        end
-    end
-    return "N/A"
-end
-
 -- LOOP
 task.spawn(function()
     while task.wait(0.3) do
         if SelectedPlayer then
-
             Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strong","strength"}))
-            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance"}))
+            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance","durability"}))
             Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
             Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
-            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill","kills"}))
+            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill"}))
             Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
-
-            -- 🔥 ESTAS SON LAS QUE FALTABAN
-            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"Muscle Emperor Reps","muscle emperor reps","MuscleEmperorReps"}))
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"MuscleEmperorReps"}))
             Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
-
         end
     end
 end)
 
 
+-- =========================
+-- 📈 GAIN STATS FIX
+-- =========================
 
 local StatsTab = window:AddTab("Gain Stats")
 
-for i = 1,8 do -- más espacio arriba
+for i = 1,8 do
     StatsTab:AddLabel(" ")
 end
 
@@ -878,12 +893,12 @@ local label = StatsTab:AddLabel("Cargando datos...")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- 🔍 BUSCAR STAT
-local function findStat(names)
+-- 🔍 FIND STAT (OBJETO)
+local function findStatLocal(names)
     for _, v in pairs(LocalPlayer:GetDescendants()) do
         if v:IsA("NumberValue") or v:IsA("IntValue") then
             for _, name in pairs(names) do
-                if v.Name:lower():find(name) then
+                if v.Name:lower():find(name:lower()) then
                     return v
                 end
             end
@@ -892,13 +907,28 @@ local function findStat(names)
     return nil
 end
 
-task.wait(2)
+-- 🔄 AUTO DETECCIÓN
+local strengthStat, enduranceStat, rebirthStat
 
-local strengthStat = findStat({"strong","strength"})
-local enduranceStat = findStat({"endurance","durability"})
-local rebirthStat = findStat({"rebirth"})
+task.spawn(function()
+    while true do
+        task.wait(1)
 
--- 🔢 FORMATO NUMEROS
+        if not strengthStat then
+            strengthStat = findStatLocal({"strong","strength"})
+        end
+
+        if not enduranceStat then
+            enduranceStat = findStatLocal({"endurance","durability"})
+        end
+
+        if not rebirthStat then
+            rebirthStat = findStatLocal({"rebirth"})
+        end
+    end
+end)
+
+-- 🔢 FORMAT
 local function format(n)
     if n >= 1e12 then return string.format("%.2fT", n/1e12) end
     if n >= 1e9 then return string.format("%.2fB", n/1e9) end
@@ -907,7 +937,7 @@ local function format(n)
     return tostring(math.floor(n))
 end
 
--- ⏱ FORMATO TIEMPO
+-- ⏱ TIEMPO
 local function formatTime(seconds)
     local h = math.floor(seconds / 3600)
     local m = math.floor((seconds % 3600) / 60)
@@ -915,12 +945,10 @@ local function formatTime(seconds)
     return string.format("%02d:%02d:%02d", h, m, s)
 end
 
--- Variables base
-local lastStrength = strengthStat and strengthStat.Value or 0
-local lastEndurance = enduranceStat and enduranceStat.Value or 0
-local lastRebirths = rebirthStat and rebirthStat.Value or 0
+local lastStrength = 0
+local lastEndurance = 0
+local lastRebirths = 0
 
--- 🔥 ACUMULADORES REALES (NO SE RESETEAN)
 local totalStrength = 0
 local totalEndurance = 0
 local totalRebirths = 0
@@ -937,17 +965,14 @@ task.spawn(function()
         local currentEndurance = enduranceStat and enduranceStat.Value or 0
         local currentRebirths = rebirthStat and rebirthStat.Value or 0
 
-        -- Ganancia del último segundo
         local s_gain = currentStrength - lastStrength
         local e_gain = currentEndurance - lastEndurance
         local r_gain = currentRebirths - lastRebirths
 
-        -- 🔥 Si hiciste rebirth y bajó el valor, NO lo contamos negativo
         if s_gain < 0 then s_gain = 0 end
         if e_gain < 0 then e_gain = 0 end
         if r_gain < 0 then r_gain = 0 end
 
-        -- Acumular total real
         totalStrength += s_gain
         totalEndurance += e_gain
         totalRebirths += r_gain
