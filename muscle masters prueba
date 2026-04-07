@@ -789,196 +789,108 @@ end)
 
 
 
-local estadisticas = window:AddTab("Stats Jugadores")
-
-local SelectPlayerName = ""
-local SelectedPlayer = nil
-
--- DROPDOWN
-local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
-    SelectPlayerName = Value:match("| (.+)")
-    SelectedPlayer = game.Players:FindFirstChild(SelectPlayerName)
-end)
-
--- PLAYERS
-for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
-    PlayerDrop:Add(Plr.DisplayName .. " | " .. Plr.Name)
-end
-
-game.Players.PlayerAdded:Connect(function(plr)
-    PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
-end)
-
--- FORMATO
-local function FormatNumber(n)
-    if typeof(n) ~= "number" then return tostring(n) end
-    local suffix = {"","K","M","B","T","Qa"}
-    local i = 1
-    while n >= 1000 and i < #suffix do
-        n /= 1000
-        i += 1
-    end
-    return string.format("%.2f", n) .. suffix[i]
-end
-
--- LABELS
-local Strong = estadisticas:AddLabel("")
-local Endurance = estadisticas:AddLabel("")
-local Mobility = estadisticas:AddLabel("")
-local Rebirths = estadisticas:AddLabel("")
-local Kills = estadisticas:AddLabel("")
-local Coins = estadisticas:AddLabel("")
-local Emperor = estadisticas:AddLabel("")
-local Device = estadisticas:AddLabel("")
-
--- BUSCAR STAT MEJORADO 🔥
-local function findStat(plr, names)
-    for _, v in pairs(plr:GetDescendants()) do
-        if v:IsA("NumberValue") or v:IsA("StringValue") or v:IsA("IntValue") then
-            for _, name in pairs(names) do
-                if v.Name:lower():find(name:lower()) then
-                    return v.Value
-                end
-            end
-        end
-    end
-    return "N/A"
-end
-
--- LOOP
-task.spawn(function()
-    while task.wait(0.3) do
-        if SelectedPlayer then
-
-            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strong","strength"}))
-            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance"}))
-            Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
-            Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
-            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill","kills"}))
-            Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
-
-            -- 🔥 ESTAS SON LAS QUE FALTABAN
-            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"Muscle Emperor Reps","muscle emperor reps","MuscleEmperorReps"}))
-            Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
-
-        end
-    end
-end)
-
-
-
-local StatsTab = window:AddTab("Gain Stats")
-
-for i = 1,8 do -- más espacio arriba
-    StatsTab:AddLabel(" ")
-end
-
-local label = StatsTab:AddLabel("Cargando datos...")
-
+-- ================= VARIABLES =================
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local player = Players.LocalPlayer
 
--- 🔍 BUSCAR STAT
-local function findStat(names)
-    for _, v in pairs(LocalPlayer:GetDescendants()) do
-        if v:IsA("NumberValue") or v:IsA("IntValue") then
-            for _, name in pairs(names) do
-                if v.Name:lower():find(name) then
-                    return v
-                end
-            end
-        end
-    end
-    return nil
+-- Crear GUI simple si no tienes una
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "StatsGui"
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 260, 0, 320)
+Frame.Position = UDim2.new(0, 20, 0.5, -160)
+Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Frame.BorderSizePixel = 0
+Frame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0,12)
+UICorner.Parent = Frame
+
+local statsLabel = Instance.new("TextLabel")
+statsLabel.Size = UDim2.new(1, -10, 1, -10)
+statsLabel.Position = UDim2.new(0,5,0,5)
+statsLabel.BackgroundTransparency = 1
+statsLabel.TextColor3 = Color3.fromRGB(0,255,150)
+statsLabel.TextScaled = false
+statsLabel.TextWrapped = true
+statsLabel.Font = Enum.Font.GothamBold
+statsLabel.TextSize = 16
+statsLabel.Text = "Cargando Stats..."
+statsLabel.TextYAlignment = Enum.TextYAlignment.Top
+statsLabel.Parent = Frame
+
+-- ================= SAFE FORMAT =================
+local function safeFormat(n)
+	if typeof(n) ~= "number" then
+		return "0"
+	end
+	
+	if n ~= n or n == math.huge or n < 0 then
+		n = 0
+	end
+
+	if n >= 1e12 then
+		return string.format("%.2fT", n/1e12)
+	elseif n >= 1e9 then
+		return string.format("%.2fB", n/1e9)
+	elseif n >= 1e6 then
+		return string.format("%.2fM", n/1e6)
+	elseif n >= 1e3 then
+		return string.format("%.1fK", n/1e3)
+	else
+		return tostring(math.floor(n))
+	end
 end
 
-task.wait(2)
+-- ================= TRACKER VARIABLES =================
+local lastStrength = 0
+local lastEndurance = 0
+local lastRebirths = 0
 
-local strengthStat = findStat({"strong","strength"})
-local enduranceStat = findStat({"endurance","durability"})
-local rebirthStat = findStat({"rebirth"})
-
--- 🔢 FORMATO NUMEROS
-local function format(n)
-    if n >= 1e12 then return string.format("%.2fT", n/1e12) end
-    if n >= 1e9 then return string.format("%.2fB", n/1e9) end
-    if n >= 1e6 then return string.format("%.2fM", n/1e6) end
-    if n >= 1e3 then return string.format("%.1fK", n/1e3) end
-    return tostring(math.floor(n))
-end
-
--- ⏱ FORMATO TIEMPO
-local function formatTime(seconds)
-    local h = math.floor(seconds / 3600)
-    local m = math.floor((seconds % 3600) / 60)
-    local s = math.floor(seconds % 60)
-    return string.format("%02d:%02d:%02d", h, m, s)
-end
-
--- Variables base
-local lastStrength = strengthStat and strengthStat.Value or 0
-local lastEndurance = enduranceStat and enduranceStat.Value or 0
-local lastRebirths = rebirthStat and rebirthStat.Value or 0
-
--- 🔥 ACUMULADORES REALES (NO SE RESETEAN)
-local totalStrength = 0
-local totalEndurance = 0
-local totalRebirths = 0
-
-local startTime = tick()
-
+-- ================= STATS TRACKER =================
 task.spawn(function()
-    while true do
-        task.wait(1)
+	while task.wait(1) do
+		
+		local leaderstats = player:FindFirstChild("leaderstats")
+		if not leaderstats then
+			statsLabel.Text = "Esperando leaderstats..."
+			continue
+		end
 
-        if not strengthStat then continue end
+		local strength = leaderstats:FindFirstChild("Strength")
+		local endurance = leaderstats:FindFirstChild("Endurance")
+		local rebirths = leaderstats:FindFirstChild("Rebirths")
 
-        local currentStrength = strengthStat.Value
-        local currentEndurance = enduranceStat and enduranceStat.Value or 0
-        local currentRebirths = rebirthStat and rebirthStat.Value or 0
+		if not strength or not endurance or not rebirths then
+			statsLabel.Text = "Esperando stats..."
+			continue
+		end
 
-        -- Ganancia del último segundo
-        local s_gain = currentStrength - lastStrength
-        local e_gain = currentEndurance - lastEndurance
-        local r_gain = currentRebirths - lastRebirths
+		local currentStrength = tonumber(strength.Value) or 0
+		local currentEndurance = tonumber(endurance.Value) or 0
+		local currentRebirths = tonumber(rebirths.Value) or 0
 
-        -- 🔥 Si hiciste rebirth y bajó el valor, NO lo contamos negativo
-        if s_gain < 0 then s_gain = 0 end
-        if e_gain < 0 then e_gain = 0 end
-        if r_gain < 0 then r_gain = 0 end
+		-- Ganancia estable
+		local s_gain = math.max(0, currentStrength - lastStrength)
+		local e_gain = math.max(0, currentEndurance - lastEndurance)
+		local r_gain = math.max(0, currentRebirths - lastRebirths)
 
-        -- Acumular total real
-        totalStrength += s_gain
-        totalEndurance += e_gain
-        totalRebirths += r_gain
+		lastStrength = currentStrength
+		lastEndurance = currentEndurance
+		lastRebirths = currentRebirths
 
-        local elapsed = tick() - startTime
-
-        label.Text =
-            "💪 FUERZA\n"..
-            format(currentStrength)..
-            "\n⚡ "..format(s_gain*60).."/min | "..format(s_gain*3600).."/h | "..format(s_gain*86400).."/d\n\n"..
-
-            "🛡️ DURABILIDAD\n"..
-            format(currentEndurance)..
-            "\n⚡ "..format(e_gain*60).."/min | "..format(e_gain*3600).."/h | "..format(e_gain*86400).."/d\n\n"..
-
-            "🔄 RENACIMIENTOS\n"..
-            format(currentRebirths)..
-            "\n⚡ "..format(r_gain*60).."/min | "..format(r_gain*3600).."/h | "..format(r_gain*86400).."/d\n\n"..
-
-            "━━━━━━━━━━━━━━━\n"..
-
-            "⏱ TIEMPO EN SERVER\n"..
-            formatTime(elapsed).."\n\n"..
-
-            "📈 FARMEADO TOTAL\n"..
-            "💪 "..format(totalStrength).."\n"..
-            "🛡️ "..format(totalEndurance).."\n"..
-            "🔄 "..format(totalRebirths)
-
-        lastStrength = currentStrength
-        lastEndurance = currentEndurance
-        lastRebirths = currentRebirths
-    end
+		statsLabel.Text =
+			"💪 FUERZA\n" ..
+			safeFormat(currentStrength) ..
+			"\n⚡ +" .. safeFormat(s_gain*60) .. "/min" ..
+			"\n\n🛡 ENDURANCE\n" ..
+			safeFormat(currentEndurance) ..
+			"\n⚡ +" .. safeFormat(e_gain*60) .. "/min" ..
+			"\n\n🔁 REBIRTHS\n" ..
+			safeFormat(currentRebirths) ..
+			"\n⚡ +" .. safeFormat(r_gain*60) .. "/min"
+	end
 end)
