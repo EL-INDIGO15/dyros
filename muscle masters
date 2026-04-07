@@ -801,7 +801,7 @@ local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
 
-local AntiAFKEnabled = false
+local AntiAFKEnabled = true
 local AntiAFKConnection = nil
 local AntiAFK_GUI = nil
 local AntiAFK_SwitchRef = nil
