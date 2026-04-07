@@ -1144,7 +1144,7 @@ end)
 local StatsTab = window:AddTab("Gain Stats")
 
 -- Espacio arriba (ajustado)
-for i = 1,15 do
+for i = 3 do
     StatsTab:AddLabel(" ")
 end
 
