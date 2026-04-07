@@ -879,22 +879,21 @@ end)
 
 
 -- =========================
--- 📈 GAIN STATS FINAL FIX
+-- 📈 GAIN STATS ULTRA PRO
 -- =========================
 
 local StatsTab = window:AddTab("Gain Stats")
 
--- 🔽 MENOS ESPACIO ARRIBA (FIX UI)
-for i = 1,10 do
+for i = 1,9 do
     StatsTab:AddLabel(" ")
 end
 
-local label = StatsTab:AddLabel("Cargando...")
+local label = StatsTab:AddLabel("Cargando datos...")
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- 🔍 BUSCAR STAT
+-- 🔍 BUSCAR STAT (OBJETO)
 local function findStatLocal(names)
     for _, v in pairs(LocalPlayer:GetDescendants()) do
         if v:IsA("NumberValue") or v:IsA("IntValue") then
@@ -923,11 +922,11 @@ task.spawn(function()
         mobilityStat = mobilityStat or findStatLocal({"mobility","agility"})
         coinsStat = coinsStat or findStatLocal({"coin","cash"})
         killsStat = killsStat or findStatLocal({"kill"})
-        emperorStat = emperorStat or findStatLocal({"muscleemperorreps"}) -- 🔥 FIX REAL
+        emperorStat = emperorStat or findStatLocal({"MuscleEmperorReps"})
     end
 end)
 
--- 🔢 FORMAT
+-- 🔢 FORMAT NUMEROS
 local function format(n)
     if n >= 1e12 then return string.format("%.2fT", n/1e12) end
     if n >= 1e9 then return string.format("%.2fB", n/1e9) end
@@ -945,7 +944,7 @@ local function formatTimeFull(seconds)
     return string.format("%02d:%02d:%02d:%02d", d, h, m, s)
 end
 
--- 🔢 CONTADOR PRO
+-- 🔢 CONTADOR PRO (tipo dinero)
 local timeCounter = 0
 
 local function formatBig(n)
@@ -963,19 +962,46 @@ task.spawn(function()
     end
 end)
 
--- BASE
+-- BASE (NO CONTAR LO QUE YA TENÍAS)
 local baseStrength, baseEndurance, baseRebirths = 0,0,0
 local baseMobility, baseCoins, baseKills, baseEmperor = 0,0,0,0
 
-task.spawn(function() repeat task.wait() until strengthStat baseStrength = strengthStat.Value end)
-task.spawn(function() repeat task.wait() until enduranceStat baseEndurance = enduranceStat.Value end)
-task.spawn(function() repeat task.wait() until rebirthStat baseRebirths = rebirthStat.Value end)
-task.spawn(function() repeat task.wait() until mobilityStat baseMobility = mobilityStat.Value end)
-task.spawn(function() repeat task.wait() until coinsStat baseCoins = coinsStat.Value end)
-task.spawn(function() repeat task.wait() until killsStat baseKills = killsStat.Value end)
-task.spawn(function() repeat task.wait() until emperorStat baseEmperor = emperorStat.Value end)
+task.spawn(function()
+    repeat task.wait() until strengthStat
+    baseStrength = strengthStat.Value
+end)
 
--- LAST
+task.spawn(function()
+    repeat task.wait() until enduranceStat
+    baseEndurance = enduranceStat.Value
+end)
+
+task.spawn(function()
+    repeat task.wait() until rebirthStat
+    baseRebirths = rebirthStat.Value
+end)
+
+task.spawn(function()
+    repeat task.wait() until mobilityStat
+    baseMobility = mobilityStat.Value
+end)
+
+task.spawn(function()
+    repeat task.wait() until coinsStat
+    baseCoins = coinsStat.Value
+end)
+
+task.spawn(function()
+    repeat task.wait() until killsStat
+    baseKills = killsStat.Value
+end)
+
+task.spawn(function()
+    repeat task.wait() until emperorStat
+    baseEmperor = emperorStat.Value
+end)
+
+-- LAST VALUES
 local lastStrength,lastEndurance,lastRebirths = 0,0,0
 local lastMobility,lastCoins,lastKills,lastEmperor = 0,0,0,0
 
@@ -1005,18 +1031,41 @@ task.spawn(function()
 
         local elapsed = tick() - startTime
 
-        -- 🔥 TEXTO MÁS COMPACTO (NO SE SALE)
         label.Text =
-            "💪 "..format(s).." | "..format(s_gain*60).."/m\n"..
-            "🛡️ "..format(e).." | "..format(e_gain*60).."/m\n"..
-            "🔄 "..format(r).." | "..format(r_gain*60).."/m\n"..
-            "🏃 "..format(m).." | "..format(m_gain*60).."/m\n"..
-            "💰 "..format(c).." | "..format(c_gain*60).."/m\n"..
-            "⚔️ "..format(k).." | "..format(k_gain*60).."/m\n"..
-            "👑 "..format(em).." | "..format(em_gain*60).."/m\n\n"..
+            "💪 FUERZA\n"..format(s)..
+            "\n⚡ "..format(s_gain*60).."/min | "..format(s_gain*3600).."/h | "..format(s_gain*86400).."/d\n\n"..
 
-            "⏱ "..formatTimeFull(elapsed).."\n"..
-            "🧮 "..formatBig(timeCounter)
+            "🛡️ DURABILIDAD\n"..format(e)..
+            "\n⚡ "..format(e_gain*60).."/min | "..format(e_gain*3600).."/h | "..format(e_gain*86400).."/d\n\n"..
+
+            "🔄 RENACIMIENTOS\n"..format(r)..
+            "\n⚡ "..format(r_gain*60).."/min | "..format(r_gain*3600).."/h | "..format(r_gain*86400).."/d\n\n"..
+
+            "🏃 MOVILITY\n"..format(m)..
+            "\n⚡ "..format(m_gain*60).."/min | "..format(m_gain*3600).."/h | "..format(m_gain*86400).."/d\n\n"..
+
+            "💰 COINS\n"..format(c)..
+            "\n⚡ "..format(c_gain*60).."/min | "..format(c_gain*3600).."/h | "..format(c_gain*86400).."/d\n\n"..
+
+            "⚔️ KILLS\n"..format(k)..
+            "\n⚡ "..format(k_gain*60).."/min | "..format(k_gain*3600).."/h | "..format(k_gain*86400).."/d\n\n"..
+
+            "👑 EMPEROR REPS\n"..format(em)..
+            "\n⚡ "..format(em_gain*60).."/min | "..format(em_gain*3600).."/h | "..format(em_gain*86400).."/d\n\n"..
+
+            "━━━━━━━━━━━━━━━\n"..
+
+            "⏱ TIEMPO EN SERVER\n"..formatTimeFull(elapsed).."\n"..
+            "🧮 CONTADOR PRO\n"..formatBig(timeCounter).."\n\n"..
+
+            "📈 GANADO EN ESTE SERVER\n"..
+            "💪 "..format(s).."\n"..
+            "🛡️ "..format(e).."\n"..
+            "🔄 "..format(r).."\n"..
+            "🏃 "..format(m).."\n"..
+            "💰 "..format(c).."\n"..
+            "⚔️ "..format(k).."\n"..
+            "👑 "..format(em)
 
         lastStrength = s
         lastEndurance = e
