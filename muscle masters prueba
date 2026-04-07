@@ -884,7 +884,7 @@ end)
 
 local StatsTab = window:AddTab("Gain Stats")
 
-for i = 1,9 do
+for i = 1,13 do
     StatsTab:AddLabel(" ")
 end
 
