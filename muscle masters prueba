@@ -601,6 +601,189 @@ Killer:AddSwitch("Auto Punch Ultra Fast", function(state)
     end)
 end)
 
+<FILE filename="muscle masters v2 (1) - CON REMOTO KILL.txt" size="32000 bytes">-- CARGA DE LIBRERÍA 
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/EL-INDIGO15/dyros/refs/heads/main/libreria"))() 
+
+-- OBTENER NOMBRE DEL JUGADOR 
+local player = game.Players.LocalPlayer 
+local displayName = player.DisplayName or player.Name 
+
+-- OPCIONES DE LA VENTANA
+local options = {
+    main_color = Color3.fromRGB(220, 20, 60),
+    min_size = Vector2.new(600, 820),
+    can_resize = false,
+}
+
+-- VENTANA PRINCIPAL
+local window = library:AddWindow("HadesHub|Bienvenid@ I love you Lider GHT " .. displayName, options)
+
+-- ANIMACIÓN DE COLOR (se mantiene igual)
+local colores = {
+    Color3.fromRGB(220, 20, 60), Color3.fromRGB(255, 102, 102), Color3.fromRGB(255, 0, 0),
+    Color3.fromRGB(255, 140, 0), Color3.fromRGB(255, 165, 0), Color3.fromRGB(255, 215, 0), Color3.fromRGB(255, 255, 0),
+}
+task.spawn(function()
+    local indice = 1
+    while true do
+        local colorActual = colores[indice]
+        local colorSiguiente = colores[indice % #colores + 1]
+        for i = 0, 50 do
+            local alpha = i / 50
+            options.main_color = colorActual:Lerp(colorSiguiente, alpha)
+            task.wait(0.05)
+        end
+        indice = indice % #colores + 1
+    end
+end) 
+
+local AutoFarm = window:AddTab("Main+") 
+local Killer = window:AddTab("Kill")
+local Misc = window:AddTab("Misc")
+local estadisticas = window:AddTab("Stats Jugadores")
+local StatsTab = window:AddTab("Gain Stats")
+
+-- ================= VARIABLES =================
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local localPlayer = Players.LocalPlayer
+
+-- ================= AUTO FARM, GLITCH, REBIRTH, ANTILAG (se mantiene exactamente igual) =================
+-- ... (todo el código de AutoFarm, AutoGlitch, AutoRebirth, AntiLag y Full antilag se queda igual, no lo copio aquí para no alargar el mensaje)
+
+-- ================= KILLER TAB =================
+
+-- View Player (se mantiene igual)
+Killer:AddSwitch("View Player", function(bool)
+    spying = bool
+    if not spying then
+        local cam = workspace.CurrentCamera
+        cam.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") or localPlayer
+        return
+    end
+    task.spawn(function()
+        while spying do
+            local target = Players:FindFirstChild(targetPlayerName)
+            if target and target ~= localPlayer then
+                local humanoid = target.Character and target.Character:FindFirstChild("Humanoid")
+                if humanoid then
+                    workspace.CurrentCamera.CameraSubject = humanoid
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+end)
+
+-- ================= AUTO KILL ALL (método antiguo con TP) =================
+-- (código original que ya tenías, se mantiene)
+
+local AutoKillAllEnabled = false
+local killAllThread
+
+local function EquipPunch()
+    local backpack = localPlayer:FindFirstChild("Backpack")
+    if backpack then
+        local tool = backpack:FindFirstChild("Punch")
+        if tool and localPlayer.Character and not localPlayer.Character:FindFirstChild("Punch") then
+            local humanoid = localPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then humanoid:EquipTool(tool) end
+        end
+    end
+end
+
+local function killAllLoop()
+    while AutoKillAllEnabled do
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= localPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and
+               localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local myHRP = localPlayer.Character.HumanoidRootPart
+                local targetHRP = plr.Character.HumanoidRootPart
+                local startTime = tick()
+                while tick() - startTime < 0.4 and AutoKillAllEnabled do
+                    myHRP.CFrame = targetHRP.CFrame
+                    EquipPunch()
+                    local punch = localPlayer.Character:FindFirstChild("Punch")
+                    if punch then punch:Activate() end
+                    task.wait(0.03)
+                end
+            end
+        end
+        task.wait(0.05)
+    end
+end
+
+Killer:AddSwitch("Auto Kill All (con TP)", function(state)
+    AutoKillAllEnabled = state
+    if state then
+        killAllThread = task.spawn(killAllLoop)
+    else
+        if killAllThread then task.cancel(killAllThread) killAllThread = nil end
+    end
+end)
+
+-- ================= NUEVO: AUTO KILL ALL REMOTO (SIN TP) =================
+local AutoKillRemoteEnabled = false
+local killRemoteThread
+local punchRemote = nil
+
+local function getPunchRemote()
+    local remotesFolder = ReplicatedStorage:FindFirstChild("RemotesEvent")
+    if not remotesFolder then return nil end
+
+    local possibleNames = {"Punch", "PunchEvent", "Damage", "CombatEvent", "HitEvent", "PunchRemote"}
+    for _, name in ipairs(possibleNames) do
+        local remote = remotesFolder:FindFirstChild(name)
+        if remote and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
+            return remote
+        end
+    end
+    return nil
+end
+
+local function remoteKillLoop()
+    while AutoKillRemoteEnabled do
+        if not punchRemote then
+            punchRemote = getPunchRemote()
+            if not punchRemote then
+                game:GetService("StarterGui"):SetCore("SendNotification", {Title="❌ Remote Kill", Text="No se encontró el remote de punch.\nIntenta reiniciar el script o dime qué remotes ves en RemotesEvent.", Duration=8})
+                AutoKillRemoteEnabled = false
+                return
+            end
+        end
+
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= localPlayer and plr.Character and plr.Character:FindFirstChild("RightLowerArm") then
+                pcall(function()
+                    punchRemote:FireServer(plr.Character.RightLowerArm)  -- método remoto clásico
+                end)
+            end
+        end
+        task.wait(0.08)  -- súper rápido pero estable
+    end
+end
+
+Killer:AddSwitch("Auto Kill All Remoto (SIN TP)", function(state)
+    AutoKillRemoteEnabled = state
+
+    if state then
+        punchRemote = getPunchRemote()
+        killRemoteThread = task.spawn(remoteKillLoop)
+        game:GetService("StarterGui"):SetCore("SendNotification", {Title="✅ Remote Kill Activado", Text="Método remoto sin teletransportarse", Duration=5})
+    else
+        if killRemoteThread then
+            task.cancel(killRemoteThread)
+            killRemoteThread = nil
+        end
+    end
+end)
+
+-- (el resto del código de Follow, Auto Punch, Misc, Stats, etc. se mantiene exactamente igual que tenías)
+
+-- ================= RESTO DEL SCRIPT (Misc, Stats, Gain Stats) =================
+-- ... (todo lo que venía después se queda idéntico)
+
+print("✅ HadesHub cargado con Auto Kill Remoto (Sin TP) añadido")
 
 
 local Misc = window:AddTab("Misc")
