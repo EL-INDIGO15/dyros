@@ -1007,13 +1007,13 @@ task.spawn(function()
             "🔄 RENACIMIENTOS\n"..format(r)..
             "\n⚡ "..format(r_gain*60).."/min | "..format(r_gain*3600).."/h | "..format(r_gain*86400).."/d\n\n"..
 
-            "🏃 MOVILITY\n"..format(m)..
+            "⚡ MOVILITY\n"..format(m)..
             "\n⚡ "..format(m_gain*60).."/min | "..format(m_gain*3600).."/h | "..format(m_gain*86400).."/d\n\n"..
 
             "💰 COINS\n"..format(c)..
             "\n⚡ "..format(c_gain*60).."/min | "..format(c_gain*3600).."/h | "..format(c_gain*86400).."/d\n\n"..
 
-            "⚔️ KILLS\n"..format(k)..
+            "☠️ KILLS\n"..format(k)..
             "\n⚡ "..format(k_gain*60).."/min | "..format(k_gain*3600).."/h | "..format(k_gain*86400).."/d\n\n"..
 
             "👑 EMPEROR REPS\n"..format(em)..
@@ -1022,15 +1022,15 @@ task.spawn(function()
             "━━━━━━━━━━━━━━━\n"..
 
             "⏱ TIEMPO EN SERVER\n"..formatTimeFull(elapsed).."\n"..
-            "🧮 CONTADOR PRO\n"..formatBig(timeCounter).."\n\n"..
+            "CONTADOR TOP PRO\n"..formatBig(timeCounter).."\n\n"..
 
             "📈 GANADO EN ESTE SERVER\n"..
             "💪 "..format(s).."\n"..
             "🛡️ "..format(e).."\n"..
             "🔄 "..format(r).."\n"..
-            "🏃 "..format(m).."\n"..
+            "⚡ "..format(m).."\n"..
             "💰 "..format(c).."\n"..
-            "⚔️ "..format(k).."\n"..
+            "☠️ "..format(k).."\n"..
             "👑 "..format(em)
 
         lastStrength = s
