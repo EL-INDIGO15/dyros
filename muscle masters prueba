@@ -1082,3 +1082,261 @@ local function FormatNumber(n)
     return string.format("%.2f", n) .. suffix[i]
 end
 
+-- 🔍 FIND STAT FIXED
+local function findStat(plr, names)
+    if not plr then return "N/A" end
+
+    local leader = plr:FindFirstChild("leaderstats")
+    if leader then
+        for _, stat in pairs(leader:GetChildren()) do
+            for _, name in pairs(names) do
+                if stat.Name:lower():find(name:lower()) then
+                    return stat.Value
+                end
+            end
+        end
+    end
+
+    for _, v in pairs(plr:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name:lower()) then
+                    return v.Value
+                end
+            end
+        end
+    end
+
+    return "N/A"
+end
+
+-- LABELS
+local Strong = estadisticas:AddLabel("")
+local Endurance = estadisticas:AddLabel("")
+local Mobility = estadisticas:AddLabel("")
+local Rebirths = estadisticas:AddLabel("")
+local Kills = estadisticas:AddLabel("")
+local Coins = estadisticas:AddLabel("")
+local Emperor = estadisticas:AddLabel("")
+local Device = estadisticas:AddLabel("")
+
+-- LOOP
+task.spawn(function()
+    while task.wait(0.3) do
+        if SelectedPlayer then
+            Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strong","strength"}))
+            Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance","durability"}))
+            Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
+            Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
+            Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill"}))
+            Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"MuscleEmperorReps"}))
+            Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
+        end
+    end
+end)
+
+
+-- =========================
+-- 📈 GAIN STATS COMPLETO FINAL
+-- =========================
+
+local StatsTab = window:AddTab("Gain Stats")
+
+-- Espacio arriba (ajustado)
+for i = 1,15 do
+    StatsTab:AddLabel(" ")
+end
+
+-- =========================
+-- 📊 LABELS (NO SE CORTA)
+-- =========================
+
+local L_Str = StatsTab:AddLabel("")
+local L_End = StatsTab:AddLabel("")
+local L_Reb = StatsTab:AddLabel("")
+local L_Mob = StatsTab:AddLabel("")
+local L_Coins = StatsTab:AddLabel("")
+local L_Kills = StatsTab:AddLabel("")
+local L_Emp = StatsTab:AddLabel("")
+
+StatsTab:AddLabel("────────────")
+
+local L_Time = StatsTab:AddLabel("")
+local L_Counter = StatsTab:AddLabel("")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- =========================
+-- 🔍 BUSCAR STATS
+-- =========================
+
+local function findStatLocal(names)
+    for _, v in pairs(LocalPlayer:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name:lower()) then
+                    return v
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- =========================
+-- 🔄 AUTO DETECCIÓN
+-- =========================
+
+local strengthStat, enduranceStat, rebirthStat
+local mobilityStat, coinsStat, killsStat, emperorStat
+
+task.spawn(function()
+    while true do
+        task.wait(1)
+
+        strengthStat = strengthStat or findStatLocal({"strong","strength"})
+        enduranceStat = enduranceStat or findStatLocal({"endurance","durability"})
+        rebirthStat = rebirthStat or findStatLocal({"rebirth"})
+
+        mobilityStat = mobilityStat or findStatLocal({"mobility","agility"})
+        coinsStat = coinsStat or findStatLocal({"coin","cash"})
+        killsStat = killsStat or findStatLocal({"kill"})
+        emperorStat = emperorStat or findStatLocal({"muscleemperorreps","emperor"})
+    end
+end)
+
+-- =========================
+-- 🔢 FORMATO
+-- =========================
+
+local function format(n)
+    if n >= 1e12 then return string.format("%.2fT", n/1e12) end
+    if n >= 1e9 then return string.format("%.2fB", n/1e9) end
+    if n >= 1e6 then return string.format("%.2fM", n/1e6) end
+    if n >= 1e3 then return string.format("%.1fK", n/1e3) end
+    return tostring(math.floor(n))
+end
+
+local function formatBig(n)
+    if n >= 1e12 then return string.format("%.2fT", n/1e12) end
+    if n >= 1e9 then return string.format("%.2fB", n/1e9) end
+    if n >= 1e6 then return string.format("%.2fM", n/1e6) end
+    if n >= 1e3 then return string.format("%.1fK", n/1e3) end
+    return tostring(n)
+end
+
+local function formatTimeFull(seconds)
+    local d = math.floor(seconds / 86400)
+    local h = math.floor((seconds % 86400) / 3600)
+    local m = math.floor((seconds % 3600) / 60)
+    local s = math.floor(seconds % 60)
+    return string.format("%02d:%02d:%02d:%02d", d, h, m, s)
+end
+
+-- =========================
+-- ⏱ CONTADOR PRO
+-- =========================
+
+local timeCounter = 0
+
+task.spawn(function()
+    while true do
+        task.wait(1)
+        timeCounter += 1
+    end
+end)
+
+-- =========================
+-- 🔥 BASE (NO CONTAR LO ANTERIOR)
+-- =========================
+
+local baseStrength, baseEndurance, baseRebirths = 0,0,0
+local baseMobility, baseCoins, baseKills, baseEmperor = 0,0,0,0
+
+task.spawn(function() repeat task.wait() until strengthStat baseStrength = strengthStat.Value end)
+task.spawn(function() repeat task.wait() until enduranceStat baseEndurance = enduranceStat.Value end)
+task.spawn(function() repeat task.wait() until rebirthStat baseRebirths = rebirthStat.Value end)
+task.spawn(function() repeat task.wait() until mobilityStat baseMobility = mobilityStat.Value end)
+task.spawn(function() repeat task.wait() until coinsStat baseCoins = coinsStat.Value end)
+task.spawn(function() repeat task.wait() until killsStat baseKills = killsStat.Value end)
+task.spawn(function() repeat task.wait() until emperorStat baseEmperor = emperorStat.Value end)
+
+-- =========================
+-- 📊 VARIABLES
+-- =========================
+
+local lastStrength,lastEndurance,lastRebirths = 0,0,0
+local lastMobility,lastCoins,lastKills,lastEmperor = 0,0,0,0
+
+local startTime = tick()
+
+-- =========================
+-- 🔄 LOOP PRINCIPAL
+-- =========================
+
+task.spawn(function()
+    while true do
+        task.wait(1)
+
+        if not strengthStat then continue end
+
+        local s = strengthStat.Value - baseStrength
+        local e = (enduranceStat and enduranceStat.Value or 0) - baseEndurance
+        local r = (rebirthStat and rebirthStat.Value or 0) - baseRebirths
+        local m = (mobilityStat and mobilityStat.Value or 0) - baseMobility
+        local c = (coinsStat and coinsStat.Value or 0) - baseCoins
+        local k = (killsStat and killsStat.Value or 0) - baseKills
+        local em = (emperorStat and emperorStat.Value or 0) - baseEmperor
+
+        local s_gain = math.max(0, s - lastStrength)
+        local e_gain = math.max(0, e - lastEndurance)
+        local r_gain = math.max(0, r - lastRebirths)
+        local m_gain = math.max(0, m - lastMobility)
+        local c_gain = math.max(0, c - lastCoins)
+        local k_gain = math.max(0, k - lastKills)
+        local em_gain = math.max(0, em - lastEmperor)
+
+        local elapsed = tick() - startTime
+
+        -- =========================
+        -- 🧾 TEXTO FINAL
+        -- =========================
+
+        L_Str.Text =
+        "💪 Fuerza\n"..format(s).."\n"..format(s_gain*60).." /min\n"..format(s_gain*3600).." /hora\n"..format(s_gain*86400).." /día"
+
+        L_End.Text =
+        "🛡️ Durabilidad\n"..format(e).."\n"..format(e_gain*60).." /min\n"..format(e_gain*3600).." /hora\n"..format(e_gain*86400).." /día"
+
+        L_Reb.Text =
+        "🔄 Rebirths\n"..format(r).."\n"..format(r_gain*60).." /min\n"..format(r_gain*3600).." /hora\n"..format(r_gain*86400).." /día"
+
+        L_Mob.Text =
+        "🏃 Mobility\n"..format(m).."\n"..format(m_gain*60).." /min\n"..format(m_gain*3600).." /hora\n"..format(m_gain*86400).." /día"
+
+        L_Coins.Text =
+        "💰 Coins\n"..format(c).."\n"..format(c_gain*60).." /min\n"..format(c_gain*3600).." /hora\n"..format(c_gain*86400).." /día"
+
+        L_Kills.Text =
+        "⚔️ Kills\n"..format(k).."\n"..format(k_gain*60).." /min\n"..format(k_gain*3600).." /hora\n"..format(k_gain*86400).." /día"
+
+        L_Emp.Text =
+        "👑 Muscle Emperor Reps\n"..format(em).."\n"..format(em_gain*60).." /min\n"..format(em_gain*3600).." /hora\n"..format(em_gain*86400).." /día"
+
+        L_Time.Text =
+        "⏱ Tiempo en server\n"..formatTimeFull(elapsed)
+
+        L_Counter.Text =
+        "🧮 Contador\n"..formatBig(timeCounter)
+
+        lastStrength = s
+        lastEndurance = e
+        lastRebirths = r
+        lastMobility = m
+        lastCoins = c
+        lastKills = k
+        lastEmperor = em
+    end
+end)
