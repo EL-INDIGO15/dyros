@@ -879,7 +879,7 @@ end)
 
 
 -- =========================
--- 📈 GAIN STATS FIX
+-- 📈 GAIN STATS ULTRA PRO
 -- =========================
 
 local StatsTab = window:AddTab("Gain Stats")
@@ -893,7 +893,7 @@ local label = StatsTab:AddLabel("Cargando datos...")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- 🔍 FIND STAT (OBJETO)
+-- 🔍 BUSCAR STAT (OBJETO)
 local function findStatLocal(names)
     for _, v in pairs(LocalPlayer:GetDescendants()) do
         if v:IsA("NumberValue") or v:IsA("IntValue") then
@@ -909,26 +909,24 @@ end
 
 -- 🔄 AUTO DETECCIÓN
 local strengthStat, enduranceStat, rebirthStat
+local mobilityStat, coinsStat, killsStat, emperorStat
 
 task.spawn(function()
     while true do
         task.wait(1)
 
-        if not strengthStat then
-            strengthStat = findStatLocal({"strong","strength"})
-        end
+        strengthStat = strengthStat or findStatLocal({"strong","strength"})
+        enduranceStat = enduranceStat or findStatLocal({"endurance","durability"})
+        rebirthStat = rebirthStat or findStatLocal({"rebirth"})
 
-        if not enduranceStat then
-            enduranceStat = findStatLocal({"endurance","durability"})
-        end
-
-        if not rebirthStat then
-            rebirthStat = findStatLocal({"rebirth"})
-        end
+        mobilityStat = mobilityStat or findStatLocal({"mobility","agility"})
+        coinsStat = coinsStat or findStatLocal({"coin","cash"})
+        killsStat = killsStat or findStatLocal({"kill"})
+        emperorStat = emperorStat or findStatLocal({"emperor"})
     end
 end)
 
--- 🔢 FORMAT
+-- 🔢 FORMAT NUMEROS
 local function format(n)
     if n >= 1e12 then return string.format("%.2fT", n/1e12) end
     if n >= 1e9 then return string.format("%.2fB", n/1e9) end
@@ -937,21 +935,75 @@ local function format(n)
     return tostring(math.floor(n))
 end
 
--- ⏱ TIEMPO
-local function formatTime(seconds)
-    local h = math.floor(seconds / 3600)
+-- ⏱ TIEMPO NORMAL
+local function formatTimeFull(seconds)
+    local d = math.floor(seconds / 86400)
+    local h = math.floor((seconds % 86400) / 3600)
     local m = math.floor((seconds % 3600) / 60)
     local s = math.floor(seconds % 60)
-    return string.format("%02d:%02d:%02d", h, m, s)
+    return string.format("%02d:%02d:%02d:%02d", d, h, m, s)
 end
 
-local lastStrength = 0
-local lastEndurance = 0
-local lastRebirths = 0
+-- 🔢 CONTADOR PRO (tipo dinero)
+local timeCounter = 0
 
-local totalStrength = 0
-local totalEndurance = 0
-local totalRebirths = 0
+local function formatBig(n)
+    if n >= 1e12 then return string.format("%.2fT", n/1e12) end
+    if n >= 1e9 then return string.format("%.2fB", n/1e9) end
+    if n >= 1e6 then return string.format("%.2fM", n/1e6) end
+    if n >= 1e3 then return string.format("%.1fK", n/1e3) end
+    return tostring(n)
+end
+
+task.spawn(function()
+    while true do
+        task.wait(1)
+        timeCounter += 1
+    end
+end)
+
+-- BASE (NO CONTAR LO QUE YA TENÍAS)
+local baseStrength, baseEndurance, baseRebirths = 0,0,0
+local baseMobility, baseCoins, baseKills, baseEmperor = 0,0,0,0
+
+task.spawn(function()
+    repeat task.wait() until strengthStat
+    baseStrength = strengthStat.Value
+end)
+
+task.spawn(function()
+    repeat task.wait() until enduranceStat
+    baseEndurance = enduranceStat.Value
+end)
+
+task.spawn(function()
+    repeat task.wait() until rebirthStat
+    baseRebirths = rebirthStat.Value
+end)
+
+task.spawn(function()
+    repeat task.wait() until mobilityStat
+    baseMobility = mobilityStat.Value
+end)
+
+task.spawn(function()
+    repeat task.wait() until coinsStat
+    baseCoins = coinsStat.Value
+end)
+
+task.spawn(function()
+    repeat task.wait() until killsStat
+    baseKills = killsStat.Value
+end)
+
+task.spawn(function()
+    repeat task.wait() until emperorStat
+    baseEmperor = emperorStat.Value
+end)
+
+-- LAST VALUES
+local lastStrength,lastEndurance,lastRebirths = 0,0,0
+local lastMobility,lastCoins,lastKills,lastEmperor = 0,0,0,0
 
 local startTime = tick()
 
@@ -961,49 +1013,66 @@ task.spawn(function()
 
         if not strengthStat then continue end
 
-        local currentStrength = strengthStat.Value
-        local currentEndurance = enduranceStat and enduranceStat.Value or 0
-        local currentRebirths = rebirthStat and rebirthStat.Value or 0
+        local s = strengthStat.Value - baseStrength
+        local e = (enduranceStat and enduranceStat.Value or 0) - baseEndurance
+        local r = (rebirthStat and rebirthStat.Value or 0) - baseRebirths
+        local m = (mobilityStat and mobilityStat.Value or 0) - baseMobility
+        local c = (coinsStat and coinsStat.Value or 0) - baseCoins
+        local k = (killsStat and killsStat.Value or 0) - baseKills
+        local em = (emperorStat and emperorStat.Value or 0) - baseEmperor
 
-        local s_gain = currentStrength - lastStrength
-        local e_gain = currentEndurance - lastEndurance
-        local r_gain = currentRebirths - lastRebirths
-
-        if s_gain < 0 then s_gain = 0 end
-        if e_gain < 0 then e_gain = 0 end
-        if r_gain < 0 then r_gain = 0 end
-
-        totalStrength += s_gain
-        totalEndurance += e_gain
-        totalRebirths += r_gain
+        local s_gain = math.max(0, s - lastStrength)
+        local e_gain = math.max(0, e - lastEndurance)
+        local r_gain = math.max(0, r - lastRebirths)
+        local m_gain = math.max(0, m - lastMobility)
+        local c_gain = math.max(0, c - lastCoins)
+        local k_gain = math.max(0, k - lastKills)
+        local em_gain = math.max(0, em - lastEmperor)
 
         local elapsed = tick() - startTime
 
         label.Text =
-            "💪 FUERZA\n"..
-            format(currentStrength)..
+            "💪 FUERZA\n"..format(s)..
             "\n⚡ "..format(s_gain*60).."/min | "..format(s_gain*3600).."/h | "..format(s_gain*86400).."/d\n\n"..
 
-            "🛡️ DURABILIDAD\n"..
-            format(currentEndurance)..
+            "🛡️ DURABILIDAD\n"..format(e)..
             "\n⚡ "..format(e_gain*60).."/min | "..format(e_gain*3600).."/h | "..format(e_gain*86400).."/d\n\n"..
 
-            "🔄 RENACIMIENTOS\n"..
-            format(currentRebirths)..
+            "🔄 RENACIMIENTOS\n"..format(r)..
             "\n⚡ "..format(r_gain*60).."/min | "..format(r_gain*3600).."/h | "..format(r_gain*86400).."/d\n\n"..
+
+            "🏃 MOVILITY\n"..format(m)..
+            "\n⚡ "..format(m_gain*60).."/min | "..format(m_gain*3600).."/h | "..format(m_gain*86400).."/d\n\n"..
+
+            "💰 COINS\n"..format(c)..
+            "\n⚡ "..format(c_gain*60).."/min | "..format(c_gain*3600).."/h | "..format(c_gain*86400).."/d\n\n"..
+
+            "⚔️ KILLS\n"..format(k)..
+            "\n⚡ "..format(k_gain*60).."/min | "..format(k_gain*3600).."/h | "..format(k_gain*86400).."/d\n\n"..
+
+            "👑 EMPEROR REPS\n"..format(em)..
+            "\n⚡ "..format(em_gain*60).."/min | "..format(em_gain*3600).."/h | "..format(em_gain*86400).."/d\n\n"..
 
             "━━━━━━━━━━━━━━━\n"..
 
-            "⏱ TIEMPO EN SERVER\n"..
-            formatTime(elapsed).."\n\n"..
+            "⏱ TIEMPO EN SERVER\n"..formatTimeFull(elapsed).."\n"..
+            "🧮 CONTADOR PRO\n"..formatBig(timeCounter).."\n\n"..
 
-            "📈 FARMEADO TOTAL\n"..
-            "💪 "..format(totalStrength).."\n"..
-            "🛡️ "..format(totalEndurance).."\n"..
-            "🔄 "..format(totalRebirths)
+            "📈 GANADO EN ESTE SERVER\n"..
+            "💪 "..format(s).."\n"..
+            "🛡️ "..format(e).."\n"..
+            "🔄 "..format(r).."\n"..
+            "🏃 "..format(m).."\n"..
+            "💰 "..format(c).."\n"..
+            "⚔️ "..format(k).."\n"..
+            "👑 "..format(em)
 
-        lastStrength = currentStrength
-        lastEndurance = currentEndurance
-        lastRebirths = currentRebirths
+        lastStrength = s
+        lastEndurance = e
+        lastRebirths = r
+        lastMobility = m
+        lastCoins = c
+        lastKills = k
+        lastEmperor = em
     end
 end)
