@@ -494,3 +494,591 @@ Players.PlayerAdded:Connect(function(player)
     end
 end)
 
+-- 📌 Actualizar lista cuando se vayan jugadores
+Players.PlayerRemoving:Connect(function(player)
+    -- Limpiamos y agregamos de nuevo
+    followDropdown:Clear()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            followDropdown:Add(plr.DisplayName)
+        end
+    end
+
+    -- Dejar de seguir si se fue
+    if followTarget == player.Name then
+        followTarget = nil
+        following = false
+    end
+end)
+
+-- Cuando se va alguien
+Players.PlayerRemoving:Connect(function(player)
+    if targetDropdownItems[player.Name] then
+        targetDropdownItems[player.Name] = nil
+        targetDropdown:Clear()
+        for _, displayName in pairs(targetDropdownItems) do
+            targetDropdown:Add(displayName)
+        end
+    end
+
+    for i = #targetPlayerNames, 1, -1 do
+        if targetPlayerNames[i] == player.Name then
+            table.remove(targetPlayerNames, i)
+        end
+    end
+end)
+
+
+-- 📌 Botón para dejar de seguir
+Killer:AddButton("Dejar de Seguir", function()
+    following = false
+    followTarget = nil
+    print("⛔ Stopped following")
+end)
+
+-- 📌 Loop de seguimiento automático
+task.spawn(function()
+    while task.wait(0.01) do
+        if following and followTarget then
+            local target = Players:FindFirstChild(followTarget)
+            if target then
+                followPlayer(target)
+            else
+                following = false
+                followTarget = nil
+            end
+        end
+    end
+end)
+-- 📌 Reintentar cuando respawnees
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if following and followTarget then
+        local target = Players:FindFirstChild(followTarget)
+        if target then
+            followPlayer(target)
+        end
+    end
+end)
+
+local autoPunchSafe = false
+
+Killer:AddSwitch("Auto Punch", function(state)
+    autoPunchSafe = state
+
+    task.spawn(function()
+        while autoPunchSafe do
+            local char = LocalPlayer.Character
+            if not char then task.wait() continue end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
+                or char:FindFirstChild("Punch")
+
+            if punch and humanoid then
+                -- 🔥 Forzar equipar bien (mejor que parent)
+                if punch.Parent ~= char then
+                    humanoid:EquipTool(punch)
+                    task.wait(0.1)
+                end
+
+                -- 🔥 Evitar que se desequipe
+                if not char:FindFirstChild("Punch") then
+                    humanoid:EquipTool(punch)
+                end
+
+                -- 🔥 Golpear (forma más confiable)
+                punch:Activate()
+            end
+
+            task.wait(0.12 + math.random() * 0.08)
+        end
+    end)
+end)
+
+local autoPunchfastSafe = false
+
+Killer:AddSwitch("Auto Punch Fast", function(state)
+    autoPunchSafe = state
+
+    task.spawn(function()
+        while autoPunchSafe do
+            local char = LocalPlayer.Character
+            if not char then task.wait() continue end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
+                or char:FindFirstChild("Punch")
+
+            if punch and humanoid then
+                -- 🔥 Forzar equipar bien (mejor que parent)
+                if punch.Parent ~= char then
+                    humanoid:EquipTool(punch)
+                    task.wait(0.1)
+                end
+
+                -- 🔥 Evitar que se desequipe
+                if not char:FindFirstChild("Punch") then
+                    humanoid:EquipTool(punch)
+                end
+
+                -- 🔥 Golpear (forma más confiable)
+                punch:Activate()
+            end
+
+            task.wait(0.000001)
+        end
+    end)
+end)
+
+local autoPunchultrafastSafe = false
+
+Killer:AddSwitch("Auto Punch Ultra Fast", function(state)
+    autoPunchSafe = state
+
+    task.spawn(function()
+        while autoPunchSafe do
+            local char = LocalPlayer.Character
+            if not char then task.wait() continue end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
+                or char:FindFirstChild("Punch")
+
+            if punch and humanoid then
+                -- 🔥 Forzar equipar bien (mejor que parent)
+                if punch.Parent ~= char then
+                    humanoid:EquipTool(punch)
+                    task.wait(0.1)
+                end
+
+                -- 🔥 Evitar que se desequipe
+                if not char:FindFirstChild("Punch") then
+                    humanoid:EquipTool(punch)
+                end
+
+                -- 🔥 Golpear (forma más confiable)
+                punch:Activate()
+            end
+
+            task.wait(0)
+        end
+    end)
+end)
+
+
+
+local Misc = window:AddTab("Misc")
+
+-- ================= MISC =================
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- REMOTES
+local OpenPetRemote = ReplicatedStorage:WaitForChild("RemotesEvent"):WaitForChild("OpenPetEvent")
+
+-- ESTADOS
+local eggsState = {
+    Common = false,
+    Rare = false,
+    Epic = false,
+    Legendary = false,
+    Mythic = false,
+    Master = false
+}
+
+local masterEgg = false
+local autoSpin = false
+
+-- ================= AUTO EGGS LOOP =================
+task.spawn(function()
+    while true do
+        if masterEgg then
+            for eggName, _ in pairs(eggsState) do
+                OpenPetRemote:FireServer(string.lower(eggName))
+            end
+        else
+            for eggName, enabled in pairs(eggsState) do
+                if enabled then
+                    OpenPetRemote:FireServer(string.lower(eggName))
+                end
+            end
+        end
+        task.wait(0.15)
+    end
+end)
+
+-- ================= SWITCHES EGGS =================
+
+Misc:AddSwitch("Common Egg", function(state)
+    eggsState.Common = state
+end)
+
+Misc:AddSwitch("Rare Egg", function(state)
+    eggsState.Rare = state
+end)
+
+Misc:AddSwitch("Epic Egg", function(state)
+    eggsState.Epic = state
+end)
+
+Misc:AddSwitch("Legendary Egg", function(state)
+    eggsState.Legendary = state
+end)
+
+Misc:AddSwitch("Mythic Egg", function(state)
+    eggsState.Mythic = state
+end)
+
+Misc:AddSwitch("Master Eggs", function(state)
+    eggsState.Master = state
+end)
+
+-- ================= AUTO SPIN =================
+Misc:AddSwitch("Auto Spin", function(state)
+    autoSpin = state
+
+    if autoSpin then
+        task.spawn(function()
+            while autoSpin do
+                game:GetService("ReplicatedStorage")
+                    :WaitForChild("RemotesEvent")
+                    :WaitForChild("SpinFunction")
+                    :InvokeServer()
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
+-- Auto Collect Rewards
+Misc:AddSwitch("Auto Claim Rewards", function(state)
+    autoCollect = state
+
+    if autoCollect then
+        task.spawn(function()
+            while autoCollect do
+                for i = 1, 5 do
+                    for attempt = 1, 3 do -- 👈 intenta varias veces
+                        game:GetService("ReplicatedStorage")
+                            :WaitForChild("RemotesEvent")
+                            :WaitForChild("rewardClaim")
+                            :FireServer("reward"..i)
+
+                        task.wait(0.3)
+                    end
+                end
+                task.wait(2)
+            end
+        end)
+    end
+end)
+
+-- AUTO EAT CHOCOLATE (PRO)
+Misc:AddSwitch("Auto Eat Chocolate", function(state)
+    autoEat = state
+
+    if autoEat then
+        task.spawn(function()
+            local player = game.Players.LocalPlayer
+
+            while autoEat do
+                local character = player.Character
+                local backpack = player:FindFirstChild("Backpack")
+
+                if character and backpack then
+
+                    -- BUSCAR CHOCOLATE (BACKPACK + CHARACTER)
+                    local chocolate = nil
+
+                    for _, item in pairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") and item.Name:lower():find("chocolate") then
+                            chocolate = item
+                            break
+                        end
+                    end
+
+                    if not chocolate then
+                        for _, item in pairs(character:GetChildren()) do
+                            if item:IsA("Tool") and item.Name:lower():find("chocolate") then
+                                chocolate = item
+                                break
+                            end
+                        end
+                    end
+
+                    -- SI ENCUENTRA CHOCOLATE
+                    if chocolate then
+
+                        -- EQUIPAR SI NO ESTÁ EQUIPADO
+                        if chocolate.Parent ~= character then
+                            chocolate.Parent = character
+                            task.wait(0.1) -- más tiempo en mano
+                        end
+
+                        -- SPAM MÁS RÁPIDO
+                        for i = 1, 5 do
+                            if chocolate then
+                                chocolate:Activate()
+                            end
+                            task.wait(0.03) -- súper rápido
+                        end
+                    end
+                end
+
+                task.wait(0.05) -- loop rápido
+            end
+        end)
+    end
+end)
+
+-- ================= ANTI AFK PRO =================
+local AntiAFK = false
+local VirtualUser = game:GetService("VirtualUser")
+local AntiAFKConnection = nil
+
+Misc:AddSwitch("Anti AFKV1", function(state)
+    AntiAFK = state
+
+    if AntiAFKConnection then
+        AntiAFKConnection:Disconnect()
+        AntiAFKConnection = nil
+    end
+
+    if state then
+        AntiAFKConnection = player.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end
+end)
+
+-- ================= ANTI AFK SISTEMA COMPLETO =================
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
+
+local AntiAFKEnabled = false
+local AntiAFKConnection = nil
+local AntiAFK_GUI = nil
+local AntiAFK_SwitchRef = nil
+
+-- 🔥 FUNCIÓN CREAR GUI
+local function CreateAntiAFKGUI()
+
+    if AntiAFK_GUI then
+        AntiAFK_GUI:Destroy()
+    end
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "AntiAFK_GUI"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    AntiAFK_GUI = ScreenGui
+
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 210, 0, 120)
+    Frame.Position = UDim2.new(0, 20, 0.5, -60)
+    Frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    Frame.BorderSizePixel = 0
+    Frame.Active = true
+    Frame.Draggable = true
+    Frame.Parent = ScreenGui
+
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,14)
+
+    local TopBar = Instance.new("Frame")
+    TopBar.Size = UDim2.new(1,0,0,30)
+    TopBar.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    TopBar.BorderSizePixel = 0
+    TopBar.Parent = Frame
+
+    Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0,14)
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1,-70,1,0)
+    Title.Position = UDim2.new(0,10,0,0)
+    Title.BackgroundTransparency = 1
+    Title.Text = "ANTI AFK"
+    Title.TextColor3 = Color3.fromRGB(0,255,120)
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 14
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = TopBar
+
+    local MinButton = Instance.new("TextButton")
+    MinButton.Size = UDim2.new(0,30,0,30)
+    MinButton.Position = UDim2.new(1,-60,0,0)
+    MinButton.BackgroundTransparency = 1
+    MinButton.Text = "-"
+    MinButton.TextColor3 = Color3.new(1,1,1)
+    MinButton.Font = Enum.Font.GothamBold
+    MinButton.TextSize = 18
+    MinButton.Parent = TopBar
+
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Size = UDim2.new(0,30,0,30)
+    CloseButton.Position = UDim2.new(1,-30,0,0)
+    CloseButton.BackgroundTransparency = 1
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Color3.fromRGB(255,70,70)
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.TextSize = 16
+    CloseButton.Parent = TopBar
+
+    local Content = Instance.new("TextLabel")
+    Content.Size = UDim2.new(1,0,1,-30)
+    Content.Position = UDim2.new(0,0,0,30)
+    Content.BackgroundTransparency = 1
+    Content.TextColor3 = Color3.fromRGB(200,200,200)
+    Content.Font = Enum.Font.Gotham
+    Content.TextSize = 14
+    Content.TextYAlignment = Enum.TextYAlignment.Top
+    Content.Parent = Frame
+
+    -- Minimizar
+    local minimized = false
+    MinButton.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        if minimized then
+            Content.Visible = false
+            Frame.Size = UDim2.new(0,210,0,30)
+            MinButton.Text = "+"
+        else
+            Content.Visible = true
+            Frame.Size = UDim2.new(0,210,0,120)
+            MinButton.Text = "-"
+        end
+    end)
+
+    -- Cerrar desde GUI
+    CloseButton.MouseButton1Click:Connect(function()
+        AntiAFKEnabled = false
+
+        if AntiAFKConnection then
+            AntiAFKConnection:Disconnect()
+            AntiAFKConnection = nil
+        end
+
+        if AntiAFK_GUI then
+            AntiAFK_GUI:Destroy()
+            AntiAFK_GUI = nil
+        end
+
+        -- apagar switch visual
+        if AntiAFK_SwitchRef then
+            AntiAFK_SwitchRef:Set(false)
+        end
+    end)
+
+    -- FPS
+    local fps = 0
+    local frames = 0
+    local lastTime = tick()
+
+    RunService.RenderStepped:Connect(function()
+        frames += 1
+        if tick() - lastTime >= 1 then
+            fps = frames
+            frames = 0
+            lastTime = tick()
+        end
+    end)
+
+    local startTime = tick()
+
+    task.spawn(function()
+        while AntiAFK_GUI and AntiAFKEnabled do
+            task.wait(1)
+
+            local elapsed = tick() - startTime
+            local h = math.floor(elapsed / 3600)
+            local m = math.floor((elapsed % 3600) / 60)
+            local s = math.floor(elapsed % 60)
+
+            Content.Text =
+                "Estado: ON\n\n"..
+                "FPS: "..fps.."\n\n"..
+                "Tiempo: "..string.format("%02d:%02d:%02d", h, m, s)
+        end
+    end)
+end
+
+-- 🔥 FUNCIÓN ACTIVAR
+local function EnableAntiAFK()
+    if AntiAFKConnection then
+        AntiAFKConnection:Disconnect()
+    end
+
+    AntiAFKConnection = LocalPlayer.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+
+    CreateAntiAFKGUI()
+end
+
+-- 🔥 FUNCIÓN DESACTIVAR
+local function DisableAntiAFK()
+    if AntiAFKConnection then
+        AntiAFKConnection:Disconnect()
+        AntiAFKConnection = nil
+    end
+
+    if AntiAFK_GUI then
+        AntiAFK_GUI:Destroy()
+        AntiAFK_GUI = nil
+    end
+end
+
+-- 🔥 SWITCH EN LIBRARY
+AntiAFK_SwitchRef = Misc:AddSwitch("Anti AFK GUI", function(state)
+    AntiAFKEnabled = state
+
+    if state then
+        EnableAntiAFK()
+    else
+        DisableAntiAFK()
+    end
+end)
+
+-- Encender automáticamente
+AntiAFK_SwitchRef:Set(true)
+
+
+
+-- =========================
+-- 📊 STATS JUGADORES FIX
+-- =========================
+
+local estadisticas = window:AddTab("Stats Jugadores")
+
+local SelectPlayerName = ""
+local SelectedPlayer = nil
+
+local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
+    SelectPlayerName = Value:match("| (.+)")
+    SelectedPlayer = game.Players:FindFirstChild(SelectPlayerName)
+end)
+
+for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+    PlayerDrop:Add(Plr.DisplayName .. " | " .. Plr.Name)
+end
+
+game.Players.PlayerAdded:Connect(function(plr)
+    PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
+end)
+
+-- 🔢 FORMATO
+local function FormatNumber(n)
+    if typeof(n) ~= "number" then return tostring(n) end
+    local suffix = {"","K","M","B","T"}
+    local i = 1
+    while n >= 1000 and i < #suffix do
+        n /= 1000
+        i += 1
+    end
+    return string.format("%.2f", n) .. suffix[i]
+end
+
