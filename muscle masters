@@ -794,25 +794,164 @@ Misc:AddSwitch("Auto Eat Chocolate", function(state)
     end
 end)
 
--- ================= ANTI AFK PRO =================
-local AntiAFK = enabled
+-- ================= ANTI AFK GUI PRO MAX =================
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
-local AntiAFKConnection = nil
 
-Misc:AddSwitch("Anti AFK", function(state)
-    AntiAFK = state
+-- Si ya existe, eliminarla
+if LocalPlayer.PlayerGui:FindFirstChild("AntiAFK_GUI") then
+    LocalPlayer.PlayerGui.AntiAFK_GUI:Destroy()
+end
 
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AntiAFK_GUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 210, 0, 120)
+Frame.Position = UDim2.new(0, 20, 0.5, -60)
+Frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner", Frame)
+UICorner.CornerRadius = UDim.new(0,14)
+
+-- TOP BAR
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1,0,0,30)
+TopBar.BackgroundColor3 = Color3.fromRGB(30,30,30)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = Frame
+
+local UICorner2 = Instance.new("UICorner", TopBar)
+UICorner2.CornerRadius = UDim.new(0,14)
+
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1,-70,1,0)
+Title.Position = UDim2.new(0,10,0,0)
+Title.BackgroundTransparency = 1
+Title.Text = "ANTI AFK"
+Title.TextColor3 = Color3.fromRGB(0,255,120)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+-- Botón Minimizar
+local MinButton = Instance.new("TextButton")
+MinButton.Size = UDim2.new(0,30,0,30)
+MinButton.Position = UDim2.new(1,-60,0,0)
+MinButton.BackgroundTransparency = 1
+MinButton.Text = "-"
+MinButton.TextColor3 = Color3.fromRGB(255,255,255)
+MinButton.Font = Enum.Font.GothamBold
+MinButton.TextSize = 18
+MinButton.Parent = TopBar
+
+-- Botón Destruir
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0,30,0,30)
+CloseButton.Position = UDim2.new(1,-30,0,0)
+CloseButton.BackgroundTransparency = 1
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255,70,70)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextSize = 16
+CloseButton.Parent = TopBar
+
+-- CONTENIDO
+local Content = Instance.new("TextLabel")
+Content.Size = UDim2.new(1,0,1,-30)
+Content.Position = UDim2.new(0,0,0,30)
+Content.BackgroundTransparency = 1
+Content.TextColor3 = Color3.fromRGB(200,200,200)
+Content.TextWrapped = true
+Content.Font = Enum.Font.Gotham
+Content.TextSize = 14
+Content.TextYAlignment = Enum.TextYAlignment.Top
+Content.Parent = Frame
+
+-- ================= ANTI AFK =================
+local AntiAFKConnection
+
+local function EnableAntiAFK()
     if AntiAFKConnection then
         AntiAFKConnection:Disconnect()
-        AntiAFKConnection = nil
     end
 
-    if state then
-        AntiAFKConnection = player.Idled:Connect(function()
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new())
-        end)
+    AntiAFKConnection = LocalPlayer.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end
+
+EnableAntiAFK()
+
+-- ================= FPS =================
+local fps = 0
+local frames = 0
+local lastTime = tick()
+
+RunService.RenderStepped:Connect(function()
+    frames += 1
+    if tick() - lastTime >= 1 then
+        fps = frames
+        frames = 0
+        lastTime = tick()
     end
+end)
+
+-- ================= TIEMPO =================
+local startTime = tick()
+
+task.spawn(function()
+    while ScreenGui.Parent do
+        task.wait(1)
+
+        local elapsed = tick() - startTime
+        local h = math.floor(elapsed / 3600)
+        local m = math.floor((elapsed % 3600) / 60)
+        local s = math.floor(elapsed % 60)
+
+        Content.Text =
+            "Estado: ON\n\n"..
+            "FPS: "..fps.."\n\n"..
+            "Tiempo: "..string.format("%02d:%02d:%02d", h, m, s)
+    end
+end)
+
+-- ================= MINIMIZAR =================
+local minimized = false
+
+MinButton.MouseButton1Click:Connect(function()
+    minimized = not minimized
+
+    if minimized then
+        Content.Visible = false
+        Frame.Size = UDim2.new(0,210,0,30)
+        MinButton.Text = "+"
+    else
+        Content.Visible = true
+        Frame.Size = UDim2.new(0,210,0,120)
+        MinButton.Text = "-"
+    end
+end)
+
+-- ================= DESTRUIR =================
+CloseButton.MouseButton1Click:Connect(function()
+    if AntiAFKConnection then
+        AntiAFKConnection:Disconnect()
+    end
+    ScreenGui:Destroy()
 end)
 
 -- =========================
