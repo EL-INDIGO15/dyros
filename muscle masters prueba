@@ -789,38 +789,12 @@ end)
 
 
 
--- ================= VARIABLES =================
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+-- ================= TAB STATS =================
+local StatsTab = Window:AddTab("Stats")
 
--- Crear GUI simple si no tienes una
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "StatsGui"
-ScreenGui.Parent = player:WaitForChild("PlayerGui")
+local StatsSection = StatsTab:AddSection("Player Stats")
 
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 260, 0, 320)
-Frame.Position = UDim2.new(0, 20, 0.5, -160)
-Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
-Frame.BorderSizePixel = 0
-Frame.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0,12)
-UICorner.Parent = Frame
-
-local statsLabel = Instance.new("TextLabel")
-statsLabel.Size = UDim2.new(1, -10, 1, -10)
-statsLabel.Position = UDim2.new(0,5,0,5)
-statsLabel.BackgroundTransparency = 1
-statsLabel.TextColor3 = Color3.fromRGB(0,255,150)
-statsLabel.TextScaled = false
-statsLabel.TextWrapped = true
-statsLabel.Font = Enum.Font.GothamBold
-statsLabel.TextSize = 16
-statsLabel.Text = "Cargando Stats..."
-statsLabel.TextYAlignment = Enum.TextYAlignment.Top
-statsLabel.Parent = Frame
+local StatsLabel = StatsSection:AddLabel("Cargando stats...")
 
 -- ================= SAFE FORMAT =================
 local function safeFormat(n)
@@ -845,18 +819,20 @@ local function safeFormat(n)
 	end
 end
 
--- ================= TRACKER VARIABLES =================
+-- ================= TRACKER =================
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
 local lastStrength = 0
 local lastEndurance = 0
 local lastRebirths = 0
 
--- ================= STATS TRACKER =================
 task.spawn(function()
 	while task.wait(1) do
 		
 		local leaderstats = player:FindFirstChild("leaderstats")
 		if not leaderstats then
-			statsLabel.Text = "Esperando leaderstats..."
+			StatsLabel:Set("Esperando leaderstats...")
 			continue
 		end
 
@@ -865,7 +841,7 @@ task.spawn(function()
 		local rebirths = leaderstats:FindFirstChild("Rebirths")
 
 		if not strength or not endurance or not rebirths then
-			statsLabel.Text = "Esperando stats..."
+			StatsLabel:Set("Esperando stats...")
 			continue
 		end
 
@@ -873,7 +849,6 @@ task.spawn(function()
 		local currentEndurance = tonumber(endurance.Value) or 0
 		local currentRebirths = tonumber(rebirths.Value) or 0
 
-		-- Ganancia estable
 		local s_gain = math.max(0, currentStrength - lastStrength)
 		local e_gain = math.max(0, currentEndurance - lastEndurance)
 		local r_gain = math.max(0, currentRebirths - lastRebirths)
@@ -882,15 +857,13 @@ task.spawn(function()
 		lastEndurance = currentEndurance
 		lastRebirths = currentRebirths
 
-		statsLabel.Text =
-			"💪 FUERZA\n" ..
-			safeFormat(currentStrength) ..
+		StatsLabel:Set(
+			"💪 FUERZA: " .. safeFormat(currentStrength) ..
 			"\n⚡ +" .. safeFormat(s_gain*60) .. "/min" ..
-			"\n\n🛡 ENDURANCE\n" ..
-			safeFormat(currentEndurance) ..
+			"\n\n🛡 ENDURANCE: " .. safeFormat(currentEndurance) ..
 			"\n⚡ +" .. safeFormat(e_gain*60) .. "/min" ..
-			"\n\n🔁 REBIRTHS\n" ..
-			safeFormat(currentRebirths) ..
+			"\n\n🔁 REBIRTHS: " .. safeFormat(currentRebirths) ..
 			"\n⚡ +" .. safeFormat(r_gain*60) .. "/min"
+		)
 	end
 end)
