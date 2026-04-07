@@ -885,7 +885,7 @@ end)
 local StatsTab = window:AddTab("Gain Stats")
 
 -- 🔽 MENOS ESPACIO ARRIBA (FIX UI)
-for i = 1,3 do
+for i = 1,10 do
     StatsTab:AddLabel(" ")
 end
 
