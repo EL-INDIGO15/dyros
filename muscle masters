@@ -794,95 +794,160 @@ Misc:AddSwitch("Auto Eat Chocolate", function(state)
     end
 end)
 
--- ================= ANTI AFK GUI PRO MAX =================
+-- ================= ANTI AFK SISTEMA COMPLETO =================
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
 
--- Si ya existe, eliminarla
-if LocalPlayer.PlayerGui:FindFirstChild("AntiAFK_GUI") then
-    LocalPlayer.PlayerGui.AntiAFK_GUI:Destroy()
+local AntiAFKEnabled = false
+local AntiAFKConnection = nil
+local AntiAFK_GUI = nil
+local AntiAFK_SwitchRef = nil
+
+-- 🔥 FUNCIÓN CREAR GUI
+local function CreateAntiAFKGUI()
+
+    if AntiAFK_GUI then
+        AntiAFK_GUI:Destroy()
+    end
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "AntiAFK_GUI"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    AntiAFK_GUI = ScreenGui
+
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 210, 0, 120)
+    Frame.Position = UDim2.new(0, 20, 0.5, -60)
+    Frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    Frame.BorderSizePixel = 0
+    Frame.Active = true
+    Frame.Draggable = true
+    Frame.Parent = ScreenGui
+
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,14)
+
+    local TopBar = Instance.new("Frame")
+    TopBar.Size = UDim2.new(1,0,0,30)
+    TopBar.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    TopBar.BorderSizePixel = 0
+    TopBar.Parent = Frame
+
+    Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0,14)
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1,-70,1,0)
+    Title.Position = UDim2.new(0,10,0,0)
+    Title.BackgroundTransparency = 1
+    Title.Text = "ANTI AFK"
+    Title.TextColor3 = Color3.fromRGB(0,255,120)
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 14
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = TopBar
+
+    local MinButton = Instance.new("TextButton")
+    MinButton.Size = UDim2.new(0,30,0,30)
+    MinButton.Position = UDim2.new(1,-60,0,0)
+    MinButton.BackgroundTransparency = 1
+    MinButton.Text = "-"
+    MinButton.TextColor3 = Color3.new(1,1,1)
+    MinButton.Font = Enum.Font.GothamBold
+    MinButton.TextSize = 18
+    MinButton.Parent = TopBar
+
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Size = UDim2.new(0,30,0,30)
+    CloseButton.Position = UDim2.new(1,-30,0,0)
+    CloseButton.BackgroundTransparency = 1
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Color3.fromRGB(255,70,70)
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.TextSize = 16
+    CloseButton.Parent = TopBar
+
+    local Content = Instance.new("TextLabel")
+    Content.Size = UDim2.new(1,0,1,-30)
+    Content.Position = UDim2.new(0,0,0,30)
+    Content.BackgroundTransparency = 1
+    Content.TextColor3 = Color3.fromRGB(200,200,200)
+    Content.Font = Enum.Font.Gotham
+    Content.TextSize = 14
+    Content.TextYAlignment = Enum.TextYAlignment.Top
+    Content.Parent = Frame
+
+    -- Minimizar
+    local minimized = false
+    MinButton.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        if minimized then
+            Content.Visible = false
+            Frame.Size = UDim2.new(0,210,0,30)
+            MinButton.Text = "+"
+        else
+            Content.Visible = true
+            Frame.Size = UDim2.new(0,210,0,120)
+            MinButton.Text = "-"
+        end
+    end)
+
+    -- Cerrar desde GUI
+    CloseButton.MouseButton1Click:Connect(function()
+        AntiAFKEnabled = false
+
+        if AntiAFKConnection then
+            AntiAFKConnection:Disconnect()
+            AntiAFKConnection = nil
+        end
+
+        if AntiAFK_GUI then
+            AntiAFK_GUI:Destroy()
+            AntiAFK_GUI = nil
+        end
+
+        -- apagar switch visual
+        if AntiAFK_SwitchRef then
+            AntiAFK_SwitchRef:Set(false)
+        end
+    end)
+
+    -- FPS
+    local fps = 0
+    local frames = 0
+    local lastTime = tick()
+
+    RunService.RenderStepped:Connect(function()
+        frames += 1
+        if tick() - lastTime >= 1 then
+            fps = frames
+            frames = 0
+            lastTime = tick()
+        end
+    end)
+
+    local startTime = tick()
+
+    task.spawn(function()
+        while AntiAFK_GUI and AntiAFKEnabled do
+            task.wait(1)
+
+            local elapsed = tick() - startTime
+            local h = math.floor(elapsed / 3600)
+            local m = math.floor((elapsed % 3600) / 60)
+            local s = math.floor(elapsed % 60)
+
+            Content.Text =
+                "Estado: ON\n\n"..
+                "FPS: "..fps.."\n\n"..
+                "Tiempo: "..string.format("%02d:%02d:%02d", h, m, s)
+        end
+    end)
 end
 
--- GUI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "AntiAFK_GUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 210, 0, 120)
-Frame.Position = UDim2.new(0, 20, 0.5, -60)
-Frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
-Frame.BorderSizePixel = 0
-Frame.Active = true
-Frame.Draggable = true
-Frame.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner", Frame)
-UICorner.CornerRadius = UDim.new(0,14)
-
--- TOP BAR
-local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1,0,0,30)
-TopBar.BackgroundColor3 = Color3.fromRGB(30,30,30)
-TopBar.BorderSizePixel = 0
-TopBar.Parent = Frame
-
-local UICorner2 = Instance.new("UICorner", TopBar)
-UICorner2.CornerRadius = UDim.new(0,14)
-
--- Título
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1,-70,1,0)
-Title.Position = UDim2.new(0,10,0,0)
-Title.BackgroundTransparency = 1
-Title.Text = "ANTI AFK"
-Title.TextColor3 = Color3.fromRGB(0,255,120)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 14
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = TopBar
-
--- Botón Minimizar
-local MinButton = Instance.new("TextButton")
-MinButton.Size = UDim2.new(0,30,0,30)
-MinButton.Position = UDim2.new(1,-60,0,0)
-MinButton.BackgroundTransparency = 1
-MinButton.Text = "-"
-MinButton.TextColor3 = Color3.fromRGB(255,255,255)
-MinButton.Font = Enum.Font.GothamBold
-MinButton.TextSize = 18
-MinButton.Parent = TopBar
-
--- Botón Destruir
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0,30,0,30)
-CloseButton.Position = UDim2.new(1,-30,0,0)
-CloseButton.BackgroundTransparency = 1
-CloseButton.Text = "X"
-CloseButton.TextColor3 = Color3.fromRGB(255,70,70)
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.TextSize = 16
-CloseButton.Parent = TopBar
-
--- CONTENIDO
-local Content = Instance.new("TextLabel")
-Content.Size = UDim2.new(1,0,1,-30)
-Content.Position = UDim2.new(0,0,0,30)
-Content.BackgroundTransparency = 1
-Content.TextColor3 = Color3.fromRGB(200,200,200)
-Content.TextWrapped = true
-Content.Font = Enum.Font.Gotham
-Content.TextSize = 14
-Content.TextYAlignment = Enum.TextYAlignment.Top
-Content.Parent = Frame
-
--- ================= ANTI AFK =================
-local AntiAFKConnection
-
+-- 🔥 FUNCIÓN ACTIVAR
 local function EnableAntiAFK()
     if AntiAFKConnection then
         AntiAFKConnection:Disconnect()
@@ -892,212 +957,31 @@ local function EnableAntiAFK()
         VirtualUser:CaptureController()
         VirtualUser:ClickButton2(Vector2.new())
     end)
+
+    CreateAntiAFKGUI()
 end
 
-EnableAntiAFK()
-
--- ================= FPS =================
-local fps = 0
-local frames = 0
-local lastTime = tick()
-
-RunService.RenderStepped:Connect(function()
-    frames += 1
-    if tick() - lastTime >= 1 then
-        fps = frames
-        frames = 0
-        lastTime = tick()
-    end
-end)
-
--- ================= TIEMPO =================
-local startTime = tick()
-
-task.spawn(function()
-    while ScreenGui.Parent do
-        task.wait(1)
-
-        local elapsed = tick() - startTime
-        local h = math.floor(elapsed / 3600)
-        local m = math.floor((elapsed % 3600) / 60)
-        local s = math.floor(elapsed % 60)
-
-        Content.Text =
-            "Estado: ON\n\n"..
-            "FPS: "..fps.."\n\n"..
-            "Tiempo: "..string.format("%02d:%02d:%02d", h, m, s)
-    end
-end)
-
--- ================= MINIMIZAR =================
-local minimized = false
-
-MinButton.MouseButton1Click:Connect(function()
-    minimized = not minimized
-
-    if minimized then
-        Content.Visible = false
-        Frame.Size = UDim2.new(0,210,0,30)
-        MinButton.Text = "+"
-    else
-        Content.Visible = true
-        Frame.Size = UDim2.new(0,210,0,120)
-        MinButton.Text = "-"
-    end
-end)
-
--- ================= DESTRUIR =================
-CloseButton.MouseButton1Click:Connect(function()
+-- 🔥 FUNCIÓN DESACTIVAR
+local function DisableAntiAFK()
     if AntiAFKConnection then
         AntiAFKConnection:Disconnect()
+        AntiAFKConnection = nil
     end
-    ScreenGui:Destroy()
-end)
 
--- Variables
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+    if AntiAFK_GUI then
+        AntiAFK_GUI:Destroy()
+        AntiAFK_GUI = nil
+    end
+end
 
-local infJumpEnabled = false
-local flyMobileEnabled = false
-local flyPCEnabled = false
-local antiRagdollEnabled = false
-local lockPositionEnabled = false
-local espEnabled = false
+-- 🔥 SWITCH EN LIBRARY
+AntiAFK_SwitchRef = Misc:AddSwitch("Anti AFK GUI", function(state)
+    AntiAFKEnabled = state
 
--- ==================== SWITCHES ====================
-Misc:AddSwitch("Infinity Jump", function(state)
-    infJumpEnabled = state
-end)
-
-Misc:AddSwitch("Fly Celular", function(state)
-    flyMobileEnabled = state
-end)
-
-Misc:AddSwitch("Fly PC", function(state)
-    flyPCEnabled = state
-end)
-
-Misc:AddSwitch("Anti Ragdoll", function(state)
-    antiRagdollEnabled = state
-end)
-
-Misc:AddSwitch("Lock Posición", function(state)
-    lockPositionEnabled = state
     if state then
-        local char = LocalPlayer.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            lockedCFrame = char.HumanoidRootPart.CFrame
-        end
+        EnableAntiAFK()
     else
-        lockedCFrame = nil
-    end
-end)
-
-Misc:AddSwitch("ESP Jugadores", function(state)
-    espEnabled = state
-end)
-
--- Infinity Jump
-UserInputService.JumpRequest:Connect(function()
-    if infJumpEnabled then
-        local char = LocalPlayer.Character
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if hum then
-            hum:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end
-end)
-
--- Fly Celular (avanza hacia donde apunta la cámara)
-RunService.Heartbeat:Connect(function()
-    if flyMobileEnabled then
-        local char = LocalPlayer.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            local cam = workspace.CurrentCamera
-            hrp.AssemblyLinearVelocity = cam.CFrame.LookVector * 100
-        end
-    end
-end)
-
--- Fly PC (WASD + Space/Shift + mouse)
-local bvPC, bgPC
-local flyPCConn
-RunService.Heartbeat:Connect(function()
-    if flyPCEnabled then
-        local char = LocalPlayer.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-
-        if not bvPC then
-            bvPC = Instance.new("BodyVelocity")
-            bvPC.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-            bvPC.Parent = hrp
-        end
-        if not bgPC then
-            bgPC = Instance.new("BodyGyro")
-            bgPC.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-            bgPC.P = 12500
-            bgPC.Parent = hrp
-        end
-
-        local cam = workspace.CurrentCamera.CFrame
-        local move = Vector3.new()
-
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then move += cam.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then move -= cam.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then move -= cam.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then move += cam.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
-        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move -= Vector3.new(0,1,0) end
-
-        bvPC.Velocity = (move.Magnitude > 0 and move.Unit or Vector3.new()) * 100
-        bgPC.CFrame = cam
-    else
-        if bvPC then bvPC:Destroy() bvPC = nil end
-        if bgPC then bgPC:Destroy() bgPC = nil end
-    end
-end)
-
--- Lock Posición (solo posición, puedes girar la cámara)
-RunService.Heartbeat:Connect(function()
-    if lockPositionEnabled and lockedCFrame then
-        local char = LocalPlayer.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.CFrame = CFrame.new(lockedCFrame.Position) * hrp.CFrame.Rotation
-        end
-    end
-end)
-
--- ESP Jugadores
-task.spawn(function()
-    while true do
-        if espEnabled then
-            for _, plr in ipairs(Players:GetPlayers()) do
-                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                    if not highlights[plr] then
-                        local hl = Instance.new("Highlight")
-                        hl.Adornee = plr.Character
-                        hl.FillColor = Color3.fromRGB(255, 0, 0)
-                        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-                        hl.FillTransparency = 0.5
-                        hl.OutlineTransparency = 0
-                        hl.Parent = plr.Character
-                        highlights[plr] = hl
-                    end
-                end
-            end
-        else
-            for plr, hl in pairs(highlights) do
-                if hl then hl:Destroy() end
-                highlights[plr] = nil
-            end
-        end
-        task.wait(1)
+        DisableAntiAFK()
     end
 end)
 
