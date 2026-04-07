@@ -371,6 +371,66 @@ localPlayer.CharacterAdded:Connect(function()
     end
 end)
 
+-- ================= AUTO KILL ALL WHITELIST (Friends) =================
+local AutoKillWhitelistEnabled = false
+local killWhitelistThread
+
+local function killWhitelistLoop()
+    while AutoKillWhitelistEnabled do
+        for _, plr in ipairs(Players:GetPlayers()) do
+            -- WHITELIST AUTOMÁTICA: si es amigo en Roblox → lo salta
+            if plr ~= localPlayer
+            and not localPlayer:IsFriendsWith(plr.UserId)
+            and plr.Character
+            and plr.Character:FindFirstChild("HumanoidRootPart")
+            and localPlayer.Character
+            and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+
+                local myHRP = localPlayer.Character.HumanoidRootPart
+                local targetHRP = plr.Character.HumanoidRootPart
+
+                -- Teleport + pegar rápido (igual que el original)
+                local startTime = tick()
+                while tick() - startTime < 0.4 and AutoKillWhitelistEnabled do
+                    myHRP.CFrame = targetHRP.CFrame
+
+                    EquipPunch()
+
+                    local punch = localPlayer.Character:FindFirstChild("Punch")
+                    if punch then
+                        punch:Activate()
+                    end
+
+                    task.wait(0.03)
+                end
+            end
+        end
+        task.wait(0.05)
+    end
+end
+
+-- 🔘 SWITCH KillAll(Whitelist)
+Killer:AddSwitch("KillAll(Whitelist)", function(state)
+    AutoKillWhitelistEnabled = state
+
+    if state then
+        killWhitelistThread = task.spawn(killWhitelistLoop)
+    else
+        if killWhitelistThread then
+            task.cancel(killWhitelistThread)
+            killWhitelistThread = nil
+        end
+    end
+end)
+
+-- 🔁 REINICIO AUTOMÁTICO AL MORIR (para el Whitelist)
+localPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if AutoKillWhitelistEnabled then
+        killWhitelistThread = task.spawn(killWhitelistLoop)
+    end
+end)
+
 
 -- 📌 Teleport / Follow System (versión auto-follow desde Dropdown)
 
