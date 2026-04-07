@@ -954,6 +954,256 @@ CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
+-- ==================== NUEVA PESTAÑA MISC2 ====================
+local Misc2 = window:AddTab("Misc2")
+
+-- Variables
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local walkOnWaterEnabled = false
+local walkOnAirEnabled = false
+local infJumpEnabled = false
+local flyMobileEnabled = false
+local flyPCEnabled = false
+local antiRagdollEnabled = false
+local lockPositionEnabled = false
+local espEnabled = false
+local godModeEnabled = false
+
+local walkSpeedValue = 50
+local jumpPowerValue = 50
+
+local highlights = {}
+local lockedCFrame = nil
+
+-- ==================== SLIDERS ====================
+Misc2:AddSlider("Velocidad", 16, 500, 50, function(value)
+    walkSpeedValue = value
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = value end
+    end
+end)
+
+Misc2:AddSlider("Salto", 50, 300, 50, function(value)
+    jumpPowerValue = value
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then hum.JumpPower = value end
+    end
+end)
+
+-- ==================== SWITCHES ====================
+Misc2:AddSwitch("Walk on Water", function(state)
+    walkOnWaterEnabled = state
+end)
+
+Misc2:AddSwitch("Walk on Air", function(state)
+    walkOnAirEnabled = state
+end)
+
+Misc2:AddSwitch("Infinity Jump", function(state)
+    infJumpEnabled = state
+end)
+
+Misc2:AddSwitch("Fly Celular", function(state)
+    flyMobileEnabled = state
+end)
+
+Misc2:AddSwitch("Fly PC", function(state)
+    flyPCEnabled = state
+end)
+
+Misc2:AddSwitch("Anti Ragdoll", function(state)
+    antiRagdollEnabled = state
+end)
+
+Misc2:AddSwitch("Lock Posición", function(state)
+    lockPositionEnabled = state
+    if state then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            lockedCFrame = char.HumanoidRootPart.CFrame
+        end
+    else
+        lockedCFrame = nil
+    end
+end)
+
+Misc2:AddSwitch("ESP Jugadores", function(state)
+    espEnabled = state
+end)
+
+Misc2:AddSwitch("God Mode", function(state)
+    godModeEnabled = state
+end)
+
+-- ==================== LOGICA (LOOPS) ====================
+
+-- Walk on Water + Walk on Air
+RunService.Stepped:Connect(function()
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    if walkOnWaterEnabled and hum:GetState() == Enum.HumanoidStateType.Swimming then
+        hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+    end
+
+    if walkOnAirEnabled and hum:GetState() == Enum.HumanoidStateType.Freefall then
+        hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+    end
+end)
+
+-- Infinity Jump
+UserInputService.JumpRequest:Connect(function()
+    if infJumpEnabled then
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+-- Fly Celular (avanza hacia donde apunta la cámara)
+RunService.Heartbeat:Connect(function()
+    if flyMobileEnabled then
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local cam = workspace.CurrentCamera
+            hrp.AssemblyLinearVelocity = cam.CFrame.LookVector * 100
+        end
+    end
+end)
+
+-- Fly PC (WASD + Space/Shift + mouse)
+local bvPC, bgPC
+local flyPCConn
+RunService.Heartbeat:Connect(function()
+    if flyPCEnabled then
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        if not bvPC then
+            bvPC = Instance.new("BodyVelocity")
+            bvPC.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bvPC.Parent = hrp
+        end
+        if not bgPC then
+            bgPC = Instance.new("BodyGyro")
+            bgPC.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            bgPC.P = 12500
+            bgPC.Parent = hrp
+        end
+
+        local cam = workspace.CurrentCamera.CFrame
+        local move = Vector3.new()
+
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then move += cam.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then move -= cam.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then move -= cam.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then move += cam.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move -= Vector3.new(0,1,0) end
+
+        bvPC.Velocity = (move.Magnitude > 0 and move.Unit or Vector3.new()) * 100
+        bgPC.CFrame = cam
+    else
+        if bvPC then bvPC:Destroy() bvPC = nil end
+        if bgPC then bgPC:Destroy() bgPC = nil end
+    end
+end)
+
+-- Anti Ragdoll (no te empujan)
+RunService.Heartbeat:Connect(function()
+    if antiRagdollEnabled then
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.AssemblyLinearVelocity = Vector3.new(0, hrp.AssemblyLinearVelocity.Y, 0)
+            hrp.AssemblyAngularVelocity = Vector3.new()
+        end
+    end
+end)
+
+-- Lock Posición (solo posición, puedes girar la cámara)
+RunService.Heartbeat:Connect(function()
+    if lockPositionEnabled and lockedCFrame then
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = CFrame.new(lockedCFrame.Position) * hrp.CFrame.Rotation
+        end
+    end
+end)
+
+-- ESP Jugadores
+task.spawn(function()
+    while true do
+        if espEnabled then
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    if not highlights[plr] then
+                        local hl = Instance.new("Highlight")
+                        hl.Adornee = plr.Character
+                        hl.FillColor = Color3.fromRGB(255, 0, 0)
+                        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        hl.FillTransparency = 0.5
+                        hl.OutlineTransparency = 0
+                        hl.Parent = plr.Character
+                        highlights[plr] = hl
+                    end
+                end
+            end
+        else
+            for plr, hl in pairs(highlights) do
+                if hl then hl:Destroy() end
+                highlights[plr] = nil
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- God Mode
+task.spawn(function()
+    while true do
+        if godModeEnabled then
+            local char = LocalPlayer.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum.MaxHealth = 9e9
+                    hum.Health = 9e9
+                end
+            end
+        end
+        task.wait(0.5)
+    end
+end)
+
+-- Aplicar velocidad y salto al respawnear
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.WalkSpeed = walkSpeedValue
+            hum.JumpPower = jumpPowerValue
+        end
+    end
+end)
+
+
 -- =========================
 -- 📊 STATS JUGADORES FIX
 -- =========================
