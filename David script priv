@@ -740,18 +740,20 @@ Misc:AddSwitch("Anti AFK", function(state)
 end)
 
 
+-- =========================
+-- 📊 STATS JUGADORES FIX
+-- =========================
+
 local estadisticas = window:AddTab("Stats Jugadores")
 
 local SelectPlayerName = ""
 local SelectedPlayer = nil
 
--- DROPDOWN
 local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
     SelectPlayerName = Value:match("| (.+)")
     SelectedPlayer = game.Players:FindFirstChild(SelectPlayerName)
 end)
 
--- PLAYERS
 for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
     PlayerDrop:Add(Plr.DisplayName .. " | " .. Plr.Name)
 end
@@ -760,7 +762,7 @@ game.Players.PlayerAdded:Connect(function(plr)
     PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
 end)
 
--- FORMATO
+-- 🔢 FORMATO
 local function FormatNumber(n)
     if typeof(n) ~= "number" then return tostring(n) end
     local suffix = {"","K","M","B","T"}
@@ -770,6 +772,34 @@ local function FormatNumber(n)
         i += 1
     end
     return string.format("%.2f", n) .. suffix[i]
+end
+
+-- 🔍 FIND STAT FIXED
+local function findStat(plr, names)
+    if not plr then return "N/A" end
+
+    local leader = plr:FindFirstChild("leaderstats")
+    if leader then
+        for _, stat in pairs(leader:GetChildren()) do
+            for _, name in pairs(names) do
+                if stat.Name:lower():find(name:lower()) then
+                    return stat.Value
+                end
+            end
+        end
+    end
+
+    for _, v in pairs(plr:GetDescendants()) do
+        if v:IsA("NumberValue") or v:IsA("IntValue") then
+            for _, name in pairs(names) do
+                if v.Name:lower():find(name:lower()) then
+                    return v.Value
+                end
+            end
+        end
+    end
+
+    return "N/A"
 end
 
 -- LABELS
@@ -782,36 +812,18 @@ local Coins = estadisticas:AddLabel("")
 local Emperor = estadisticas:AddLabel("")
 local Device = estadisticas:AddLabel("")
 
--- BUSCAR STAT MEJORADO 🔥
-local function findStat(plr, names)
-    for _, v in pairs(plr:GetDescendants()) do
-        if v:IsA("NumberValue") or v:IsA("StringValue") or v:IsA("IntValue") then
-            for _, name in pairs(names) do
-                if v.Name:lower():find(name:lower()) then
-                    return v.Value
-                end
-            end
-        end
-    end
-    return "N/A"
-end
-
 -- LOOP
 task.spawn(function()
     while task.wait(0.3) do
         if SelectedPlayer then
-
             Strong.Text = "Strong: " .. FormatNumber(findStat(SelectedPlayer, {"strong","strength"}))
             Endurance.Text = "Endurance: " .. FormatNumber(findStat(SelectedPlayer, {"endurance","durability"}))
             Mobility.Text = "Mobility: " .. FormatNumber(findStat(SelectedPlayer, {"mobility","agility"}))
             Rebirths.Text = "Rebirths: " .. FormatNumber(findStat(SelectedPlayer, {"rebirth"}))
             Kills.Text = "Kills: " .. FormatNumber(findStat(SelectedPlayer, {"kill"}))
             Coins.Text = "Coins: " .. FormatNumber(findStat(SelectedPlayer, {"coin","cash"}))
-
-            -- 🔥 ESTAS SON LAS QUE FALTABAN
-            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"Muscle Emperor Reps","muscle emperor reps","MuscleEmperorReps"}))
+            Emperor.Text = "Emperor Reps: " .. FormatNumber(findStat(SelectedPlayer, {"MuscleEmperorReps"}))
             Device.Text = "Device: " .. tostring(findStat(SelectedPlayer, {"device"}))
-
         end
     end
 end)
