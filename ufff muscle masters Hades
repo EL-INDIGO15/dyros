@@ -238,3 +238,17 @@ AutoFarm:AddSwitch("Fast Glicht", function(state)
         startAutoGlitch600()
     end
 end)
+
+-- ================= AUTO REBIRTH =================
+AutoFarm:AddSwitch("Auto Rebirth", function(state)
+    AutoRebirthEnabled = state
+end)
+
+task.spawn(function()
+    while true do
+        if AutoRebirthEnabled then
+            ReplicatedStorage.RemotesEvent.RebirthEvent:FireServer()
+        end
+        task.wait(0)
+    end
+end)
