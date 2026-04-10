@@ -1,0 +1,145 @@
+pcall(function()
+    local cg = game:GetService("CoreGui"):FindFirstChild("PersistentToggleGui")
+    if cg then cg:Destroy() end
+    local pg = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("PremiumDeliveryGUI")
+    if pg then pg:Destroy() end
+end)
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "FastFarm",
+    SubTitle = "Auto Farm by FaDhen",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(500, 340),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local Tab = Window:AddTab({ Title = "Auto Farm", Icon = "sprout" })
+
+local Options = Fluent.Options
+
+-- ===========================================================
+--  AUTO FARM (sin tocar nada del código original)
+-- ===========================================================
+
+local PlayersService = game:GetService("Players")
+local localPlayer = PlayersService.LocalPlayer
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local rebirths = leaderstats:WaitForChild("Rebirths")
+
+local AutoFarmEnabled = false
+local runningThreads = {}
+local rng = Random.new()
+
+local function stopAll()
+    AutoFarmEnabled = false
+    for _, t in ipairs(runningThreads) do
+        if t then task.cancel(t) end
+    end
+    table.clear(runningThreads)
+end
+
+local function GetPrompts(MachinesFolder, positions)
+    local EPSILON = 0.01
+    local prompts = {}
+    for _, obj in ipairs(MachinesFolder:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            local pos = obj.Position
+            for _, target in ipairs(positions) do
+                if (pos - target).Magnitude < EPSILON then
+                    local prompt = obj:FindFirstChild("ProximityPromptMachine")
+                    if prompt and prompt:IsA("ProximityPrompt") then
+                        prompts[#prompts+1] = prompt
+                    end
+                end
+            end
+        end
+    end
+    return prompts
+end
+
+local function RunScriptBelow10()
+    local TARGET_POSITIONS = {
+        CFrame.new(-120.774185, 5.02033472, -56.9413261).Position,
+        CFrame.new(-94.2546463, 5.02033472, -35.0815392).Position
+    }
+    local MachinesFolder = workspace:WaitForChild("MachinesFolder")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local MachineRemote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
+    local prompts = GetPrompts(MachinesFolder, TARGET_POSITIONS)
+    if #prompts == 0 then return end
+
+    table.insert(runningThreads, task.spawn(function()  
+        while AutoFarmEnabled do  
+            local prompt = prompts[rng:NextInteger(1, #prompts)]  
+            if prompt and prompt.Enabled then fireproximityprompt(prompt) end  
+            task.wait(0.2)
+        end  
+    end))  
+    table.insert(runningThreads, task.spawn(function()  
+        while AutoFarmEnabled do  
+            MachineRemote:FireServer()  
+            task.wait(0.1)  
+        end  
+    end))
+end
+
+local function RunScriptAboveOrEqual10()
+    local TARGET_POSITIONS = {
+        Vector3.new(2747.89795, 7.65916204, 105.534966),
+        Vector3.new(2747.89795, 7.65916204, 126.657951),
+        Vector3.new(2743.69092, 11.6664858, 233.435394),
+        Vector3.new(2743.69092, 11.6664858, 258.496918),
+    }
+    local MachinesFolder = workspace:WaitForChild("MachinesFolder")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local MachineRemote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
+    local prompts = GetPrompts(MachinesFolder, TARGET_POSITIONS)
+    if #prompts == 0 then return end
+
+    table.insert(runningThreads, task.spawn(function()  
+        while AutoFarmEnabled do  
+            local prompt = prompts[rng:NextInteger(1, #prompts)]  
+            if prompt and prompt.Enabled then fireproximityprompt(prompt) end  
+            task.wait(0.2)
+        end  
+    end))  
+    table.insert(runningThreads, task.spawn(function()  
+        while AutoFarmEnabled do  
+            MachineRemote:FireServer()  
+            task.wait(0.05)  
+        end  
+    end))
+end
+
+local AutoFarmToggle = Tab:AddToggle("AutoFarm", { 
+    Title = "Auto Farm", 
+    Default = false 
+})
+
+AutoFarmToggle:OnChanged(function()
+    local Value = Options.AutoFarm.Value
+    if Value then
+        stopAll()
+        AutoFarmEnabled = true
+        if rebirths.Value < 10 then
+            RunScriptBelow10()
+        else
+            RunScriptAboveOrEqual10()
+        end
+    else
+        stopAll()
+    end
+end)
+
+-- Notificación de carga
+Fluent:Notify({
+    Title = "FastFarm",
+    Content = "Auto Farm cargado correctamente ✅",
+    Duration = 5
+})
+
+Window:SelectTab(1)
