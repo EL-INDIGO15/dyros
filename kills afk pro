@@ -368,3 +368,110 @@ StarterGui:SetCore("SendNotification", {
 })
 
 print("HADES HUB cargado correctamente")
+
+-- === SERVER HOP LIBRARY (menos de 6 jugadores → servidor con más de 6) ===
+-- Agrega esto en tu script (después de cargar tu UI y MainTab)
+
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
+local isHopEnabled = false
+
+-- Función que busca servidores públicos y devuelve el que tenga MÁS jugadores (>6)
+local function findBestServerWithMoreThan6()
+    local cursor = ""
+    local bestServer = nil
+    local bestCount = 6   -- solo nos interesan >6
+
+    repeat
+        local url = "https://games.roblox.com/v1/games/" .. game.GameId .. "/servers/Public?sortOrder=Asc&limit=100"
+        if cursor ~= "" then
+            url = url .. "&cursor=" .. cursor
+        end
+
+        local success, response = pcall(function()
+            return HttpService:GetAsync(url)
+        end)
+
+        if success then
+            local data = HttpService:JSONDecode(response)
+            for _, server in ipairs(data.data or {}) do
+                -- Excluimos el servidor actual y buscamos el que tenga más jugadores
+                if server.id ~= game.JobId and server.playing and server.playing > bestCount then
+                    bestCount = server.playing
+                    bestServer = server
+                end
+            end
+            cursor = data.nextPageCursor or ""
+        else
+            cursor = "" -- si falla una página, paramos
+        end
+    until cursor == ""
+
+    return bestServer
+end
+
+-- Lógica principal del hopper (se ejecuta en un thread separado)
+local function serverHopLoop()
+    while isHopEnabled do
+        local currentPlayers = #Players:GetPlayers()
+
+        -- Solo actuamos si estamos por debajo de 6 jugadores
+        if currentPlayers >= 6 then
+            task.wait(1)
+            continue
+        end
+
+        print("🔄 Server Hop: Servidor actual tiene " .. currentPlayers .. " jugadores (<6). Buscando servidor con >6...")
+
+        local found = false
+        while isHopEnabled and not found do
+            -- Re-chequeo en tiempo real (por si sube mientras buscamos)
+            currentPlayers = #Players:GetPlayers()
+            if currentPlayers >= 6 then
+                print("✅ Player count subió a " .. currentPlayers .. ". Cancelando intento de hop.")
+                break
+            end
+
+            local targetServer = findBestServerWithMoreThan6()
+
+            if targetServer then
+                print("🚀 Server Hop: Encontrado servidor con " .. targetServer.playing .. " jugadores. Teletransportando...")
+                found = true
+
+                local teleportSuccess, err = pcall(function()
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, targetServer.id, Players.LocalPlayer)
+                end)
+
+                if not teleportSuccess then
+                    warn("❌ Teleport falló: " .. tostring(err))
+                    found = false
+                end
+            else
+                print("⚠️ No se encontró servidor con >6 jugadores. Reintentando en 5 segundos...")
+                task.wait(5)
+            end
+        end
+
+        task.wait(1) -- pequeño delay cuando está >=6 para no saturar
+    end
+end
+
+-- === SWITCH EXACTAMENTE COMO LO PEDISTE ===
+local hopSwitchRef = MainTab:AddSwitch("Hop (5 jugadores)", function(state)
+    isHopEnabled = state
+    
+    if state then
+        task.spawn(serverHopLoop)  -- inicia el loop de monitoreo
+        print("✅ Server Hop ACTIVADO")
+    else
+        print("❌ Server Hop DESACTIVADO")
+        -- El loop se detiene solo porque isHopEnabled = false
+    end
+end)
+
+-- Activa por defecto como en tu ejemplo
+hopSwitchRef:Set(true)
+
+print("📌 Server Hop Library cargada correctamente")
