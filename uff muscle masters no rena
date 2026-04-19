@@ -55,7 +55,7 @@ end
 
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/GeloXOshiru/JeloKill.Image/refs/heads/main/Lua", true))()
 
-local window, windowFrame = library:AddWindow("PrimeJelo On Top", {
+local window, windowFrame = library:AddWindow("Hdxssxsad on top", {
     title_bar = {
         Color3.fromRGB(140, 80, 255),
         Color3.fromRGB(100, 50, 200),
@@ -97,7 +97,7 @@ task.spawn(function()
             local t = tick()
             local symbol = animSymbols[math.floor(t * 5) % #animSymbols + 1]
             titleLabel.Text = string.format(
-                "%sPRIMEJELO•PRIVATE | %s - %s  %s",
+                "%sHadxss•PRIVATE | %s - %s  %s",
                 symbol, getGreeting(), displayName, symbol
             )
             task.wait(0.01)
@@ -1050,7 +1050,7 @@ myLabelGrad.Color = ColorSequence.new({
 })
 myLabelGrad.Rotation = 0 myLabelGrad.Parent = myLabel
 
-local devLabel = infoTab:AddLabel("K13 On Top")
+local devLabel = infoTab:AddLabel("GHT On Top")
 devLabel.Font = Enum.Font.LuckiestGuy devLabel.TextSize = 20
 devLabel.TextXAlignment = Enum.TextXAlignment.Center devLabel.Size = UDim2.new(1,0,0,25)
 local devLabelGrad = Instance.new("UIGradient")
@@ -1060,11 +1060,11 @@ devLabelGrad.Color = ColorSequence.new({
 })
 devLabelGrad.Rotation = 0 devLabelGrad.Parent = devLabel
 
-local madeByLabel = infoTab:AddLabel("                    THIS SCRIPT MADE BY JELO WITH ❤")
+local madeByLabel = infoTab:AddLabel("                   Hdxssxsad X GHT")
 madeByLabel.Font = Enum.Font.Bodoni madeByLabel.TextSize = 15
 madeByLabel.TextXAlignment = Enum.TextXAlignment.Center
 
-local devLabel2 = infoTab:AddLabel("Developer: Prime Jelo")
+local devLabel2 = infoTab:AddLabel("GHT > K13 and IXI ")
 devLabel2.Font = Enum.Font.PermanentMarker devLabel2.TextSize = 18
 local devLabel3 = infoTab:AddLabel("Dont forget to follow me on tiktok!")
 devLabel3.Font = Enum.Font.PermanentMarker devLabel3.TextSize = 18
