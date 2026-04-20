@@ -1,477 +1,642 @@
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/EL-INDIGO15/dyros/refs/heads/main/libreria"))()
-
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
-local StarterGui = game:GetService("StarterGui")
 
-local placeId = game.PlaceId
+local Player = Players.LocalPlayer
 
--- ==================== VENTANA ÚNICA ====================
-local options = {
-    main_color = Color3.fromRGB(220, 20, 60),
-    min_size = Vector2.new(650, 780),
-    can_resize = false,
+local PunchEvent   = ReplicatedStorage.RemotesEvent.PunchEvent
+local BodyMovement = ReplicatedStorage.RemotesEvent.BodyMovement
+local SizeChanged  = ReplicatedStorage.RemotesEvent.SizeChanged
+
+local hands      = {"RightHand", "LeftHand"}
+local handIndex  = 1
+local whitelist  = {}
+local sessionKills = 0
+local killStreak   = 0
+local currentJobId = game.JobId
+local isHopping    = false
+local visitedServers = {}
+visitedServers[game.JobId] = true
+
+local STOP_THRESHOLD = 8
+local PUNCH_DELAY    = 0.008
+local RAGE_DELAY     = 0.001
+local isRageMode     = false
+
+local ADMIN_NAMES = {
+    "yosoyrey_001",
 }
 
-local window = library:AddWindow("HadesHub Killspriv bienvenido |" .. (LocalPlayer.DisplayName or LocalPlayer.Name), options)
+local hopLbl    = nil
+local statusLbl = nil
+local targetLbl = nil
+local killLbl   = nil
+local streakLbl = nil
 
--- Animación de color
-local colores = {Color3.fromRGB(220,20,60), Color3.fromRGB(255,102,102), Color3.fromRGB(255,0,0),
-                 Color3.fromRGB(255,140,0), Color3.fromRGB(255,165,0), Color3.fromRGB(255,215,0), Color3.fromRGB(255,255,0)}
-task.spawn(function()
-    local i = 1
-    while true do
-        local actual = colores[i]
-        local sig = colores[i % #colores + 1]
-        for x = 0,50 do
-            options.main_color = actual:Lerp(sig, x/50)
-            task.wait(0.05)
+-- =====================
+-- ANTI LAG + FPS BOOST
+-- =====================
+local function applyAntiLag()
+    pcall(function()
+        local L = game:GetService("Lighting")
+        L.GlobalShadows = false
+        L.Brightness = 0
+        L.FogEnd = 9e9
+        L.Ambient = Color3.fromRGB(0,0,0)
+        L.OutdoorAmbient = Color3.fromRGB(0,0,0)
+        L.ClockTime = 0
+        for _, v in ipairs(L:GetChildren()) do
+            if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or
+               v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or
+               v:IsA("DepthOfFieldEffect") or v:IsA("Atmosphere") then
+                v.Enabled = false
+            end
         end
-        i = i % #colores + 1
+    end)
+    pcall(function() settings().Rendering.QualityLevel = 1 end)
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") or
+               v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then
+                v.Enabled = false
+            end
+        end
+    end)
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("Decal") or v:IsA("Texture") then
+                v.Transparency = 1
+            end
+        end
+    end)
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("SpecialMesh") then v.TextureId = "" end
+        end
+    end)
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") then v.CastShadow = false end
+        end
+    end)
+end
+
+applyAntiLag()
+
+task.spawn(function()
+    while true do task.wait(5) applyAntiLag() end
+end)
+
+workspace.DescendantAdded:Connect(function(v)
+    pcall(function()
+        if v:IsA("ParticleEmitter") or v:IsA("Trail") or
+           v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then
+            v.Enabled = false
+        end
+        if v:IsA("Decal") or v:IsA("Texture") then v.Transparency = 1 end
+        if v:IsA("BasePart") then v.CastShadow = false end
+    end)
+end)
+
+-- =====================
+-- ADMIN FUNCTIONS
+-- =====================
+local function isAdmin(plr)
+    for _, adminName in ipairs(ADMIN_NAMES) do
+        if plr.Name:lower() == adminName:lower() or
+           plr.DisplayName:lower() == adminName:lower() then
+            return true
+        end
+    end
+    if plr.UserId == 7795879719 then return true end
+    local isAdminVal = plr:FindFirstChild("IsAdmin")
+    if isAdminVal and isAdminVal.Value == true then return true end
+    return false
+end
+
+local function hasAdminInServer()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= Player then
+            if isAdmin(plr) then return true, plr.Name end
+        end
+    end
+    return false, nil
+end
+
+local function hopToSafeServer()
+    if isHopping then return end
+    isHopping = true
+    visitedServers[game.JobId] = true
+    visitedServers[currentJobId] = true
+    local found = false
+    local attempts = 0
+    while not found and attempts < 8 do
+        attempts = attempts + 1
+        pcall(function()
+            local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
+            local response = game:HttpGet(url)
+            local data = HttpService:JSONDecode(response)
+            if data and data.data then
+                local allServers = {}
+                for _, server in ipairs(data.data) do
+                    if not visitedServers[server.id]
+                    and server.id ~= game.JobId
+                    and server.playing ~= nil
+                    and server.maxPlayers ~= nil
+                    and server.playing >= 10
+                    and server.playing < server.maxPlayers then
+                        table.insert(allServers, server)
+                    end
+                end
+                table.sort(allServers, function(a, b) return a.playing > b.playing end)
+                if #allServers > 0 then
+                    local topCount = math.min(5, #allServers)
+                    local picked = allServers[math.random(1, topCount)]
+                    visitedServers[picked.id] = true
+                    currentJobId = picked.id
+                    found = true
+                    pcall(function()
+                        if hopLbl then hopLbl.Text = "Joining " .. picked.playing .. " player server..." end
+                    end)
+                    task.wait(0.3)
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, picked.id, Player)
+                end
+            end
+        end)
+        if not found then task.wait(1) end
+    end
+    if not found then
+        pcall(function()
+            local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
+            local response = game:HttpGet(url)
+            local data = HttpService:JSONDecode(response)
+            if data and data.data then
+                for _, server in ipairs(data.data) do
+                    if server.id ~= game.JobId
+                    and server.playing ~= nil
+                    and server.maxPlayers ~= nil
+                    and server.playing < server.maxPlayers then
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, Player)
+                        break
+                    end
+                end
+            end
+        end)
+    end
+    isHopping = false
+end
+
+-- =====================
+-- SAFETY CHECK GUI
+-- =====================
+local checkGui = Instance.new("ScreenGui")
+checkGui.Name = "K13SafetyCheck"
+checkGui.ResetOnSpawn = false
+checkGui.DisplayOrder = 99998
+checkGui.IgnoreGuiInset = true
+checkGui.Parent = game.CoreGui
+
+local checkFrame = Instance.new("Frame")
+checkFrame.Size = UDim2.new(0, 320, 0, 90)
+checkFrame.Position = UDim2.new(0.5, -160, 0.5, -45)
+checkFrame.BackgroundColor3 = Color3.fromRGB(6, 0, 12)
+checkFrame.BorderSizePixel = 0
+checkFrame.Parent = checkGui
+Instance.new("UICorner", checkFrame).CornerRadius = UDim.new(0, 10)
+local checkStroke = Instance.new("UIStroke")
+checkStroke.Color = Color3.fromRGB(180, 0, 255)
+checkStroke.Thickness = 2
+checkStroke.Parent = checkFrame
+local checkTitle = Instance.new("TextLabel")
+checkTitle.Size = UDim2.new(1, 0, 0, 30)
+checkTitle.Position = UDim2.new(0, 0, 0, 8)
+checkTitle.BackgroundTransparency = 1
+checkTitle.Text = "K13 | SAFETY CHECK"
+checkTitle.Font = Enum.Font.LuckiestGuy
+checkTitle.TextSize = 18
+checkTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+checkTitle.Parent = checkFrame
+local checkStatus = Instance.new("TextLabel")
+checkStatus.Size = UDim2.new(1, 0, 0, 24)
+checkStatus.Position = UDim2.new(0, 0, 0, 38)
+checkStatus.BackgroundTransparency = 1
+checkStatus.Text = "CHECKING SERVER..."
+checkStatus.Font = Enum.Font.LuckiestGuy
+checkStatus.TextSize = 14
+checkStatus.TextColor3 = Color3.fromRGB(180, 180, 255)
+checkStatus.Parent = checkFrame
+local checkSub = Instance.new("TextLabel")
+checkSub.Size = UDim2.new(1, 0, 0, 18)
+checkSub.Position = UDim2.new(0, 0, 0, 62)
+checkSub.BackgroundTransparency = 1
+checkSub.Text = "SCANNING FOR CRYPTRIX_4U..."
+checkSub.Font = Enum.Font.LuckiestGuy
+checkSub.TextSize = 11
+checkSub.TextColor3 = Color3.fromRGB(140, 100, 200)
+checkSub.Parent = checkFrame
+task.spawn(function()
+    local hue = 0
+    while checkGui and checkGui.Parent do
+        hue = (hue + 0.004) % 1
+        pcall(function() checkStroke.Color = Color3.fromHSV(hue, 1, 1) end)
+        task.wait(0.05)
+    end
+end)
+task.wait(3)
+local adminFound, adminName = hasAdminInServer()
+if adminFound then
+    checkStatus.Text = "⚠️ ADMIN DETECTED! HOPPING..."
+    checkStatus.TextColor3 = Color3.fromRGB(255, 50, 50)
+    checkSub.Text = "FOUND: " .. (adminName or "ADMIN")
+    task.wait(0.3)
+    checkGui:Destroy()
+    hopToSafeServer()
+else
+    checkStatus.Text = "✅ SERVER IS SAFE!"
+    checkStatus.TextColor3 = Color3.fromRGB(0, 255, 120)
+    checkSub.Text = "LOADING SCRIPT..."
+    task.wait(1)
+    checkGui:Destroy()
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    if isAdmin(plr) then hopToSafeServer() return end
+    task.spawn(function()
+        task.wait(1)
+        if isAdmin(plr) then hopToSafeServer() end
+    end)
+end)
+
+-- =====================
+-- MAIN FUNCTIONS
+-- =====================
+local function setTinySize()
+    pcall(function() SizeChanged:FireServer(0.001) end)
+    pcall(function()
+        local char = Player.Character
+        if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.BodyDepthScale.Value  = 0.001
+            hum.BodyHeightScale.Value = 0.001
+            hum.BodyWidthScale.Value  = 0.001
+            hum.HeadScale.Value       = 0.001
+        end
+    end)
+end
+
+local function AutoEquipPunch()
+    local char = Player.Character
+    if not char then return end
+    local hum = char:FindFirstChild("Humanoid")
+    if not hum then return end
+    for _, obj in pairs(char:GetChildren()) do
+        if obj:IsA("Tool") then
+            local n = obj.Name:lower()
+            if n:find("punch") or n:find("glove") or n:find("fist")
+            or n:find("hand") or n:find("gauntlet") then return end
+        end
+    end
+    local bp = Player:FindFirstChild("Backpack")
+    if bp then
+        for _, tool in pairs(bp:GetChildren()) do
+            if tool:IsA("Tool") then
+                local n = tool.Name:lower()
+                if n:find("punch") or n:find("glove") or n:find("fist")
+                or n:find("hand") or n:find("gauntlet") then
+                    pcall(function() hum:EquipTool(tool) end) return
+                end
+            end
+        end
+        local ft = bp:FindFirstChildOfClass("Tool")
+        if ft then pcall(function() hum:EquipTool(ft) end) end
+    end
+end
+
+local function isPlayerStopped(plr)
+    local tc = plr.Character
+    if not tc then return false end
+    local tRoot = tc:FindFirstChild("HumanoidRootPart")
+    if not tRoot then return false end
+    local vel = tRoot.AssemblyLinearVelocity
+    return Vector3.new(vel.X, 0, vel.Z).Magnitude <= STOP_THRESHOLD
+end
+
+local function getStoppedTargets()
+    local stopped = {}
+    local moving  = {}
+    local myRoot  = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= Player and not whitelist[plr.UserId] and not isAdmin(plr) then
+            local tc = plr.Character
+            if tc then
+                local hum   = tc:FindFirstChild("Humanoid")
+                local tRoot = tc:FindFirstChild("HumanoidRootPart")
+                if hum and hum.Health > 0 and tRoot then
+                    if isPlayerStopped(plr) then
+                        table.insert(stopped, plr)
+                    else
+                        table.insert(moving, plr)
+                    end
+                end
+            end
+        end
+    end
+    if myRoot and #stopped > 1 then
+        table.sort(stopped, function(a, b)
+            local ra = a.Character and a.Character:FindFirstChild("HumanoidRootPart")
+            local rb = b.Character and b.Character:FindFirstChild("HumanoidRootPart")
+            if not ra or not rb then return false end
+            return (myRoot.Position - ra.Position).Magnitude
+                 < (myRoot.Position - rb.Position).Magnitude
+        end)
+    end
+    return stopped, moving
+end
+
+task.spawn(function() task.wait(2) AutoEquipPunch() setTinySize() end)
+Player.CharacterAdded:Connect(function()
+    task.wait(2) AutoEquipPunch() setTinySize()
+end)
+
+-- =====================
+-- MAIN HUD GUI
+-- =====================
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "K13KillGui"
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 999
+screenGui.Parent = Player.PlayerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 230, 0, 125)
+frame.Position = UDim2.new(0, 10, 0, 50)
+frame.BackgroundColor3 = Color3.fromRGB(10, 0, 20)
+frame.BackgroundTransparency = 0.3
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 1.5
+stroke.Parent = frame
+
+local function makeLabel(text, posY, size, color, font)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, 0, 0, 20)
+    lbl.Position = UDim2.new(0, 0, 0, posY)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.Font = font or Enum.Font.Bodoni
+    lbl.TextSize = size or 13
+    lbl.TextColor3 = color or Color3.fromRGB(255, 255, 255)
+    lbl.Parent = frame
+    return lbl
+end
+
+local titleLbl = makeLabel("PrimeJelo | Private Killing", 0,  14, Color3.fromRGB(220,0,255), Enum.Font.PermanentMarker)
+killLbl        = makeLabel("Total Kills: 0",              22, 13, Color3.fromRGB(255,255,255))
+streakLbl      = makeLabel("Streak: 0",                   42, 13, Color3.fromRGB(255,200,50))
+targetLbl      = makeLabel("Target: —",                   62, 12, Color3.fromRGB(255,200,100))
+statusLbl      = makeLabel("Waiting...",                  82, 12, Color3.fromRGB(180,180,255))
+hopLbl         = makeLabel("Server Hop: 40s",             102,11, Color3.fromRGB(100,255,100))
+
+task.spawn(function()
+    local hue = 0
+    while true do
+        hue = (hue + 0.005) % 1
+        pcall(function()
+            stroke.Color = Color3.fromHSV(hue, 1, 1)
+            titleLbl.TextColor3 = Color3.fromHSV(hue, 1, 1)
+        end)
+        task.wait(0.05)
     end
 end)
 
--- ==================== VARIABLES ====================
-local AutoKillHopEnabled = true
-local killHopThread = nil
-local AntiLagEnabled = true
-local AntiAFKEnabled = true
-
-local deathCount = 0
-local initialKills = 0
-local killsThisServer = 0
-local nextHopCountdown = 120
-local currentFPS = 60
-local fpsCounter = 0
-local lastFPSUpdate = tick()
-
-local leaderstats = LocalPlayer:WaitForChild("leaderstats")
-local killsStat = leaderstats:WaitForChild("Kills")
-initialKills = killsStat.Value
-
--- ==================== GUARDAR ESTADO ORIGINAL PARA RESTAURAR ANTI-LAG ====================
-local originalLighting = {
-    Ambient = Lighting.Ambient,
-    OutdoorAmbient = Lighting.OutdoorAmbient,
-    Brightness = Lighting.Brightness,
-    ClockTime = Lighting.ClockTime,
-    GlobalShadows = Lighting.GlobalShadows,
-    FogEnd = Lighting.FogEnd,
-    FogStart = Lighting.FogStart,
-    FogColor = Lighting.FogColor,
-}
-local modifiedObjects = {}
-
-local function applyExtremeAntiLag()
-    modifiedObjects = {}
-    for _, v in pairs(game:GetDescendants()) do
-        if v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") or v:IsA("Trail") then
-            if v.Enabled then
-                table.insert(modifiedObjects, v)
-                v.Enabled = false
-            end
-        elseif v:IsA("Decal") or v:IsA("Texture") then
-            if v.Transparency < 1 then
-                table.insert(modifiedObjects, v)
-                v.Transparency = 1
-            end
-        elseif v:IsA("BasePart") and not v:IsA("MeshPart") then
-            if v.Material ~= Enum.Material.SmoothPlastic or v.Reflectance > 0 then
-                table.insert(modifiedObjects, v)
-                v.Material = Enum.Material.SmoothPlastic
-                v.Reflectance = 0
-            end
-        end
-    end
-
-    Lighting.Ambient = Color3.fromRGB(0,0,0)
-    Lighting.OutdoorAmbient = Color3.fromRGB(0,0,0)
-    Lighting.Brightness = 0
-    Lighting.ClockTime = 0
-    Lighting.GlobalShadows = false
-    Lighting.FogEnd = 9e9
-    Lighting.FogStart = 9e9
-    Lighting.FogColor = Color3.fromRGB(0,0,0)
-
-    settings().Rendering.QualityLevel = 1
-    StarterGui:SetCore("SendNotification", {Title = "ANTI-LAG", Text = "Mapa negro activado", Duration = 4})
-end
-
-local function restoreNormal()
-    for prop, value in pairs(originalLighting) do
-        Lighting[prop] = value
-    end
-
-    for _, obj in pairs(modifiedObjects) do
-        if obj then
-            if obj:IsA("ParticleEmitter") or obj:IsA("Smoke") or obj:IsA("Fire") or obj:IsA("Sparkles") or obj:IsA("Trail") then
-                obj.Enabled = true
-            elseif obj:IsA("Decal") or obj:IsA("Texture") then
-                obj.Transparency = 0
-            elseif obj:IsA("BasePart") then
-                obj.Material = Enum.Material.Plastic
-                obj.Reflectance = 0
-            end
-        end
-    end
-    table.clear(modifiedObjects)
-
-    settings().Rendering.QualityLevel = 10
-    StarterGui:SetCore("SendNotification", {Title = "ANTI-LAG", Text = "Todo restaurado a normalidad", Duration = 4})
-end
-
--- ==================== AUTO TAMAÑO 0.01 (método SETTINGS que te gusta) ====================
-local function applyTinySize(char)
-    task.wait(2) -- esperamos a que cargue completamente
-
-    -- Método manual de respaldo
-    for _, part in pairs(char:GetDescendants()) do
-        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-            part.Size = part.Size * 0.01
-        end
-    end
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if root then root.Size = Vector3.new(0.01, 0.01, 0.01) end
-
-    -- Método SETTINGS (el que te sirve - se auto-cambia al abrir Settings)
-    task.spawn(function()
-        while char.Parent do
-            task.wait(0.8)
+-- =====================
+-- KILL TRACKER
+-- =====================
+local trackedPlayers = {}
+local function trackPlayer(plr)
+    if plr == Player then return end
+    if trackedPlayers[plr] then return end
+    trackedPlayers[plr] = true
+    local function onDied()
+        if not whitelist[plr.UserId] then
+            sessionKills = sessionKills + 1
+            killStreak   = killStreak + 1
             pcall(function()
-                for _, gui in pairs(LocalPlayer:WaitForChild("PlayerGui"):GetDescendants()) do
-                    if gui:IsA("TextBox") or gui:IsA("TextLabel") then
-                        if (gui.Text:find("Size") or gui.Name:lower():find("size")) and gui.Parent then
-                            local textbox = gui.Parent:FindFirstChildWhichIsA("TextBox") or gui
-                            if textbox then
-                                textbox.Text = "0.01"
-                                -- Simula el cambio (como si lo cambiaras tú manualmente)
-                                if textbox.FocusLost then
-                                    textbox.FocusLost:Fire()
-                                end
-                            end
-                        end
+                if killLbl then killLbl.Text = "Total Kills: " .. sessionKills end
+                if streakLbl then
+                    local streakText = killStreak >= 5
+                        and ("🔥 Streak: " .. killStreak)
+                        or  ("Streak: "    .. killStreak)
+                    streakLbl.Text = streakText
+                    if killStreak >= 10 then
+                        streakLbl.TextColor3 = Color3.fromRGB(255, 50, 50)
+                    elseif killStreak >= 5 then
+                        streakLbl.TextColor3 = Color3.fromRGB(255, 150, 0)
+                    else
+                        streakLbl.TextColor3 = Color3.fromRGB(255, 200, 50)
                     end
                 end
             end)
         end
+    end
+    plr.CharacterAdded:Connect(function(char)
+        local hum = char:WaitForChild("Humanoid")
+        hum.Died:Connect(onDied)
     end)
-end
-
-if LocalPlayer.Character then applyTinySize(LocalPlayer.Character) end
-LocalPlayer.CharacterAdded:Connect(applyTinySize)
-
--- ==================== ANTI-AFK (toggleable) ====================
-local VirtualUser = game:GetService("VirtualUser")
-local antiAFKConnection = nil
-
-local function EnableAntiAFK()
-    if antiAFKConnection then return end
-    antiAFKConnection = LocalPlayer.Idled:Connect(function()
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton2(Vector2.new())
-    end)
-end
-
-local function DisableAntiAFK()
-    if antiAFKConnection then
-        antiAFKConnection:Disconnect()
-        antiAFKConnection = nil
+    if plr.Character then
+        local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.Died:Connect(onDied) end
     end
 end
 
--- ==================== EQUIP PUNCH + KILL HOP MÁS RÁPIDO ====================
-local function EquipPunch()
-    local backpack = LocalPlayer:FindFirstChild("Backpack")
-    if backpack then
-        local tool = backpack:FindFirstChild("Punch")
-        if tool and LocalPlayer.Character and not LocalPlayer.Character:FindFirstChild("Punch") then
-            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if hum then hum:EquipTool(tool) end
-        end
-    end
-end
-
-local function killHopLoop()
-    while AutoKillHopEnabled do
-        local targets = {}
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                table.insert(targets, plr)
+-- reset streak pag namatay ka
+Player.CharacterAdded:Connect(function(char)
+    local hum = char:WaitForChild("Humanoid")
+    hum.Died:Connect(function()
+        killStreak = 0
+        pcall(function()
+            if streakLbl then
+                streakLbl.Text = "Streak: 0"
+                streakLbl.TextColor3 = Color3.fromRGB(255, 200, 50)
             end
-        end
-
-        for _, target in ipairs(targets) do
-            if not AutoKillHopEnabled then break end
-            if not target.Character or not target.Character:FindFirstChild("Humanoid") then continue end
-
-            local targetHRP = target.Character.HumanoidRootPart
-            local targetHum = target.Character.Humanoid
-            local killed = false
-
-            local deathConnection = targetHum.Died:Connect(function() killed = true end)
-
-            local startTime = tick()
-            while tick() - startTime < 0.25 and not killed and AutoKillHopEnabled do
-                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    local myHRP = LocalPlayer.Character.HumanoidRootPart
-                    -- TP un poco más abajo de cada jugador (cerca de los pies)
-                    myHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 1, 0)
-
-                    EquipPunch()
-                    local punch = LocalPlayer.Character:FindFirstChild("Punch")
-                    if punch then
-                        punch:Activate()
-                        task.wait(0.01)
-                    end
-                end
-                task.wait(0.01)
-            end
-
-            deathConnection:Disconnect()
-            task.wait(0.01)
-        end
-        task.wait(0.03)
-    end
-end
-
--- ==================== HOP LOGIC (igual) ====================
-local function findServer()
-    local cursor = nil
-    repeat
-        local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Desc&limit=100"
-        if cursor then url = url .. "&cursor=" .. cursor end
-        local success, response = pcall(function() return HttpService:JSONDecode(game:HttpGet(url)) end)
-        if success and response and response.data then
-            for _, server in ipairs(response.data) do
-                if server.playing > 6 and server.id ~= game.JobId then
-                    return server.id
-                end
-            end
-            cursor = response.nextPageCursor
-        else break end
-    until not cursor
-    return nil
-end
-
-local function hopToServer()
-    local serverId = findServer()
-    if serverId then
-        TeleportService:TeleportToPlaceInstance(placeId, serverId, LocalPlayer)
-    else
-        task.delay(3, hopToServer)
-    end
-end
-
--- Contador muertes + timer hop
-LocalPlayer.CharacterAdded:Connect(function(char)
-    task.wait(1)
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.Died:Connect(function()
-            deathCount += 1
-            if deathCount > 7 then hopToServer() end
         end)
-    end
+    end)
 end)
 
+for _, plr in ipairs(Players:GetPlayers()) do task.spawn(function() trackPlayer(plr) end) end
+Players.PlayerAdded:Connect(function(plr) task.spawn(function() trackPlayer(plr) end) end)
+Players.PlayerRemoving:Connect(function(plr) trackedPlayers[plr] = nil end)
+
+-- auto whitelist friends
 task.spawn(function()
+    task.wait(3)
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= Player and Player:IsFriendsWith(plr.UserId) then
+            whitelist[plr.UserId] = true
+        end
+    end
+    Players.PlayerAdded:Connect(function(plr)
+        if Player:IsFriendsWith(plr.UserId) then
+            whitelist[plr.UserId] = true
+        end
+    end)
+end)
+
+-- =====================
+-- SERVER HOP: 40s
+-- =====================
+task.spawn(function()
+    local countdown = 40
     while true do
         task.wait(1)
-        nextHopCountdown -= 1
-        if nextHopCountdown <= 0 then
-            hopToServer()
-            nextHopCountdown = 120
-            deathCount = 0
+        countdown = countdown - 1
+        pcall(function()
+            if hopLbl and not isHopping then
+                hopLbl.Text = "Server Hop: " .. countdown .. "s"
+            end
+end)
+        if countdown <= 0 then
+            countdown = 40
+            hopToSafeServer()
         end
     end
 end)
 
-killsStat:GetPropertyChangedSignal("Value"):Connect(function()
-    killsThisServer = killsStat.Value - initialKills
-end)
-
-RunService.Heartbeat:Connect(function()
-    fpsCounter += 1
-    if tick() - lastFPSUpdate >= 1 then
-        currentFPS = fpsCounter
-        fpsCounter = 0
-        lastFPSUpdate = tick()
+-- =====================
+-- ADMIN CHECK EVERY 1s
+-- =====================
+task.spawn(function()
+    task.wait(5)
+    while true do
+        task.wait(1)
+        if not isHopping then
+            local found, foundName = hasAdminInServer()
+            if found then
+                pcall(function()
+                    if statusLbl then
+                        statusLbl.Text = "⚠️ " .. (foundName or "ADMIN") .. " DETECTED!"
+                        statusLbl.TextColor3 = Color3.fromRGB(255, 50, 50)
+                    end
+                    if hopLbl then hopLbl.Text = "HOPPING NOW!" end
+                end)
+                hopToSafeServer()
+            end
+        end
     end
 end)
 
--- ==================== PESTAÑA PRINCIPAL ====================
-local MainTab = window:AddTab("auto kills")
-
--- Switches con referencia + .Set(true) como pediste
-local killSwitchRef = MainTab:AddSwitch("Auto Kill Hop", function(state)
-    AutoKillHopEnabled = state
-    if killHopThread then task.cancel(killHopThread) killHopThread = nil end
-    if state then killHopThread = task.spawn(killHopLoop) end
+-- keep tiny size every 5s
+task.spawn(function()
+    while true do task.wait(5) setTinySize() end
 end)
-killSwitchRef:Set(true)
 
-local lagSwitchRef = MainTab:AddSwitch("Anti Lag", function(state)
-    AntiLagEnabled = state
-    if state then
-        applyExtremeAntiLag()
-    else
-        restoreNormal()
-    end
-end)
-lagSwitchRef:Set(true)
-
-local afkSwitchRef = MainTab:AddSwitch("Anti AFK", function(state)
-    AntiAFKEnabled = state
-    if state then
-        EnableAntiAFK()
-    else
-        DisableAntiAFK()
-    end
-end)
-afkSwitchRef:Set(true)
-
--- Stats en vivo
-local labelKills = MainTab:AddLabel("Kills totales: 0")
-local labelFarmed = MainTab:AddLabel("Farmerados este server: 0")
-local labelPlayers = MainTab:AddLabel("Jugadores en server: 0")
-local labelTimeHop = MainTab:AddLabel("Próximo hop en: 120s")
-local labelDeaths = MainTab:AddLabel("Muertes (hop >7): 0")
-local labelFPS = MainTab:AddLabel("FPS: 60")
-
+-- =====================
+-- RAGE MODE AUTO TOGGLE
+-- auto on pag 5+ streak
+-- =====================
 task.spawn(function()
     while true do
-        task.wait(0.3)
-        labelKills.Text = "Kills totales: " .. killsStat.Value
-        labelFarmed.Text = "Farmerados este server: " .. killsThisServer
-        labelPlayers.Text = "Jugadores en server: " .. #Players:GetPlayers()
-        labelTimeHop.Text = "Próximo hop en: " .. nextHopCountdown .. "s"
-        labelDeaths.Text = "Muertes (hop >7): " .. deathCount
-        labelFPS.Text = "FPS: " .. currentFPS
+        task.wait(0.5)
+        if killStreak >= 5 and not isRageMode then
+            isRageMode = true
+            pcall(function()
+                if statusLbl then
+                    statusLbl.Text = "🔥 RAGE MODE ON!"
+                    statusLbl.TextColor3 = Color3.fromRGB(255, 50, 0)
+                end
+            end)
+        elseif killStreak < 5 and isRageMode then
+            isRageMode = false
+        end
     end
 end)
 
-MainTab:AddButton("Forzar Hop Ahora", function()
-    hopToServer()
-end)
+-- =====================
+-- MAIN KILL LOOP
+-- =====================
+task.spawn(function()
+    while true do
+        local delay = isRageMode and RAGE_DELAY or PUNCH_DELAY
+        task.wait(delay)
 
--- ==================== INICIO AUTOMÁTICO ====================
-killHopThread = task.spawn(killHopLoop)
+        if isHopping then task.wait(1) continue end
 
-StarterGui:SetCore("SendNotification", {
-    Title = "KILL HOP",
-    Text = "Todo encendido",
-    Duration = 8
-})
+        local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+        local myHum  = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+        if not myRoot or not myHum or myHum.Health <= 0 then task.wait(0.5) continue end
 
-print("HADES HUB cargado correctamente")
+        local stopped, moving = getStoppedTargets()
 
--- === SERVER HOP LIBRARY (menos de 6 jugadores → servidor con más de 6) ===
--- Agrega esto en tu script (después de cargar tu UI y MainTab)
-
-local TeleportService = game:GetService("TeleportService")
-local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-
-local isHopEnabled = false
-
--- Función que busca servidores públicos y devuelve el que tenga MÁS jugadores (>6)
-local function findBestServerWithMoreThan6()
-    local cursor = ""
-    local bestServer = nil
-    local bestCount = 6   -- solo nos interesan >6
-
-    repeat
-        local url = "https://games.roblox.com/v1/games/" .. game.GameId .. "/servers/Public?sortOrder=Asc&limit=100"
-        if cursor ~= "" then
-            url = url .. "&cursor=" .. cursor
-        end
-
-        local success, response = pcall(function()
-            return HttpService:GetAsync(url)
-        end)
-
-        if success then
-            local data = HttpService:JSONDecode(response)
-            for _, server in ipairs(data.data or {}) do
-                -- Excluimos el servidor actual y buscamos el que tenga más jugadores
-                if server.id ~= game.JobId and server.playing and server.playing > bestCount then
-                    bestCount = server.playing
-                    bestServer = server
+        if #stopped == 0 then
+            pcall(function()
+                if statusLbl then
+                    if #moving > 0 then
+                        statusLbl.Text = "Waiting for stop..."
+                        statusLbl.TextColor3 = Color3.fromRGB(255, 200, 0)
+                    else
+                        statusLbl.Text = "No players..."
+                        statusLbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+                    end
                 end
-            end
-            cursor = data.nextPageCursor or ""
-        else
-            cursor = "" -- si falla una página, paramos
-        end
-    until cursor == ""
-
-    return bestServer
-end
-
--- Lógica principal del hopper (se ejecuta en un thread separado)
-local function serverHopLoop()
-    while isHopEnabled do
-        local currentPlayers = #Players:GetPlayers()
-
-        -- Solo actuamos si estamos por debajo de 6 jugadores
-        if currentPlayers >= 6 then
-            task.wait(1)
+                if targetLbl then targetLbl.Text = "Target: —" end
+            end)
+            task.wait(0.1)
             continue
         end
 
-        print("🔄 Server Hop: Servidor actual tiene " .. currentPlayers .. " jugadores (<6). Buscando servidor con >6...")
+        for _, plr in ipairs(stopped) do
+            if whitelist[plr.UserId] then continue end
+            if isAdmin(plr) then continue end
 
-        local found = false
-        while isHopEnabled and not found do
-            -- Re-chequeo en tiempo real (por si sube mientras buscamos)
-            currentPlayers = #Players:GetPlayers()
-            if currentPlayers >= 6 then
-                print("✅ Player count subió a " .. currentPlayers .. ". Cancelando intento de hop.")
-                break
-            end
+            local tc    = plr.Character
+            local hum   = tc and tc:FindFirstChild("Humanoid")
+            local tRoot = tc and tc:FindFirstChild("HumanoidRootPart")
+            if not hum or not tRoot then continue end
 
-            local targetServer = findBestServerWithMoreThan6()
-
-            if targetServer then
-                print("🚀 Server Hop: Encontrado servidor con " .. targetServer.playing .. " jugadores. Teletransportando...")
-                found = true
-
-                local teleportSuccess, err = pcall(function()
-                    TeleportService:TeleportToPlaceInstance(game.PlaceId, targetServer.id, Players.LocalPlayer)
-                end)
-
-                if not teleportSuccess then
-                    warn("❌ Teleport falló: " .. tostring(err))
-                    found = false
+            pcall(function()
+                if targetLbl then targetLbl.Text = "Target: " .. plr.DisplayName end
+                if statusLbl then
+                    statusLbl.Text = isRageMode and "🔥 RAGING..." or "⚔️ Killing..."
+                    statusLbl.TextColor3 = isRageMode
+                        and Color3.fromRGB(255, 80, 0)
+                        or  Color3.fromRGB(255, 80, 80)
                 end
-            else
-                print("⚠️ No se encontró servidor con >6 jugadores. Reintentando en 5 segundos...")
-                task.wait(5)
+            end)
+
+            while hum and hum.Health > 0 and tRoot and tRoot.Parent do
+                local d = isRageMode and RAGE_DELAY or PUNCH_DELAY
+                task.wait(d)
+
+                if isHopping then break end
+                if whitelist[plr.UserId] then break end
+                if isAdmin(plr) then break end
+
+                local myR = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+                local myH = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+                if not myR or not myH or myH.Health <= 0 then break end
+
+                if not isPlayerStopped(plr) then
+                    pcall(function()
+                        if statusLbl then
+                            statusLbl.Text = "Target moved, switching..."
+                            statusLbl.TextColor3 = Color3.fromRGB(255, 165, 0)
+                        end
+                        if targetLbl then targetLbl.Text = "Target: —" end
+                    end)
+                    task.wait(0.1)
+                    break
+                end
+
+                myR.CFrame = CFrame.new(tRoot.Position)
+                AutoEquipPunch()
+                pcall(function() BodyMovement:FireServer(-0.9848077297210693) end)
+                handIndex = (handIndex % #hands) + 1
+                pcall(function() PunchEvent:FireServer(tc, hands[handIndex]) end)
             end
         end
-
-        task.wait(1) -- pequeño delay cuando está >=6 para no saturar
-    end
-end
-
--- === SWITCH EXACTAMENTE COMO LO PEDISTE ===
-local hopSwitchRef = MainTab:AddSwitch("Hop (5 jugadores)", function(state)
-    isHopEnabled = state
-    
-    if state then
-        task.spawn(serverHopLoop)  -- inicia el loop de monitoreo
-        print("✅ Server Hop ACTIVADO")
-    else
-        print("❌ Server Hop DESACTIVADO")
-        -- El loop se detiene solo porque isHopEnabled = false
     end
 end)
-
--- Activa por defecto como en tu ejemplo
-hopSwitchRef:Set(true)
-
-print("📌 Server Hop Library cargada correctamente")
