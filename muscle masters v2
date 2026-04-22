@@ -174,55 +174,6 @@ AutoFarm:AddSwitch("Auto Glitch", function(state)
     end
 end)
 
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-
-local PUNCH_POS = Vector3.new(2743.1, 10.3, 296.2) -- farmea más abajo mirando atrás
-local sacoFarmEnabled = false
-local sacoThread = nil
-
-AutoFarm:AddSwitch("saco(20T)", function(state)
-    sacoFarmEnabled = state
-    
-    if sacoThread then
-        task.cancel(sacoThread)
-        sacoThread = nil
-    end
-
-    if state then
-        sacoThread = task.spawn(function()
-            while sacoFarmEnabled do
-                local char = player.Character
-                if not char then task.wait(0.5) continue end
-                
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                local humanoid = char:FindFirstChildOfClass("Humanoid")
-                if not hrp or not humanoid then task.wait(0.5) continue end
-
-                -- TP a la posición baja mirando hacia atrás
-                if (hrp.Position - PUNCH_POS).Magnitude > 5 then
-                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, math.pi, 0)
-                    task.wait(0.2)
-                end
-
-                -- Equipar y spamear Punch rapidísimo
-                local punch = char:FindFirstChild("Punch")
-                if not punch then
-                    punch = player.Backpack:FindFirstChild("Punch")
-                    if punch then
-                        humanoid:EquipTool(punch)
-                        task.wait(0.1)
-                    end
-                end
-
-                if punch and char:FindFirstChild("Punch") then
-                    punch:Activate()
-                end
-                task.wait(0.03) -- 33 golpes/seg
-            end
-        end)
-    end
-end)
 
 -- ================= AUTO REBIRTH =================
 AutoFarm:AddSwitch("Auto Rebirth", function(state)
@@ -278,46 +229,59 @@ AutoFarm:AddSwitch("Anti Lag", function()
 end) 
 
 
-AutoFarm:AddSwitch("Full antilag", function(State) 
-    local lighting = game:GetService("Lighting") 
-    if State then 
-        for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do 
-            if gui:IsA("ScreenGui") then gui:Destroy() end 
-        end 
-        for _, obj in pairs(workspace:GetDescendants()) do 
-            if obj:IsA("ParticleEmitter") or obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then 
-                obj:Destroy() 
-            end 
-        end 
-        for _, v in pairs(lighting:GetChildren()) do 
-            if v:IsA("Sky") then v:Destroy() end 
-        end 
-        local darkSky = Instance.new("Sky") 
-        darkSky.Name = "DarkSky" 
-darkSky.SkyboxBk = "rbxassetid://0" 
-        darkSky.SkyboxDn = "rbxassetid://0" 
-        darkSky.SkyboxFt = "rbxassetid://0" 
-        darkSky.SkyboxLf = "rbxassetid://0" 
-        darkSky.SkyboxRt = "rbxassetid://0" 
-        darkSky.SkyboxUp = "rbxassetid://0" 
-        darkSky.Parent = lighting 
-        lighting.Brightness = 0 
-        lighting.ClockTime = 0 
-        lighting.TimeOfDay = "00:00:00" 
-        lighting.OutdoorAmbient = Color3.new(0,0,0) 
-        lighting.Ambient = Color3.new(0,0,0) 
-        lighting.FogColor = Color3.new(0,0,0) 
-        lighting.FogEnd = 100 
-        task.spawn(function() 
-            while State do 
-                task.wait(5) 
-                if not lighting:FindFirstChild("DarkSky") then 
-                    darkSky:Clone().Parent = lighting 
-                end 
-            end 
-        end) 
-    end 
-end) 
+local AutoSaco = window:AddTab("Sacos") 
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local PUNCH_POS = Vector3.new(2743.1, 10.3, 296.2) -- farmea más abajo mirando atrás
+local sacoFarmEnabled = false
+local sacoThread = nil
+
+AutoSaco:AddSwitch("saco(20T)", function(state)
+    sacoFarmEnabled = state
+    
+    if sacoThread then
+        task.cancel(sacoThread)
+        sacoThread = nil
+    end
+
+    if state then
+        sacoThread = task.spawn(function()
+            while sacoFarmEnabled do
+                local char = player.Character
+                if not char then task.wait(0.5) continue end
+                
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if not hrp or not humanoid then task.wait(0.5) continue end
+
+                -- TP a la posición baja mirando hacia atrás
+                if (hrp.Position - PUNCH_POS).Magnitude > 5 then
+                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, math.pi, 0)
+                    task.wait(0.2)
+                end
+
+                -- Equipar y spamear Punch rapidísimo
+                local punch = char:FindFirstChild("Punch")
+                if not punch then
+                    punch = player.Backpack:FindFirstChild("Punch")
+                    if punch then
+                        humanoid:EquipTool(punch)
+                        task.wait(0.1)
+                    end
+                end
+
+                if punch and char:FindFirstChild("Punch") then
+                    punch:Activate()
+                end
+                task.wait(0.03) -- 33 golpes/seg
+            end
+        end)
+    end
+end)
+
+
 
 local Killer = window:AddTab("Kill")
 
