@@ -469,10 +469,60 @@ AutoSaco:AddSwitch("Saco(0 fuerza)", function(state)
     end
 end)
 
-DupeTab:AddLabel("el saco de 5k falla un poco")
+AutoSaco:AddLabel("el saco de 5k falla un poco")
 
-DupeTab:AddLabel("para ponerte en algún saco no en la lista ponte en el activa el lock position y el auto punch de abajo")
+AutoSaco:AddLabel("para ponerte en algún saco no en la lista ponte en el, activa el lock position y el auto punch de abajo")
 
+AutoSaco:AddSwitch("Lock Position", function(Value) 
+    if Value then 
+        local currentPos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame 
+        getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function() 
+            if game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then 
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = currentPos 
+            end 
+        end) 
+    else 
+        if getgenv().posLock then 
+            getgenv().posLock:Disconnect() 
+            getgenv().posLock = nil 
+        end 
+    end 
+end) 
+
+local autoPunchultrafastSafe = false
+
+AutoSaco:AddSwitch("Auto Punch", function(state)
+    autoPunchSafe = state
+
+    task.spawn(function()
+        while autoPunchSafe do
+            local char = LocalPlayer.Character
+            if not char then task.wait() continue end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
+                or char:FindFirstChild("Punch")
+
+            if punch and humanoid then
+                -- 🔥 Forzar equipar bien (mejor que parent)
+                if punch.Parent ~= char then
+                    humanoid:EquipTool(punch)
+                    task.wait(0.1)
+                end
+
+                -- 🔥 Evitar que se desequipe
+                if not char:FindFirstChild("Punch") then
+                    humanoid:EquipTool(punch)
+                end
+
+                -- 🔥 Golpear (forma más confiable)
+                punch:Activate()
+            end
+
+            task.wait(0)
+        end
+    end)
+end)
 
 
 local Killer = window:AddTab("Kill")
