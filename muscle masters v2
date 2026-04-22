@@ -471,7 +471,7 @@ end)
 
 AutoSaco:AddLabel("el saco de 5k falla un poco")
 
-AutoSaco:AddLabel("para ponerte en algún saco no en la lista ponte en el, activa el lock position y el auto punch de abajo")
+AutoSaco:AddLabel("para ponerte en algún saco no en la lista ponte en el, activa el lock position y el punch de abajo")
 
 AutoSaco:AddSwitch("Lock Position", function(Value) 
     if Value then 
@@ -489,39 +489,46 @@ AutoSaco:AddSwitch("Lock Position", function(Value)
     end 
 end) 
 
-local autoPunchultrafastSafe = false
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
-AutoSaco:AddSwitch("Auto Punch", function(state)
-    autoPunchSafe = state
+local punchEnabled = false
+local punchThread = nil
 
-    task.spawn(function()
-        while autoPunchSafe do
-            local char = LocalPlayer.Character
-            if not char then task.wait() continue end
+AutoSaco:AddSwitch("Punch", function(state)
+    punchEnabled = state
+    
+    if punchThread then
+        task.cancel(punchThread)
+        punchThread = nil
+    end
 
-            local humanoid = char:FindFirstChildOfClass("Humanoid")
-            local punch = LocalPlayer.Backpack:FindFirstChild("Punch") 
-                or char:FindFirstChild("Punch")
+    if state then
+        punchThread = task.spawn(function()
+            while punchEnabled do
+                local char = player.Character
+                if not char then task.wait(0.1) continue end
+                
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if not humanoid then task.wait(0.1) continue end
 
-            if punch and humanoid then
-                -- 🔥 Forzar equipar bien (mejor que parent)
-                if punch.Parent ~= char then
-                    humanoid:EquipTool(punch)
-                    task.wait(0.1)
+                -- Solo spamear Punch sin TP
+                local punch = char:FindFirstChild("Punch")
+                if not punch then
+                    punch = player.Backpack:FindFirstChild("Punch")
+                    if punch then
+                        humanoid:EquipTool(punch)
+                        task.wait(0.1)
+                    end
                 end
 
-                -- 🔥 Evitar que se desequipe
-                if not char:FindFirstChild("Punch") then
-                    humanoid:EquipTool(punch)
+                if punch and char:FindFirstChild("Punch") then
+                    punch:Activate()
                 end
-
-                -- 🔥 Golpear (forma más confiable)
-                punch:Activate()
+                task.wait(0.01) -- 100 golpes/seg
             end
-
-            task.wait(0)
-        end
-    end)
+        end)
+    end
 end)
 
 
