@@ -174,68 +174,53 @@ AutoFarm:AddSwitch("Auto Glitch", function(state)
     end
 end)
 
--- =================Auto GlichtV2 =================
-local function getClosestPrompt(targetPos)
-    local closest = nil
-    local minDist = math.huge
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("ProximityPrompt") then
-            local parent = v.Parent
-            if parent and parent:IsA("BasePart") then
-                local dist = (parent.Position - targetPos).Magnitude
-                if dist < minDist then
-                    minDist = dist
-                    closest = v
-                end
-            end
-        end
+local PUNCH_POS = Vector3.new(2743.1, 10.3, 296.2) -- farmea más abajo mirando atrás
+local sacoFarmEnabled = false
+local sacoThread = nil
+
+AutoFarm:AddSwitch("saco(20T)", function(state)
+    sacoFarmEnabled = state
+    
+    if sacoThread then
+        task.cancel(sacoThread)
+        sacoThread = nil
     end
 
-    return closest
-end
-
-local function startAutoGlitch600()
-    local targetPos = Vector3.new(-5959.97, 6.28, -76.56)
-    local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
-
-    local prompt = getClosestPrompt(targetPos)
-
-    -- 🔥 Hilo 1: pegarte a la máquina
-    table.insert(glitchThreads, task.spawn(function()
-        while AutoGlitchEnabled do
-            local char = player.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local hrp = char.HumanoidRootPart
-
-                -- TP exacto
-                hrp.CFrame = CFrame.new(targetPos)
-
-                -- activar prompt real
-                if prompt and prompt.Enabled then
-                    fireproximityprompt(prompt)
-                end
-            end
-            task.wait(0.1)
-        end
-    end))
-
-    -- ⚡ Hilo 2: farm rápido
-    table.insert(glitchThreads, task.spawn(function()
-        while AutoGlitchEnabled do
-            remote:FireServer()
-            task.wait(0)
-        end
-    end))
-end
-
--- SWITCH
-AutoFarm:AddSwitch("Fast Glicht", function(state)
-    AutoGlitchEnabled = state
-    stopThreads(glitchThreads)
-
     if state then
-        startAutoGlitch600()
+        sacoThread = task.spawn(function()
+            while sacoFarmEnabled do
+                local char = player.Character
+                if not char then task.wait(0.5) continue end
+                
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if not hrp or not humanoid then task.wait(0.5) continue end
+
+                -- TP a la posición baja mirando hacia atrás
+                if (hrp.Position - PUNCH_POS).Magnitude > 5 then
+                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, math.pi, 0)
+                    task.wait(0.2)
+                end
+
+                -- Equipar y spamear Punch rapidísimo
+                local punch = char:FindFirstChild("Punch")
+                if not punch then
+                    punch = player.Backpack:FindFirstChild("Punch")
+                    if punch then
+                        humanoid:EquipTool(punch)
+                        task.wait(0.1)
+                    end
+                end
+
+                if punch and char:FindFirstChild("Punch") then
+                    punch:Activate()
+                end
+                task.wait(0.03) -- 33 golpes/seg
+            end
+        end)
     end
 end)
 
