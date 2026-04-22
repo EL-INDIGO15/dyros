@@ -531,6 +531,143 @@ AutoSaco:AddSwitch("Punch", function(state)
     end
 end)
 
+-- 📌 LIBRERIA AUTO SACOS
+local folder = AutoSaco:AddFolder("Saco Farming")
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+-- Guardar última posición de cada saco
+local bagPositions = {
+    ["Emperor Bag"] = Vector3.new(2743.1, 10.3, 296.2), -- 20T
+    ["Master Bag"] = Vector3.new(5497.8, 6.1, 230.8), -- 1B
+    ["Elite Bag"] = Vector3.new(0, 0, 0), -- 1M - falta coord
+    ["Rock Bag"] = Vector3.new(-101.1, 10.4, 4490.0), -- 5K
+    ["Rookie Bag"] = Vector3.new(0, 0, 0), -- 500 - falta coord
+    ["Noob Bag"] = Vector3.new(130.5, 1.4, 828.1) -- 0
+}
+
+local activeThreads = {}
+local targetBags = {}
+
+local function stopFarm(bagName)
+    if activeThreads[bagName] then
+        activeThreads[bagName]:Disconnect()
+        activeThreads[bagName] = nil
+    end
+    if targetBags[bagName] and targetBags[bagName]:IsA("BasePart") and targetBags[bagName].Parent then
+        bagPositions[bagName] = targetBags[bagName].Position
+        targetBags[bagName].Anchored = true
+    end
+    targetBags[bagName] = nil
+end
+
+local function gettool()
+    for i, v in pairs(player.Backpack:GetChildren()) do
+        if v.Name == "Punch" and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid:EquipTool(v)
+        end
+    end
+    player.muscleEvent:FireServer("punch", "leftHand")
+    player.muscleEvent:FireServer("punch", "rightHand")
+end
+
+local function findBagByPos(bagName, searchPos)
+    local closest = nil
+    local minDist = 100
+
+    local bagsFolder = workspace:FindFirstChild("punching bags")
+    if not bagsFolder then return nil end
+
+    for _, v in pairs(bagsFolder:GetChildren()) do
+        if v.Name == "PunchingBag" and v:IsA("BasePart") then
+            local dist = (v.Position - searchPos).Magnitude
+            if dist < minDist then
+                minDist = dist
+                closest = v
+            end
+        end
+    end
+    return closest
+end
+
+local function farmBag(bagName, bool)
+    if not bool then
+        stopFarm(bagName)
+        return
+    end
+
+    stopFarm(bagName) -- limpiar antes
+
+    local searchPos = bagPositions[bagName]
+    if searchPos == Vector3.new(0, 0, 0) then
+        warn(bagName.. " - Coordenadas no configuradas")
+        return
+    end
+
+    targetBags[bagName] = findBagByPos(bagName, searchPos)
+    if not targetBags[bagName] then
+        warn(bagName.. " no encontrado cerca de ".. tostring(searchPos))
+        return
+    end
+
+    targetBags[bagName].Anchored = false
+    targetBags[bagName].CanCollide = false
+    targetBags[bagName].Transparency = 1
+
+    activeThreads[bagName] = RunService.Heartbeat:Connect(function()
+        if not targetBags[bagName] or not targetBags[bagName].Parent then
+            stopFarm(bagName)
+            return
+        end
+
+        local char = player.Character
+        if not char then return end
+
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local leftHand = char:FindFirstChild("LeftHand")
+        local rightHand = char:FindFirstChild("RightHand")
+        if not hrp or not leftHand or not rightHand then return end
+
+        targetBags[bagName].CFrame = hrp.CFrame * CFrame.new(0, 0, -3)
+        targetBags[bagName].Velocity = Vector3.zero
+        targetBags[bagName].RotVelocity = Vector3.zero
+
+        firetouchinterest(targetBags[bagName], rightHand, 0)
+        firetouchinterest(targetBags[bagName], rightHand, 1)
+        firetouchinterest(targetBags[bagName], leftHand, 0)
+        firetouchinterest(targetBags[bagName], leftHand, 1)
+
+        gettool()
+    end)
+end
+
+-- ================= SWITCHES =================
+folder:AddSwitch("Emperor Bag 20T", function(bool)
+    farmBag("Emperor Bag", bool)
+end)
+
+folder:AddSwitch("Master Bag 1B", function(bool)
+    farmBag("Master Bag", bool)
+end)
+
+folder:AddSwitch("Elite Bag 1M", function(bool)
+    farmBag("Elite Bag", bool)
+end)
+
+folder:AddSwitch("Rock Bag 5K", function(bool)
+    farmBag("Rock Bag", bool)
+end)
+
+folder:AddSwitch("Rookie Bag 500", function(bool)
+    farmBag("Rookie Bag", bool)
+end)
+
+folder:AddSwitch("Noob Bag 0", function(bool)
+    farmBag("Noob Bag", bool)
+end)
+
 
 local Killer = window:AddTab("Kill")
 
