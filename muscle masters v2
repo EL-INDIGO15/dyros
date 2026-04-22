@@ -469,6 +469,10 @@ AutoSaco:AddSwitch("Saco(0 fuerza)", function(state)
     end
 end)
 
+DupeTab:AddLabel("el saco de 5k falla un poco")
+
+DupeTab:AddLabel("para ponerte en algún saco no en la lista ponte en el activa el lock position y el auto punch de abajo")
+
 
 
 local Killer = window:AddTab("Kill")
