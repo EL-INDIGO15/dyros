@@ -306,26 +306,22 @@ AutoSaco:AddSwitch("Saco(1B)", function(state)
                 local humanoid = char:FindFirstChildOfClass("Humanoid")
                 if not hrp or not humanoid then task.wait(0.5) continue end
 
-                -- Volteado hacia ATRÁS crack
+                -- Media vuelta a la DERECHA
                 if (hrp.Position - PUNCH_POS).Magnitude > 5 then
-                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, math.pi, 0)
+                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, -math.pi/2, 0)
                     task.wait(0.2)
                 end
 
-                -- Equipar y spamear Punch
                 local punch = char:FindFirstChild("Punch")
                 if not punch then
                     punch = player.Backpack:FindFirstChild("Punch")
-                    if punch then
-                        humanoid:EquipTool(punch)
-                        task.wait(0.1)
-                    end
+                    if punch then humanoid:EquipTool(punch) task.wait(0.1) end
                 end
 
                 if punch and char:FindFirstChild("Punch") then
                     punch:Activate()
                 end
-                task.wait(0.03) -- 33 golpes/seg
+                task.wait(0.01) -- 100 golpes/seg MÁS RÁPIDO
             end
         end)
     end
@@ -384,7 +380,7 @@ end)
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
-local PUNCH_POS = Vector3.new(-101.1, 10.4, 4490.0) -- coords 5k mirando atrás
+local PUNCH_POS = Vector3.new(-101.1, 10.4, 4490.0) -- coords 5K
 local saco5kEnabled = false
 local saco5kThread = nil
 
@@ -406,26 +402,22 @@ AutoSaco:AddSwitch("Saco(5k)", function(state)
                 local humanoid = char:FindFirstChildOfClass("Humanoid")
                 if not hrp or not humanoid then task.wait(0.5) continue end
 
-                -- TP a la posición volteado hacia atrás
+                -- VUELTA HACIA ATRÁS
                 if (hrp.Position - PUNCH_POS).Magnitude > 5 then
                     hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, math.pi, 0)
                     task.wait(0.2)
                 end
 
-                -- Equipar y spamear Punch
                 local punch = char:FindFirstChild("Punch")
                 if not punch then
                     punch = player.Backpack:FindFirstChild("Punch")
-                    if punch then
-                        humanoid:EquipTool(punch)
-                        task.wait(0.1)
-                    end
+                    if punch then humanoid:EquipTool(punch) task.wait(0.1) end
                 end
 
                 if punch and char:FindFirstChild("Punch") then
                     punch:Activate()
                 end
-                task.wait(0.03) -- 33 golpes/seg
+                task.wait(0.01) -- 100 golpes/seg RÁPIDO
             end
         end)
     end
@@ -456,26 +448,22 @@ AutoSaco:AddSwitch("Saco(0 fuerza)", function(state)
                 local humanoid = char:FindFirstChildOfClass("Humanoid")
                 if not hrp or not humanoid then task.wait(0.5) continue end
 
-                -- Volteado hacia ATRÁS
+                -- Media vuelta a la DERECHA
                 if (hrp.Position - PUNCH_POS).Magnitude > 5 then
-                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, math.pi, 0)
+                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, -math.pi/2, 0)
                     task.wait(0.2)
                 end
 
-                -- Equipar y spamear Punch
                 local punch = char:FindFirstChild("Punch")
                 if not punch then
                     punch = player.Backpack:FindFirstChild("Punch")
-                    if punch then
-                        humanoid:EquipTool(punch)
-                        task.wait(0.1)
-                    end
+                    if punch then humanoid:EquipTool(punch) task.wait(0.1) end
                 end
 
                 if punch and char:FindFirstChild("Punch") then
                     punch:Activate()
                 end
-                task.wait(0.03) -- 33 golpes/seg
+                task.wait(0.01) -- 100 golpes/seg MÁS RÁPIDO
             end
         end)
     end
