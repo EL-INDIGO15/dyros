@@ -294,6 +294,310 @@ AutoFarm:AddSwitch("Anti Lag", function()
 end) 
 
 
+local AutoSaco = window:AddTab("Sacos") 
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local PUNCH_POS = Vector3.new(2743.1, 10.3, 296.2) -- farmea más abajo mirando atrás
+local sacoFarmEnabled = false
+local sacoThread = nil
+
+AutoSaco:AddSwitch("saco(20T)", function(state)
+    sacoFarmEnabled = state
+
+    if sacoThread then
+        task.cancel(sacoThread)
+        sacoThread = nil
+    end
+
+    if state then
+        sacoThread = task.spawn(function()
+            while sacoFarmEnabled do
+                local char = player.Character
+                if not char then task.wait(0.5) continue end
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if not hrp or not humanoid then task.wait(0.5) continue end
+
+                -- TP a la posición baja mirando hacia atrás
+                if (hrp.Position - PUNCH_POS).Magnitude > 5 then
+                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, math.pi, 0)
+                    task.wait(0.2)
+                end
+
+                -- Equipar y spamear Punch rapidísimo
+                local punch = char:FindFirstChild("Punch")
+                if not punch then
+                    punch = player.Backpack:FindFirstChild("Punch")
+                    if punch then
+                        humanoid:EquipTool(punch)
+                        task.wait(0.1)
+                    end
+                end
+
+                if punch and char:FindFirstChild("Punch") then
+                    punch:Activate()
+                end
+                task.wait(0.03) -- 33 golpes/seg
+            end
+        end)
+    end
+end)
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local PUNCH_POS = Vector3.new(5497.8, 6.1, 230.8) -- coords 1B
+local saco1bEnabled = false
+local saco1bThread = nil
+
+AutoSaco:AddSwitch("Saco(1B)", function(state)
+    saco1bEnabled = state
+
+    if saco1bThread then
+        task.cancel(saco1bThread)
+        saco1bThread = nil
+    end
+
+    if state then
+        saco1bThread = task.spawn(function()
+            while saco1bEnabled do
+                local char = player.Character
+                if not char then task.wait(0.5) continue end
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if not hrp or not humanoid then task.wait(0.5) continue end
+
+                -- Media vuelta a la DERECHA
+                if (hrp.Position - PUNCH_POS).Magnitude > 5 then
+                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, -math.pi/2, 0)
+                    task.wait(0.2)
+                end
+
+                local punch = char:FindFirstChild("Punch")
+                if not punch then
+                    punch = player.Backpack:FindFirstChild("Punch")
+                    if punch then humanoid:EquipTool(punch) task.wait(0.1) end
+                end
+
+                if punch and char:FindFirstChild("Punch") then
+                    punch:Activate()
+                end
+                task.wait(0.01) -- 100 golpes/seg MÁS RÁPIDO
+            end
+        end)
+    end
+end)
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local PUNCH_POS = Vector3.new(-2885.2, 10.4, 309.9) -- coords -2885
+local saco2885Enabled = false
+local saco2885Thread = nil
+
+AutoSaco:AddSwitch("Saco(1M)", function(state)
+    saco2885Enabled = state
+
+    if saco2885Thread then
+        task.cancel(saco2885Thread)
+        saco2885Thread = nil
+    end
+
+    if state then
+        saco2885Thread = task.spawn(function()
+            while saco2885Enabled do
+                local char = player.Character
+                if not char then task.wait(0.5) continue end
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if not hrp or not humanoid then task.wait(0.5) continue end
+
+                -- Volteado hacia atrás
+                if (hrp.Position - PUNCH_POS).Magnitude > 5 then
+                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, math.pi, 0)
+                    task.wait(0.2)
+                end
+
+                -- Equipar y spamear Punch
+                local punch = char:FindFirstChild("Punch")
+                if not punch then
+                    punch = player.Backpack:FindFirstChild("Punch")
+                    if punch then
+                        humanoid:EquipTool(punch)
+                        task.wait(0.1)
+                    end
+                end
+
+                if punch and char:FindFirstChild("Punch") then
+                    punch:Activate()
+                end
+                task.wait(0.03) -- 33 golpes/seg
+            end
+        end)
+    end
+end)
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local PUNCH_POS = Vector3.new(-101.1, 10.4, 4490.0) -- coords 5K
+local saco5kEnabled = false
+local saco5kThread = nil
+
+AutoSaco:AddSwitch("Saco(5k)", function(state)
+    saco5kEnabled = state
+
+    if saco5kThread then
+        task.cancel(saco5kThread)
+        saco5kThread = nil
+    end
+
+    if state then
+        saco5kThread = task.spawn(function()
+            while saco5kEnabled do
+                local char = player.Character
+                if not char then task.wait(0.5) continue end
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if not hrp or not humanoid then task.wait(0.5) continue end
+
+                -- VUELTA HACIA ATRÁS
+                if (hrp.Position - PUNCH_POS).Magnitude > 5 then
+                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, math.pi, 0)
+                    task.wait(0.2)
+                end
+
+                local punch = char:FindFirstChild("Punch")
+                if not punch then
+                    punch = player.Backpack:FindFirstChild("Punch")
+                    if punch then humanoid:EquipTool(punch) task.wait(0.1) end
+                end
+
+                if punch and char:FindFirstChild("Punch") then
+                    punch:Activate()
+                end
+                task.wait(0.01) -- 100 golpes/seg RÁPIDO
+            end
+        end)
+    end
+end)
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local PUNCH_POS = Vector3.new(130.5, 1.4, 828.1) -- coords 0 fuerza
+local saco0Enabled = false
+local saco0Thread = nil
+
+AutoSaco:AddSwitch("Saco(0 fuerza)", function(state)
+    saco0Enabled = state
+
+    if saco0Thread then
+        task.cancel(saco0Thread)
+        saco0Thread = nil
+    end
+
+    if state then
+        saco0Thread = task.spawn(function()
+            while saco0Enabled do
+                local char = player.Character
+                if not char then task.wait(0.5) continue end
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if not hrp or not humanoid then task.wait(0.5) continue end
+
+                -- Media vuelta a la DERECHA
+                if (hrp.Position - PUNCH_POS).Magnitude > 5 then
+                    hrp.CFrame = CFrame.new(PUNCH_POS + Vector3.new(0, 3, 0)) * CFrame.Angles(0, -math.pi/2, 0)
+                    task.wait(0.2)
+                end
+
+                local punch = char:FindFirstChild("Punch")
+                if not punch then
+                    punch = player.Backpack:FindFirstChild("Punch")
+                    if punch then humanoid:EquipTool(punch) task.wait(0.1) end
+                end
+
+                if punch and char:FindFirstChild("Punch") then
+                    punch:Activate()
+                end
+                task.wait(0.01) -- 100 golpes/seg MÁS RÁPIDO
+            end
+        end)
+    end
+end)
+
+AutoSaco:AddLabel("el saco de 5k falla un poco")
+
+AutoSaco:AddLabel("para ponerte en algún saco no en la lista ponte en el, activa el lock position y el punch de abajo")
+
+AutoSaco:AddSwitch("Lock Position", function(Value) 
+    if Value then 
+        local currentPos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame 
+        getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function() 
+            if game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then 
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = currentPos 
+            end 
+        end) 
+    else 
+        if getgenv().posLock then 
+            getgenv().posLock:Disconnect() 
+            getgenv().posLock = nil 
+        end 
+    end 
+end) 
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local punchEnabled = false
+local punchThread = nil
+
+AutoSaco:AddSwitch("Punch", function(state)
+    punchEnabled = state
+
+    if punchThread then
+        task.cancel(punchThread)
+        punchThread = nil
+    end
+
+    if state then
+        punchThread = task.spawn(function()
+            while punchEnabled do
+                local char = player.Character
+                if not char then task.wait(0.1) continue end
+
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if not humanoid then task.wait(0.1) continue end
+
+                -- Solo spamear Punch sin TP
+                local punch = char:FindFirstChild("Punch")
+                if not punch then
+                    punch = player.Backpack:FindFirstChild("Punch")
+                    if punch then
+                        humanoid:EquipTool(punch)
+                        task.wait(0.1)
+                    end
+                end
+
+                if punch and char:FindFirstChild("Punch") then
+                    punch:Activate()
+                end
+                task.wait(0.01) -- 100 golpes/seg
+            end
+        end)
+    end
+end)
+
+
+
 local Killer = window:AddTab("Kill")
 
 
