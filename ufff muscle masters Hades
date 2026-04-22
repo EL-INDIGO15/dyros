@@ -130,125 +130,26 @@ AutoFarm:AddSwitch("Auto Farm", function(state)
     end
 end)
 
--- ================= AUTO GLITCH =================
-local function startAutoGlitch()
-    local rebirths = player.leaderstats.Rebirths.Value
-
-    local positions = (rebirths <= 10) and {
-        Vector3.new(-41.56, 3.47, 44.41),
-        Vector3.new(-24.11, 3.47, 44.41)
-    } or {
-        Vector3.new(2712.48, 3.71, 299.78),
-        Vector3.new(2691.11, 3.71, 299.78),
-        Vector3.new(2613.02, 4.78, 289.73),
-        Vector3.new(2584.55, 4.78, 289.73)
-    }
-
-    local folder = workspace:WaitForChild("MachinesFolder")
-    local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
-
-    local prompts = getPrompts(folder, positions)
-
-    table.insert(glitchThreads, task.spawn(function()
-        while AutoGlitchEnabled do
-            local p = prompts[rng2:NextInteger(1, #prompts)]
-            if p and p.Enabled then fireproximityprompt(p) end
-            task.wait(0.5)
-        end
-    end))
-
-    table.insert(glitchThreads, task.spawn(function()
-        while AutoGlitchEnabled do
-            remote:FireServer()
-            task.wait(0)
-        end
-    end))
-end
-
-AutoFarm:AddSwitch("Auto Glitch", function(state)
-    AutoGlitchEnabled = state
-    stopThreads(glitchThreads)
-
-    if state then
-        startAutoGlitch()
+-- Botón para desbloquear el Gamepass AutoLift
+AutoFarm:AddSwitch("VIP free", function()
+    local gamepassFolder = game:GetService("ReplicatedStorage").gamepassIds
+    local player = game:GetService("Players").LocalPlayer
+    for _, gamepass in pairs(gamepassFolder:GetChildren()) do
+        local value = Instance.new("IntValue")
+        value.Name = gamepass.Name
+        value.Value = gamepass.Value
+        value.Parent = player.ownedGamepasses
     end
 end)
 
--- =================Auto GlichtV2 =================
-local function getClosestPrompt(targetPos)
-    local closest = nil
-    local minDist = math.huge
-
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("ProximityPrompt") then
-            local parent = v.Parent
-            if parent and parent:IsA("BasePart") then
-                local dist = (parent.Position - targetPos).Magnitude
-                if dist < minDist then
-                    minDist = dist
-                    closest = v
-                end
-            end
-        end
-    end
-
-    return closest
-end
-
-local function startAutoGlitch600()
-    local targetPos = Vector3.new(-5959.97, 6.28, -76.56)
-    local remote = ReplicatedStorage.RemotesEvent.MachineActiveEvent
-
-    local prompt = getClosestPrompt(targetPos)
-
-    -- 🔥 Hilo 1: pegarte a la máquina
-    table.insert(glitchThreads, task.spawn(function()
-        while AutoGlitchEnabled do
-            local char = player.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local hrp = char.HumanoidRootPart
-
-                -- TP exacto
-                hrp.CFrame = CFrame.new(targetPos)
-
-                -- activar prompt real
-                if prompt and prompt.Enabled then
-                    fireproximityprompt(prompt)
-                end
-            end
-            task.wait(0.1)
-        end
-    end))
-
-    -- ⚡ Hilo 2: farm rápido
-    table.insert(glitchThreads, task.spawn(function()
-        while AutoGlitchEnabled do
-            remote:FireServer()
-            task.wait(0)
-        end
-    end))
-end
-
--- SWITCH
-AutoFarm:AddSwitch("Fast Glicht", function(state)
-    AutoGlitchEnabled = state
-    stopThreads(glitchThreads)
-
-    if state then
-        startAutoGlitch600()
-    end
-end)
-
--- ================= AUTO REBIRTH =================
-AutoFarm:AddSwitch("Auto Rebirth", function(state)
-    AutoRebirthEnabled = state
-end)
-
-task.spawn(function()
-    while true do
-        if AutoRebirthEnabled then
-            ReplicatedStorage.RemotesEvent.RebirthEvent:FireServer()
-        end
-        task.wait(0)
-    end
-end)
+-- Botón para desbloquear el Gamepass AutoLift 
+AutoFarm:AddSwitch("Vip", function() 
+    local gamepassFolder = game:GetService("ReplicatedStorage").gamepassIds 
+    local player = game:GetService("Players").LocalPlayer 
+    for _, gamepass in pairs(gamepassFolder:GetChildren()) do 
+        local value = Instance.new("IntValue") 
+        value.Name = gamepass.Name 
+        value.Value = gamepass.Value 
+        value.Parent = player.ownedGamepasses 
+    end 
+end) 
