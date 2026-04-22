@@ -538,13 +538,13 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- Guardar última posición de cada saco
+-- Coordenadas exactas de cada saco
 local bagPositions = {
     ["Emperor Bag"] = Vector3.new(2743.1, 10.3, 296.2), -- 20T
     ["Master Bag"] = Vector3.new(5497.8, 6.1, 230.8), -- 1B
-    ["Elite Bag"] = Vector3.new(0, 0, 0), -- 1M - falta coord
+    ["Elite Bag"] = Vector3.new(-2908.8, 12.9, 209.4), -- 1M
     ["Rock Bag"] = Vector3.new(-101.1, 10.4, 4490.0), -- 5K
-    ["Rookie Bag"] = Vector3.new(0, 0, 0), -- 500 - falta coord
+    ["Rookie Bag"] = Vector3.new(-224.4, 12.8, -166.2), -- 500
     ["Noob Bag"] = Vector3.new(130.5, 1.4, 828.1) -- 0
 }
 
@@ -598,14 +598,9 @@ local function farmBag(bagName, bool)
         return
     end
 
-    stopFarm(bagName) -- limpiar antes
+    stopFarm(bagName)
 
     local searchPos = bagPositions[bagName]
-    if searchPos == Vector3.new(0, 0, 0) then
-        warn(bagName.. " - Coordenadas no configuradas")
-        return
-    end
-
     targetBags[bagName] = findBagByPos(bagName, searchPos)
     if not targetBags[bagName] then
         warn(bagName.. " no encontrado cerca de ".. tostring(searchPos))
