@@ -799,3 +799,403 @@ end)
 local myLabel = infoTab:AddLabel("Muscle Masters")
 myLabel.Font = Enum.Font.LuckiestGuy myLabel.TextSize = 22
 myLabel.TextXAlignment = Enum.TextXAlignment.Center myLabel.Size = UDim2.new(1,0,0,25)
+local devLabel = infoTab:AddLabel("PRIME JELO")
+devLabel.Font = Enum.Font.LuckiestGuy devLabel.TextSize = 20
+devLabel.TextXAlignment = Enum.TextXAlignment.Center devLabel.Size = UDim2.new(1,0,0,25)
+task.spawn(function()
+    local t = 0
+    while task.wait(0.05) do
+        t = t + 0.03
+        local r = math.floor(127+math.sin(t)*127)
+        local g = math.floor(127+math.sin(t+2)*127)
+        local b = math.floor(127+math.sin(t+4)*127)
+        pcall(function() myLabel.TextColor3 = Color3.fromRGB(r,g,b) devLabel.TextColor3 = Color3.fromRGB(r,g,b) end)
+    end
+end)
+local closeFriendsLabel = infoTab:AddLabel("Close Friends:")
+closeFriendsLabel.Font = Enum.Font.LuckiestGuy closeFriendsLabel.TextSize = 18
+task.spawn(function()
+    local colors = {
+        Color3.fromRGB(255,0,0), Color3.fromRGB(255,100,0), Color3.fromRGB(255,255,0),
+        Color3.fromRGB(0,255,0), Color3.fromRGB(0,150,255), Color3.fromRGB(150,0,255),
+        Color3.fromRGB(255,0,150),
+    }
+    local i = 1
+    while task.wait(0.3) do
+        pcall(function() closeFriendsLabel.TextColor3 = colors[i] i = (i%#colors)+1 end)
+    end
+end)
+local f2Label = infoTab:AddLabel("K13_Shi-OneEyedKing")
+f2Label.Font = Enum.Font.Bodoni f2Label.TextSize = 18
+task.spawn(function()
+    local hue = 0
+    while task.wait(0.05) do
+        hue = (hue+0.005)%1
+        pcall(function() f2Label.TextColor3 = Color3.fromHSV(hue,1,1) end)
+    end
+end)
+local headerLabel = infoTab:AddLabel("Clans That Always On Top:")
+headerLabel.Font = Enum.Font.Oswald headerLabel.TextSize = 20
+headerLabel.TextXAlignment = Enum.TextXAlignment.Center headerLabel.Size = UDim2.new(1,0,0,20)
+headerLabel.TextColor3 = Color3.fromRGB(180,180,180) headerLabel.TextTransparency = 0.3
+task.spawn(function()
+    while task.wait(0.05) do
+        pcall(function() headerLabel.TextColor3 = Color3.fromRGB(220,0,0) headerLabel.TextTransparency = 0 end)
+        task.wait(0.05)
+        pcall(function() headerLabel.TextColor3 = Color3.fromRGB(120,0,0) headerLabel.TextTransparency = 0.5 end)
+    end
+end)
+addSeparator(infoTab)
+local clan1Label = infoTab:AddLabel("SNM")
+clan1Label.Font = Enum.Font.Bodoni clan1Label.TextSize = 20
+clan1Label.TextXAlignment = Enum.TextXAlignment.Center clan1Label.Size = UDim2.new(1,0,0,28)
+addSeparator(infoTab)
+local clan2Label = infoTab:AddLabel("K13")
+clan2Label.Font = Enum.Font.Bodoni clan2Label.TextSize = 20
+clan2Label.TextXAlignment = Enum.TextXAlignment.Center clan2Label.Size = UDim2.new(1,0,0,28)
+addSeparator(infoTab)
+task.spawn(function()
+    local t = 0
+    local flickerPool = {}
+    for i = 1,200 do flickerPool[i] = math.random() end
+    local fi = 1
+    local stroke1 = Instance.new("UIStroke") stroke1.Thickness = 1.5 stroke1.Parent = clan1Label
+    local stroke2 = Instance.new("UIStroke") stroke2.Thickness = 1.5 stroke2.Parent = clan2Label
+    while task.wait(0.025) do
+        t = t + 0.055 fi = (fi%200)+1
+        local pulse1 = math.abs(math.sin(t*4.5))
+        local r1 = math.floor(160+pulse1*95)
+        local pulse2 = math.abs(math.sin(t*3.2+1.2))
+        local r2 = math.floor(90+pulse2*100)
+        local b2 = math.floor(140+pulse2*100)
+        local heartbeat = math.max(math.abs(math.sin(t*5.8)), math.abs(math.sin(t*5.8+0.25)))
+        local size1 = math.floor(17+heartbeat*5)
+        local size2 = math.floor(18+heartbeat*5)
+        local f1v = flickerPool[fi] > 0.88 and math.random(3,7)*0.1 or 0
+        local f2v = flickerPool[(fi+67)%200+1] > 0.9 and math.random(3,6)*0.1 or 0
+        local shake1 = math.sin(t*22)*1.8
+        local shake2 = math.sin(t*19+1)*1.8
+        pcall(function()
+            clan1Label.TextColor3 = Color3.fromRGB(r1, math.floor(pulse1*15), math.floor(pulse1*8))
+            clan2Label.TextColor3 = Color3.fromRGB(r2, math.floor(pulse2*8), b2)
+            stroke1.Color = Color3.fromRGB(r1,0,0) stroke1.Transparency = 1-pulse1*0.7
+            stroke2.Color = Color3.fromRGB(r2,0,b2) stroke2.Transparency = 1-pulse2*0.7
+            clan1Label.TextSize = size1 clan2Label.TextSize = size2
+            clan1Label.TextTransparency = f1v clan2Label.TextTransparency = f2v
+            clan1Label.Position = UDim2.new(0,shake1,0,0) clan2Label.Position = UDim2.new(0,-shake2,0,0)
+        end)
+    end
+end)
+local devLabel2 = infoTab:AddLabel("Developer: Prime Jelo")
+devLabel2.Font = Enum.Font.PermanentMarker devLabel2.TextSize = 18
+local devLabel3 = infoTab:AddLabel("Make Your Own Risk")
+devLabel3.Font = Enum.Font.PermanentMarker devLabel3.TextSize = 18
+devLabel3.TextColor3 = Color3.fromRGB(255,255,255)
+addSeparator(infoTab)
+local taglineLabel = infoTab:AddLabel('"Show No Mercy"')
+taglineLabel.Font = Enum.Font.PermanentMarker taglineLabel.TextSize = 16
+taglineLabel.TextXAlignment = Enum.TextXAlignment.Center taglineLabel.Size = UDim2.new(1,0,0,22)
+task.spawn(function()
+    local t = 0
+    while task.wait(0.05) do
+        t = t + 0.02
+        local r = math.floor(180+math.sin(t)*75)
+        local g = math.floor(math.sin(t*0.7)*50)
+        local b = math.floor(200+math.sin(t*1.3)*55)
+        pcall(function()
+            taglineLabel.TextColor3 = Color3.fromRGB(math.clamp(r,0,255), math.clamp(math.abs(g),0,255), math.clamp(b,0,255))
+        end)
+    end
+end)
+task.spawn(function()
+    local quotes = {
+        '"Show No Mercy"','"Built Different"','"K13 On Top Forever"',
+        '"No Competitions, Just Script Developer"','"SNM Till The End"','"Fear The Script"',
+    }
+    local qi = 1
+    while true do
+        task.wait(5) qi = (qi%#quotes)+1
+        pcall(function() taglineLabel.Text = quotes[qi] end)
+    end
+end)
+addSeparator(infoTab)
+
+-- BUTTON TEXT COLOR FIX
+task.spawn(function()
+    task.wait(3)
+    local imgui = game.CoreGui:FindFirstChild("imgui")
+    if not imgui then return end
+    while true do
+        task.wait(0.1)
+        pcall(function()
+            for _, v in ipairs(imgui:GetDescendants()) do
+                if v:IsA("TextButton") then
+                    local txt = v.Text or ""
+                    if string.find(txt,"📦") or string.find(txt,"HIDE") or string.find(txt,"SHOW")
+                    or string.find(txt,"ISLANDS") or string.find(txt,"TELEPORT TO CHEST")
+                    or string.find(txt,"Main") or string.find(txt,"Stone Realm")
+                    or string.find(txt,"Frost") or string.find(txt,"Muscle Emperor")
+                    or string.find(txt,"Folder Island") or string.find(txt,"Ocean")
+                    or string.find(txt,"Big Chest") or string.find(txt,"Legend Chest")
+                    or string.find(txt,"Stone Chest") or string.find(txt,"Frost Chest")
+                    or string.find(txt,"Master Chest") or string.find(txt,"Emperor Chest")
+                    or string.find(txt,"Ocean Chest") then
+                        v.TextColor3 = Color3.fromRGB(255,255,255)
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- MAIN LOOPS
+task.spawn(function()
+    while true do
+        task.wait(0.01)
+        if selectedTarget and not isAutoKillAll and not isEating then
+            local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+            if myRoot then
+                local tc = selectedTarget.Character
+                local tRoot = tc and tc:FindFirstChild("HumanoidRootPart")
+                if tRoot then
+                    if isSticking then
+                        local cf = getPunchCFrame(selectedTarget)
+                        if cf then myRoot.CFrame = cf end
+                    end
+                    if isAutoPunch then
+                        AutoEquipPunch()
+                        pcall(function() BodyMovement:FireServer(-0.9848077297210693) end)
+                        handIndex = (handIndex%#hands)+1
+                        pcall(function() PunchEvent:FireServer(tc, hands[handIndex]) end)
+                    end
+                end
+            end
+        end
+    end
+end)
+task.spawn(function()
+    while true do
+        task.wait(0.01)
+        if isAutoKillAll and not isEating then
+            local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+            if myRoot then
+                local targets = {}
+                for _, plr in ipairs(Players:GetPlayers()) do
+                    if plr ~= Player then
+                        local tc = plr.Character
+                        if tc then
+                            local hum = tc:FindFirstChild("Humanoid")
+                            local tRoot = tc:FindFirstChild("HumanoidRootPart")
+                            if hum and hum.Health > 0 and tRoot then table.insert(targets, plr) end
+                        end
+                    end
+                end
+                if #targets == 0 then task.wait(0.5)
+                else
+                    for _, plr in ipairs(targets) do
+                        if not isAutoKillAll or isEating then break end
+                        local tc = plr.Character
+                        if tc then
+                            local hum = tc:FindFirstChild("Humanoid")
+                            local tRoot = tc:FindFirstChild("HumanoidRootPart")
+                            if hum and tRoot then
+                                while isAutoKillAll and not isEating and hum and hum.Health > 0 and tRoot and tRoot.Parent do
+                                    task.wait(0.01)
+                                    local myR = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+                                    if not myR then break end
+                                    local cf = getPunchCFrame(plr)
+                                    if cf then myR.CFrame = cf end
+                                    AutoEquipPunch()
+                                    pcall(function() BodyMovement:FireServer(-0.9848077297210693) end)
+                                    handIndex = (handIndex%#hands)+1
+                                    pcall(function() PunchEvent:FireServer(tc, hands[handIndex]) end)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+task.spawn(function()
+    while true do
+        task.wait(0.05)
+        if isapin then
+            local now = tick()
+            if now-lastSpinTime >= SPIN_COOLDOWN then
+                lastSpinTime = now
+                pcall(function() spinfu:InvokeServer() end)
+            end
+        end
+        if isAutolift then
+            local now = tick()
+            if now-lastLiftTime >= liftCooldown then
+                lastLiftTime = now
+                local success = pcall(function()
+                    if machineuse.Value == nil then
+                        task.wait(0.5) machineactive:InvokeServer(bechmemp, true)
+                    else
+                        MachineActiveEvent:FireServer()
+                    end
+                end)
+                if success then
+                    consecutiveErrors = 0
+                    liftCooldown = math.max(0.06, liftCooldown-0.002)
+                else
+                    consecutiveErrors = consecutiveErrors + 1
+                    liftCooldown = math.min(0.5, liftCooldown+(0.05*consecutiveErrors))
+                end
+            end
+        end
+        if isAutoGlitch then
+            if machineuse.Value == nil then
+                task.wait(0.6) pcall(function() machineactive:InvokeServer(oceanSquat, true) end)
+            else
+                pcall(function() MachineActiveEvent:FireServer() end)
+            end
+        end
+        if isAutoHatch then
+            local now = tick()
+            if now-lastHatchTime >= HATCH_COOLDOWN then
+                lastHatchTime = now
+                pcall(function()
+                    local prompt = getEggPrompt(selectedEggFolder)
+                    if prompt then fireproximityprompt(prompt) end
+                end)
+            end
+        end
+        if isAutoSell then
+            local petsItem = getPetsMenu()
+            if petsItem then
+                for _, petFolder in ipairs(petsItem:GetChildren()) do
+                    local petName = petFolder.Name
+                    if selectedSellPets[petName] then
+                        local statFolder = petFolder:FindFirstChild("PetStatFolder")
+                        local sellVal = statFolder and statFolder:FindFirstChild("SellEnable")
+                        if not sellVal or sellVal.Value == true then
+                            pcall(function() SellPetEvent:FireServer(petFolder) end)
+                            task.wait(0.2)
+                        end
+                    end
+                end
+            end
+        end
+        if isAutoChest then
+            local now = tick()
+            if now-lastChestTime >= CHEST_COOLDOWN then
+                lastChestTime = now
+                for _, chest in ipairs(chestsFolder:GetChildren()) do
+                    pcall(function()
+                        local root = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+                        if root and chest:IsA("BasePart") then
+                            root.CFrame = CFrame.new(chest.Position + Vector3.new(0,5,0))
+                            task.wait(0.3)
+                            ChestClaimEvent:FireServer(chest)
+                        end
+                    end)
+                    task.wait(0.3)
+                end
+            end
+        end
+    end
+end)
+
+-- SETTINGS TAB
+local settingsHeader = settingsTab:AddLabel("SET UP UI SETTINGS YOU WANT")
+settingsHeader.Font = Enum.Font.LuckiestGuy settingsHeader.TextSize = 20
+
+local liftHeader = settingsTab:AddLabel("AUTO STRENGTH SPEED")
+liftHeader.Font = Enum.Font.Bodoni liftHeader.TextSize = 18
+local liftSpeedOptions = {"Safe (0.3s)","Balanced (0.15s)","Fast (0.1s)","Max (0.06s)"}
+local liftSpeedValues  = {0.30, 0.15, 0.10, 0.06}
+local liftSpeedDropdown = settingsTab:AddDropdown("Lift Speed", function(selected)
+    for i, lbl in ipairs(liftSpeedOptions) do
+        if lbl == selected then liftCooldown = liftSpeedValues[i] consecutiveErrors = 0 break end
+    end
+end)
+for _, lbl in ipairs(liftSpeedOptions) do liftSpeedDropdown:Add(lbl) end
+
+local transHeader = settingsTab:AddLabel("BACKGROUND TRANSPARENCY")
+transHeader.Font = Enum.Font.Bodoni transHeader.TextSize = 18
+local transOptions = {"0.0 (Solid)","0.1 (Default)","0.2","0.3","0.5 (Half)","0.8","0.95 (Clear)"}
+local transValues  = {0.0, 0.1, 0.2, 0.3, 0.5, 0.8, 0.95}
+local transDropdown = settingsTab:AddDropdown("Transparency", function(selected)
+    for i, lbl in ipairs(transOptions) do
+        if lbl == selected then
+            pcall(function()
+                windowFrame.ImageTransparency = transValues[i]
+                local bar = windowFrame:FindFirstChild("Bar")
+                if bar then bar.BackgroundTransparency = transValues[i] end
+                local tabSel = windowFrame:FindFirstChild("TabSelection")
+                if tabSel then tabSel.ImageTransparency = math.min(0.4+transValues[i], 0.95) end
+                for _, v in pairs(windowFrame:GetDescendants()) do
+                    pcall(function()
+                        if v:IsA("ImageLabel") and v.Name == "TextButton_Roundify_4px" then
+                            if v.Parent and v.Parent.Name ~= "TabButton" then v.ImageTransparency = transValues[i] end
+                        end
+                        if v:IsA("ImageButton") and v.Name == "Box" then v.ImageTransparency = transValues[i] end
+                    end)
+                end
+            end)
+            break
+        end
+    end
+end)
+for _, lbl in ipairs(transOptions) do transDropdown:Add(lbl) end
+
+local colorHeader = settingsTab:AddLabel("MAIN COLOR THEME")
+colorHeader.Font = Enum.Font.Bodoni colorHeader.TextSize = 18
+local colorOptions = {
+    {name="Purple (Default)", colors={Color3.fromRGB(10,0,40),  Color3.fromRGB(60,0,120),  Color3.fromRGB(120,0,180), Color3.fromRGB(180,0,255), Color3.fromRGB(255,50,180)}},
+    {name="Red",              colors={Color3.fromRGB(40,0,0),   Color3.fromRGB(120,0,0),   Color3.fromRGB(200,0,0),   Color3.fromRGB(255,50,50), Color3.fromRGB(255,100,100)}},
+    {name="Blue",             colors={Color3.fromRGB(0,0,40),   Color3.fromRGB(0,20,120),  Color3.fromRGB(0,60,200),  Color3.fromRGB(0,100,255), Color3.fromRGB(50,150,255)}},
+    {name="Green",            colors={Color3.fromRGB(0,20,0),   Color3.fromRGB(0,60,0),    Color3.fromRGB(0,120,40),  Color3.fromRGB(0,200,80),  Color3.fromRGB(50,255,120)}},
+    {name="Orange",           colors={Color3.fromRGB(40,10,0),  Color3.fromRGB(120,40,0),  Color3.fromRGB(200,80,0),  Color3.fromRGB(255,120,0), Color3.fromRGB(255,180,50)}},
+    {name="Pink",             colors={Color3.fromRGB(40,0,20),  Color3.fromRGB(120,0,60),  Color3.fromRGB(200,0,100), Color3.fromRGB(255,50,150),Color3.fromRGB(255,100,200)}},
+    {name="Gold",             colors={Color3.fromRGB(30,20,0),  Color3.fromRGB(100,70,0),  Color3.fromRGB(180,130,0), Color3.fromRGB(220,180,0), Color3.fromRGB(255,215,0)}},
+    {name="Cyan",             colors={Color3.fromRGB(0,20,30),  Color3.fromRGB(0,80,100),  Color3.fromRGB(0,150,180), Color3.fromRGB(0,210,240), Color3.fromRGB(50,240,255)}},
+}
+local function applyGradient(element, colorList)
+    local grad = element:FindFirstChildOfClass("UIGradient")
+    if not grad then grad = Instance.new("UIGradient") grad.Parent = element end
+    grad.Rotation = 45
+    if #colorList >= 3 then
+        grad.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0,   colorList[1]),
+            ColorSequenceKeypoint.new(0.5, colorList[3]),
+            ColorSequenceKeypoint.new(1,   colorList[5] or colorList[#colorList])
+        })
+    elseif #colorList == 2 then
+        grad.Color = ColorSequence.new({ColorSequenceKeypoint.new(0,colorList[1]),ColorSequenceKeypoint.new(1,colorList[2])})
+    else
+        grad.Color = ColorSequence.new(colorList[1])
+    end
+    if element:IsA("ImageLabel") or element:IsA("ImageButton") then
+        element.ImageColor3 = Color3.new(1,1,1)
+    else
+        element.BackgroundColor3 = Color3.new(1,1,1)
+    end
+end
+local colorDropdown = settingsTab:AddDropdown("Main Color", function(selected)
+    for _, opt in ipairs(colorOptions) do
+        if opt.name == selected then
+            pcall(function()
+                for _, v in pairs(windowFrame:GetDescendants()) do
+                    pcall(function()
+                        if v:IsA("Frame") and v.Name == "Bar" then applyGradient(v, opt.colors) end
+                        if v:IsA("ImageLabel") and v.Name == "Window" then
+                            applyGradient(v, {opt.colors[1], opt.colors[3], opt.colors[5] or opt.colors[#opt.colors]})
+                        end
+                        if v:IsA("ImageLabel") and v.Name == "TabSelection" then applyGradient(v, opt.colors) end
+                        if v:IsA("ImageLabel") and v.Name == "TextButton_Roundify_4px" then
+                            if v.Parent and v.Parent.Name ~= "TabButton" then applyGradient(v, {opt.colors[1], opt.colors[3]}) end
+                        end
+                        if v:IsA("ImageButton") and v.Name == "Box" then applyGradient(v, {opt.colors[1], opt.colors[2]}) end
+                    end)
+                end
+            end)
+            break
+        end
+    end
+end)
