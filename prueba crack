@@ -398,3 +398,404 @@ mainTab:AddSwitch("Anti Lag [BLACK SCREEN]", function(state)
         end)
         pcall(function() settings().Rendering.QualityLevel = 1 end)
     else
+
+        pcall(function()
+            local L = game:GetService("Lighting")
+            L.GlobalShadows  = savedLighting.GlobalShadows  or true
+            L.Brightness     = savedLighting.Brightness     or 2
+            L.FogEnd         = savedLighting.FogEnd         or 100000
+            L.Ambient        = savedLighting.Ambient        or Color3.fromRGB(70,70,70)
+            L.OutdoorAmbient = savedLighting.OutdoorAmbient or Color3.fromRGB(70,70,70)
+            for _, v in ipairs(L:GetChildren()) do
+                if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect")
+                or v:IsA("BloomEffect") or v:IsA("DepthOfFieldEffect") or v:IsA("Atmosphere") then
+                    v.Enabled = true
+                end
+            end
+        end)
+        pcall(function() settings().Rendering.QualityLevel = 10 end)
+    end
+end)
+
+-- PET SHOP TAB
+local autoHatchLabel = petsTab:AddLabel("AUTO HATCH")
+autoHatchLabel.Font = Enum.Font.Bodoni autoHatchLabel.TextSize = 25
+local eggDropdown = petsTab:AddDropdown("Select Egg", function(selected)
+    local folder = labelToFolder[selected]
+    if folder then selectedEggFolder = folder teleportToEgg(folder) end
+end)
+for _, d in ipairs(EGG_DATA) do eggDropdown:Add(d.label) end
+petsTab:AddSwitch("Auto Hatch", function(state)
+    isAutoHatch = state
+    if state then teleportToEgg(selectedEggFolder) end
+end)
+local autoSellLabel = petsTab:AddLabel("AUTO SELL")
+autoSellLabel.Font = Enum.Font.Bodoni autoSellLabel.TextSize = 25
+local rarityGroups = {
+    {label="COMMON EGG",idx=1},{label="RARE EGG",idx=2},{label="EPIC EGG",idx=3},
+    {label="LEGENDARY EGG",idx=4},{label="MYTHIC EGG",idx=5},
+}
+for _, grp in ipairs(rarityGroups) do
+    petsTab:AddLabel(grp.label)
+    for _, petName in ipairs(EGG_DATA[grp.idx].pets) do
+        local pn = petName
+        petsTab:AddSwitch("SELL "..pn, function(state) selectedSellPets[pn] = state or nil end)
+    end
+end
+petsTab:AddSwitch("Auto Sell", function(state) isAutoSell = state end)
+
+-- MISC TAB
+local autoClaimLabel = miscTab:AddLabel("AUTO CLAIM CHEST")
+autoClaimLabel.Font = Enum.Font.Bodoni autoClaimLabel.TextSize = 20
+miscTab:AddSwitch("Auto Claim All Chest", function(state) isAutoChest = state end)
+local hideshowLabel = miscTab:AddLabel("HIDE & SHOW PETS")
+hideshowLabel.Font = Enum.Font.Bodoni hideshowLabel.TextSize = 20
+miscTab:AddButton("Hide Pets", function() pcall(function() HidePetsEvent:FireServer(true)  end) end)
+miscTab:AddButton("Show Pets", function() pcall(function() HidePetsEvent:FireServer(false) end) end)
+local teleportIslandsLabel = miscTab:AddLabel("TELEPORT ISLANDS")
+teleportIslandsLabel.Font = Enum.Font.Bodoni teleportIslandsLabel.TextSize = 20
+local islandFolder = miscTab:AddFolder("ISLANDS")
+for _, island in ipairs(ISLANDS) do
+    local pos = island.pos
+    islandFolder:AddButton(island.name, function() teleportTo(pos) end)
+end
+local teleportChestsLabel = miscTab:AddLabel("TELEPORT CHESTS")
+teleportChestsLabel.Font = Enum.Font.Bodoni teleportChestsLabel.TextSize = 20
+local chestFolder = miscTab:AddFolder("TELEPORT TO CHEST")
+for _, chest in ipairs(CHESTS) do
+    local pos = chest.pos
+    chestFolder:AddButton("📦 "..chest.name, function() teleportTo(pos) end)
+end
+
+-- KILLING TAB
+killTab:AddButton("STOP TELEPORT", function() isSticking = false end)
+local autoPunchLabel = killTab:AddLabel("AUTO PUNCH")
+autoPunchLabel.Font = Enum.Font.Bodoni autoPunchLabel.TextSize = 20
+killTab:AddSwitch("AUTO PUNCH", function(state) isAutoPunch = state end)
+local autoKillLabel = killTab:AddLabel("AUTO KILL EVERYONE")
+autoKillLabel.Font = Enum.Font.Bodoni autoKillLabel.TextSize = 20
+killTab:AddSwitch("AUTO KILL EVERYONE", function(state) isAutoKillAll = state end)
+local tinyComboLabel = killTab:AddLabel("TINY SIZE COMBO")
+tinyComboLabel.Font = Enum.Font.Bodoni tinyComboLabel.TextSize = 20
+killTab:AddSwitch("Tiny Size Combo", function(state)
+    isTinyCombo = state
+    if state then
+        setCharSize(0.001) isSticking = true isAutoPunch = true
+    else
+        setCharSize(1) isSticking = false isAutoPunch = false
+    end
+end)
+
+local killSpyLabels = {}
+local function clearKillSpy()
+    for _, lbl in pairs(killSpyLabels) do pcall(function() lbl:Destroy() end) end
+    killSpyLabels = {}
+end
+local function showKillPlayerStats(plr)
+    clearKillSpy()
+    local function addStat(text) local lbl = killTab:AddLabel(text) table.insert(killSpyLabels, lbl) end
+    local function getVal(name, folder)
+        local src = folder and plr:FindFirstChild(folder) or plr
+        local v = src and src:FindFirstChild(name)
+        return v and v.Value or nil
+    end
+    pcall(function()
+        addStat("── "..plr.DisplayName.." ──")
+        for _, s in ipairs({
+            {name="Strong",    icon="💪", folder="leaderstats"},
+            {name="Rebirths",  icon="🔄", folder="leaderstats"},
+            {name="Kills",     icon="💀", folder="leaderstats"},
+            {name="Endurance", icon="🛡️", folder=nil},
+            {name="Mobility",  icon="👟", folder=nil},
+        }) do
+            local val = getVal(s.name, s.folder)
+            if val ~= nil then addStat(s.icon.." "..s.name..": "..formatNumber(val)) end
+        end
+    end)
+end
+
+local selectPlayerLabel = killTab:AddLabel("SELECT PLAYER TO KILL")
+selectPlayerLabel.Font = Enum.Font.Bodoni selectPlayerLabel.TextSize = 20
+local playerDropdown = killTab:AddDropdown("Select Player", function(selected)
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr.DisplayName == selected and plr ~= Player then
+            selectedTarget = plr isSticking = true showKillPlayerStats(plr) break
+        end
+    end
+end)
+task.spawn(function()
+    task.wait(2)
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= Player then pcall(function() playerDropdown:Add(plr.DisplayName) end) end
+    end
+end)
+Players.PlayerAdded:Connect(function(plr) task.wait(0.5) pcall(function() playerDropdown:Add(plr.DisplayName) end) end)
+Players.PlayerRemoving:Connect(function(plr)
+    if selectedTarget == plr then selectedTarget = nil isSticking = false clearKillSpy() end
+    pcall(function() playerDropdown:Remove(plr.DisplayName) end)
+end)
+
+local spectateLabel = killTab:AddLabel("SPECTATE PLAYER")
+spectateLabel.Font = Enum.Font.Bodoni spectateLabel.TextSize = 20
+local specdropdown = killTab:AddDropdown("Choose Player", function(selected)
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr.DisplayName == selected then
+            selectedPlayerToSpectate = plr
+            if spectating then updateSpectateTarget(plr) end
+            break
+        end
+    end
+end)
+task.spawn(function()
+    task.wait(2)
+    for _, plr in ipairs(Players:GetPlayers()) do pcall(function() specdropdown:Add(plr.DisplayName) end) end
+end)
+Players.PlayerAdded:Connect(function(plr) task.wait(0.5) pcall(function() specdropdown:Add(plr.DisplayName) end) end)
+Players.PlayerRemoving:Connect(function(plr)
+    if selectedPlayerToSpectate and selectedPlayerToSpectate == plr then selectedPlayerToSpectate = nil end
+    pcall(function() specdropdown:Remove(plr.DisplayName) end)
+end)
+killTab:AddSwitch("Spectate", function(bool)
+    spectating = bool
+    if spectating and selectedPlayerToSpectate then
+        updateSpectateTarget(selectedPlayerToSpectate)
+    else
+        if currentTargetConnection then currentTargetConnection:Disconnect() currentTargetConnection = nil end
+        if Player.Character then
+            local hum = Player.Character:FindFirstChildOfClass("Humanoid")
+            if hum then camera.CameraSubject = hum end
+        end
+    end
+end)
+
+-- SPY STATS TAB
+local spyStatLabels = {}
+local function clearSpyStats()
+    for _, lbl in pairs(spyStatLabels) do pcall(function() lbl:Remove() end) end
+    spyStatLabels = {}
+end
+local function showPlayerStats(plr)
+    clearSpyStats()
+    local function addStat(text) local lbl = spyTab:AddLabel(text) table.insert(spyStatLabels, lbl) end
+    local function getVal(name, folder)
+        local src = folder and plr:FindFirstChild(folder) or plr
+        local v = src and src:FindFirstChild(name)
+        return v and v.Value or nil
+    end
+    pcall(function()
+        addStat("👤 "..plr.DisplayName.." (@"..plr.Name..")")
+        addStat("📱 Device: "..tostring(getVal("Device") or "Unknown"))
+        addStat("👑 Premium: "..tostring(getVal("IsPremium") or false))
+        addStat("🔧 Admin: "..tostring(getVal("IsAdmin") or false))
+        addStat("── STATS ──")
+        for _, s in ipairs({
+            {name="Strong",            icon="💪", folder="leaderstats"},
+            {name="Endurance",         icon="🛡️", folder=nil},
+            {name="Mobility",          icon="👟", folder=nil},
+            {name="Rebirths",          icon="🔄", folder="leaderstats"},
+            {name="Kills",             icon="💀", folder="leaderstats"},
+            {name="Coins",             icon="🪙", folder=nil},
+            {name="Spins",             icon="🎰", folder=nil},
+            {name="MuscleEmperorReps", icon="🏋️", folder=nil},
+            {name="Pet_Storage",       icon="🐾", folder=nil},
+            {name="Donated",           icon="💝", folder=nil},
+        }) do
+            local val = getVal(s.name, s.folder)
+            if val ~= nil then addStat(s.icon.." "..s.name..": "..formatNumber(val)) end
+        end
+        local petsFolder = plr:FindFirstChild("PetsFolder")
+        if petsFolder then
+            local petCount = {}
+            for _, pet in ipairs(petsFolder:GetChildren()) do petCount[pet.Name] = (petCount[pet.Name] or 0) + 1 end
+            local total = 0
+            for _, c in pairs(petCount) do total = total + c end
+            if total > 0 then
+                addStat("── PETS ("..total..") ──")
+                for name, count in pairs(petCount) do addStat("🐾 "..name..(count > 1 and " x"..count or "")) end
+            end
+        end
+    end)
+end
+local spyDropdown = spyTab:AddDropdown("SELECT PLAYER", function(selected)
+    task.spawn(function()
+        task.wait(0.1)
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr.DisplayName == selected then selectedSpyPlayer = plr showPlayerStats(plr) break end
+        end
+    end)
+end)
+task.spawn(function()
+    task.wait(2)
+    for _, plr in ipairs(Players:GetPlayers()) do pcall(function() spyDropdown:Add(plr.DisplayName) end) end
+end)
+Players.PlayerAdded:Connect(function(plr) task.wait(0.5) pcall(function() spyDropdown:Add(plr.DisplayName) end) end)
+Players.PlayerRemoving:Connect(function(plr)
+    if selectedSpyPlayer and selectedSpyPlayer == plr then
+        clearSpyStats()
+        local lbl = spyTab:AddLabel("⚠️ "..plr.DisplayName.." left!")
+        table.insert(spyStatLabels, lbl)
+        selectedSpyPlayer = nil
+    end
+    pcall(function() spyDropdown:Remove(plr.DisplayName) end)
+end)
+
+-- STATS TAB
+local rebirthValObj = Player:FindFirstChild("leaderstats") and Player.leaderstats:FindFirstChild("Rebirths")
+local endurValObj = nil
+for _, child in pairs(Player:GetChildren()) do
+    if child.Name == "Endurance" then endurValObj = child break end
+    local e = child:FindFirstChild("Endurance")
+    if e then endurValObj = e break end
+end
+local statsStartTime  = tick()
+local initialStrength = tonumber(strong.Value) or 0
+local initialRebirths = rebirthValObj and (tonumber(rebirthValObj.Value) or 0) or 0
+local initialEndur    = endurValObj   and (tonumber(endurValObj.Value)   or 0) or 0
+local totalStrGained  = 0
+local totalRebGained  = 0
+local totalEndGained  = 0
+local lastStr = initialStrength
+local lastReb = initialRebirths
+local lastEnd = initialEndur
+
+calcTab:AddLabel("━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+local calcHeader = calcTab:AddLabel("CALCULATOR STATS")
+calcHeader.Font = Enum.Font.LuckiestGuy calcHeader.TextSize = 20
+local stopwatchLabel = calcTab:AddLabel("⏱️ Session Time: 0d 0h 0m 0s")
+calcTab:AddLabel("") calcTab:AddLabel("") calcTab:AddLabel("")
+local projStrLabel   = calcTab:AddLabel("💪 Strength:   -") projStrLabel.Font   = Enum.Font.Bodoni projStrLabel.TextSize   = 20
+local projRebLabel   = calcTab:AddLabel("🔄 Rebirths:   -") projRebLabel.Font   = Enum.Font.Bodoni projRebLabel.TextSize   = 20
+local projEndLabel   = calcTab:AddLabel("🛡️ Endurance:  -") projEndLabel.Font   = Enum.Font.Bodoni projEndLabel.TextSize   = 20
+local strengthLabel  = calcTab:AddLabel("💪 Strength:   -") strengthLabel.Font  = Enum.Font.Bodoni strengthLabel.TextSize  = 20
+local rebirthsLabel  = calcTab:AddLabel("🔄 Rebirths:   -") rebirthsLabel.Font  = Enum.Font.Bodoni rebirthsLabel.TextSize  = 20
+local enduranceLabel = calcTab:AddLabel("🛡️ Endurance:  -") enduranceLabel.Font = Enum.Font.Bodoni enduranceLabel.TextSize = 20
+calcTab:AddButton("Reset Session", function()
+    statsStartTime  = tick()
+    initialStrength = tonumber(strong.Value) or 0
+    initialRebirths = rebirthValObj and (tonumber(rebirthValObj.Value) or 0) or 0
+    initialEndur    = endurValObj   and (tonumber(endurValObj.Value)   or 0) or 0
+    totalStrGained  = 0 totalRebGained = 0 totalEndGained = 0
+    lastStr = initialStrength lastReb = initialRebirths lastEnd = initialEndur
+    stopwatchLabel.Text = "⏱️ Session Time: 0d 0h 0m 0s"
+    projStrLabel.Text = "💪 Strength:   -" projRebLabel.Text = "🔄 Rebirths:   -" projEndLabel.Text = "🛡️ Endurance:  -"
+    strengthLabel.Text = "💪 Strength:   -" rebirthsLabel.Text = "🔄 Rebirths:   -" enduranceLabel.Text = "🛡️ Endurance:  -"
+end)
+task.spawn(function()
+    local lastProjected = 0
+    while task.wait(0.2) do
+        local elapsed = tick() - statsStartTime
+        if elapsed >= 1 then
+            local days  = math.floor(elapsed/86400)
+            local hours = math.floor((elapsed%86400)/3600)
+            local mins  = math.floor((elapsed%3600)/60)
+            local secs  = math.floor(elapsed%60)
+            stopwatchLabel.Text = string.format("⏱️ Session Time: %dd %dh %dm %ds", days, hours, mins, secs)
+            local cStr = tonumber(strong.Value) or 0
+            local cReb = rebirthValObj and (tonumber(rebirthValObj.Value) or 0) or 0
+            local cEnd = endurValObj   and (tonumber(endurValObj.Value)   or 0) or 0
+            local dS = cStr-lastStr local dR = cReb-lastReb local dE = cEnd-lastEnd
+            if dS > 0 then totalStrGained = totalStrGained + dS end
+            if dR > 0 then totalRebGained = totalRebGained + dR end
+            if dE > 0 then totalEndGained = totalEndGained + dE end
+            lastStr = cStr lastReb = cReb lastEnd = cEnd
+            strengthLabel.Text  = "💪 Strength:  "..AbbrevNumber(cStr).." | +"..AbbrevNumber(totalStrGained)
+            rebirthsLabel.Text  = "🔄 Rebirths:  "..AbbrevNumber(cReb).." | +"..AbbrevNumber(totalRebGained)
+            enduranceLabel.Text = "🛡️ Endurance: "..AbbrevNumber(cEnd).." | +"..AbbrevNumber(totalEndGained)
+            if tick()-lastProjected >= 3 and elapsed >= 5 then
+                lastProjected = tick()
+                local sSec = totalStrGained/elapsed
+                local rSec = totalRebGained/elapsed
+                local eSec = totalEndGained/elapsed
+                local h,d = 3600,86400
+                projStrLabel.Text = "💪 Strength:  "..AbbrevNumber(math.floor(sSec*h)).."/h | "..AbbrevNumber(math.floor(sSec*d)).."/d"
+                projRebLabel.Text = "🔄 Rebirths:  "..AbbrevNumber(math.floor(rSec*h)).."/h | "..AbbrevNumber(math.floor(rSec*d)).."/d"
+                projEndLabel.Text = "🛡️ Endurance: "..AbbrevNumber(math.floor(eSec*h)).."/h | "..AbbrevNumber(math.floor(eSec*d)).."/d"
+            end
+        end
+    end
+end)
+
+-- INVENTORY TAB
+local invHeader = invTab:AddLabel("AUTO EAT CHOCOLATE")
+invHeader.Font = Enum.Font.LuckiestGuy invHeader.TextSize = 20
+local chocoCountLabel = invTab:AddLabel("🍫 Chocolate: -")
+chocoCountLabel.Font = Enum.Font.Bodoni chocoCountLabel.TextSize = 18
+local chocoEatenLabel = invTab:AddLabel("✅ Eaten this session: 0")
+chocoEatenLabel.Font = Enum.Font.Bodoni chocoEatenLabel.TextSize = 18
+local chocoRateLabel = invTab:AddLabel("⚡ Rate: 0 /min")
+chocoRateLabel.Font = Enum.Font.Bodoni chocoRateLabel.TextSize = 18
+invTab:AddSwitch("Auto Eat Chocolate", function(state) isAutoEat = state end)
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            local count = 0
+            local chocoFolder = Player:FindFirstChild("ChocolatesFolder")
+            if chocoFolder then
+                for _, v in pairs(chocoFolder:GetChildren()) do if v:IsA("Tool") then count = count + 1 end end
+            end
+            local bp = Player:FindFirstChild("Backpack")
+            if bp then
+                for _, v in pairs(bp:GetChildren()) do
+                    if v:IsA("Tool") and string.lower(v.Name):find("chocolate") then count = count + 1 end
+                end
+            end
+            chocoCountLabel.Text = "🍫 Chocolate: "..formatNumber(count)
+            local elapsed = tick() - chocoSessionStart
+            if elapsed > 5 then
+                chocoRateLabel.Text = "⚡ Rate: "..string.format("%.1f", (totalChocoEaten/elapsed)*60).." /min"
+            end
+        end)
+    end
+end)
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if isAutoEat and not isEating then
+            local now = tick()
+            if now - lastEatTime >= EAT_COOLDOWN then
+                lastEatTime = now
+                task.spawn(function()
+                    isEating = true
+                    pcall(function()
+                        local char = Player.Character
+                        if not char then isEating = false return end
+                        local hum = char:FindFirstChildOfClass("Humanoid")
+                        if not hum then isEating = false return end
+                        local bp = Player:FindFirstChild("Backpack")                      
+                        if not bp then isEating = false return end
+                        local choco = nil
+                        for _, tool in pairs(bp:GetChildren()) do
+                            if string.lower(tool.Name):find("chocolate") then choco = tool break end
+                        end
+                        if not choco then
+                            local chocoFolder = Player:FindFirstChild("ChocolatesFolder")
+                            if not chocoFolder then isEating = false return end
+                            local c = chocoFolder:FindFirstChildOfClass("Tool")
+                            if not c then isEating = false return end
+                            c.Parent = bp
+                            task.wait(0.2)
+                            choco = bp:FindFirstChild(c.Name)
+                        end
+                        if not choco then isEating = false return end
+                        hum:EquipTool(choco)
+                        task.wait(0.5)
+                        local equipped = char:FindFirstChild(choco.Name)
+                        if equipped then
+                            equipped:Activate()
+                            ChocolateEatEvent:FireServer(equipped)
+                            task.wait(1.5)
+                            totalChocoEaten = totalChocoEaten + 1
+                            chocoEatenLabel.Text = "✅ Eaten this session: "..totalChocoEaten
+                        end
+                    end)
+                    isEating = false
+                end)
+            end
+        end
+    end
+end)
+
+-- INFO TAB
+local myLabel = infoTab:AddLabel("Muscle Masters")
+myLabel.Font = Enum.Font.LuckiestGuy myLabel.TextSize = 22
+myLabel.TextXAlignment = Enum.TextXAlignment.Center myLabel.Size = UDim2.new(1,0,0,25)
