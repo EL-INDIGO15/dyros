@@ -1,0 +1,400 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+
+local Player = Players.LocalPlayer
+local displayName = Player.DisplayName
+local antiAFKConnection
+local ChocolateEatEvent = ReplicatedStorage.RemotesEvent.ChocolateEatEvent
+
+local function getGreeting()
+    local hour = os.date("*t").hour
+    if hour >= 5 and hour < 12 then return "Good Morning"
+    elseif hour >= 12 and hour < 18 then return "Good Afternoon"
+    elseif hour >= 18 and hour < 24 then return "Good Evening"
+    else return "Good Night" end
+end
+
+local function formatNumber(n)
+    n = tonumber(n) or 0
+    if n >= 1e18 then return string.format("%.1fQi", n/1e18)
+    elseif n >= 1e15 then return string.format("%.1fQa", n/1e15)
+    elseif n >= 1e12 then return string.format("%.1fT", n/1e12)
+    elseif n >= 1e9 then return string.format("%.1fB", n/1e9)
+    elseif n >= 1e6 then return string.format("%.1fM", n/1e6)
+    elseif n >= 1e3 then return string.format("%.1fK", n/1e3)
+    else return tostring(math.floor(n)) end
+end
+
+local function AbbrevNumber(num)
+    num = tonumber(num) or 0
+    if num <= 0 then return "0" end
+    local abbrev = {"", "K", "M", "B", "T", "Qa", "Qi"}
+    local i = 1
+    while num >= 1000 and i < #abbrev do
+        num = num / 1000
+        i = i + 1
+    end
+    return string.format("%.2f%s", num, abbrev[i])
+end
+
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/GeloXOshiru/JeloKill.Image/refs/heads/main/Lua", true))()
+
+local window, windowFrame = library:AddWindow("PrimeJelo | Muscle Masters", {
+    title_bar = {
+        Color3.fromRGB(0, 0, 0),
+        Color3.fromRGB(25, 0, 0),
+        Color3.fromRGB(10, 0, 0),
+        Color3.fromRGB(40, 0, 0),
+        Color3.fromRGB(15, 0, 0)
+    },
+    background = {
+        Color3.fromRGB(0, 0, 0),
+        Color3.fromRGB(18, 0, 0),
+        Color3.fromRGB(30, 0, 0)
+    },
+    background_transparency = 0.1,
+    main_color = Color3.fromRGB(180, 0, 255),
+    min_size = Vector2.new(400, 280),
+    can_resize = true,
+})
+
+-- TITLE BAR GLITCH ANIMATION
+task.spawn(function()
+    task.wait(1.5)
+    local titleLabel = nil
+    for _, area in pairs({game.CoreGui, Player:FindFirstChild("PlayerGui")}) do
+        if area then
+            for _, v in pairs(area:GetDescendants()) do
+                if v:IsA("TextLabel") and (string.find(v.Text,"K13") or string.find(v.Text,"Muscle") or string.find(v.Text,"PrimeJelo")) then
+                    if not v:FindFirstAncestorOfClass("ScrollingFrame") then
+                        titleLabel = v
+                        break
+                    end
+                end
+            end
+        end
+        if titleLabel then break end
+    end
+    if titleLabel then
+        titleLabel.RichText = true
+        titleLabel.Font = Enum.Font.PermanentMarker
+        local colorSets = {
+            {{255,0,0},{0,0,0},{180,0,0}},
+            {{0,0,0},{255,0,0},{0,0,0}},
+            {{255,255,255},{255,0,0},{0,0,0}},
+            {{180,0,0},{255,255,255},{255,0,0}},
+            {{0,0,0},{0,0,0},{255,50,50}},
+            {{255,50,50},{0,0,0},{255,255,255}},
+            {{100,0,0},{255,0,0},{0,0,0}},
+            {{255,0,0},{255,0,0},{255,0,0}},
+        }
+        local glitching = false
+        local glitchTimer = 0
+        local glitchDuration = 0
+        local currentColorSet = colorSets[1]
+        while true do
+            local t = tick()
+            if not glitching and math.random(1,100) <= 3 then
+                glitching = true
+                glitchDuration = math.random(8,20)
+                glitchTimer = 0
+            end
+            if glitching then
+                glitchTimer = glitchTimer + 1
+                currentColorSet = colorSets[math.random(1,#colorSets)]
+                local c1,c2,c3 = currentColorSet[1],currentColorSet[2],currentColorSet[3]
+                titleLabel.TextColor3 = Color3.fromRGB(c1[1],c1[2],c1[3])
+                titleLabel.TextStrokeColor3 = Color3.fromRGB(c2[1],c2[2],c2[3])
+                titleLabel.TextStrokeTransparency = math.random(0,6)/10
+                titleLabel.Text = string.format(
+                    "<b><font color='rgb(%d,%d,%d)'>K13</font></b>  |  <font color='rgb(%d,%d,%d)'>Muscle Masters</font>  |  <font color='rgb(%d,%d,%d)'>%s - %s</font>",
+                    c1[1],c1[2],c1[3], c2[1],c2[2],c2[3], c3[1],c3[2],c3[3],
+                    getGreeting(), displayName
+                )
+                if glitchTimer >= glitchDuration then glitching = false end
+                task.wait(0.03)
+            else
+                local blink = math.abs(math.sin(t*4))
+                local r = math.floor(255*blink)
+                titleLabel.TextColor3 = Color3.fromRGB(r,0,0)
+                titleLabel.TextStrokeColor3 = Color3.fromRGB(120,0,0)
+                titleLabel.TextStrokeTransparency = 1 - blink
+                titleLabel.Text = string.format(
+                    "<b><font color='rgb(%d,0,0)'>K13</font></b>  |  <font color='rgb(%d,0,0)'>Muscle Masters</font>  |  <font color='rgb(%d,0,0)'>%s - %s</font>",
+                    r, r, r, getGreeting(), displayName
+                )
+                task.wait(0.01)
+            end
+        end
+    end
+end)
+
+-- TABS
+local mainTab     = window:AddTab("Farm")
+local petsTab     = window:AddTab("Pet Shop")
+local miscTab     = window:AddTab("Misc")
+local killTab     = window:AddTab("Killing")
+local spyTab      = window:AddTab("Spy Stats")
+local calcTab     = window:AddTab("Stats")
+local invTab      = window:AddTab("Inventory")
+local settingsTab = window:AddTab("Settings")
+local infoTab     = window:AddTab("Info")
+
+-- REMOTES & INSTANCES
+local remoterebirths     = ReplicatedStorage.RemotesEvent.RebirthEvent
+local strong             = Player:WaitForChild("leaderstats"):WaitForChild("Strong")
+local machineactive      = ReplicatedStorage.RemotesEvent.MachineActiveFunction
+local MachineActiveEvent = ReplicatedStorage.RemotesEvent.MachineActiveEvent
+local machineuse         = Player:WaitForChild("Machineuse")
+local bechmemp           = workspace:WaitForChild("MachinesFolder"):WaitForChild("Bench Press Muscle Emperor")
+local oceanSquat         = workspace:WaitForChild("MachinesFolder"):WaitForChild("Squat Ocean")
+local spinfu             = ReplicatedStorage.RemotesEvent.SpinFunction
+local SellPetEvent       = ReplicatedStorage.RemotesEvent.SellPetEvent
+local ChestClaimEvent    = ReplicatedStorage.RemotesEvent.ChestClaimEvent
+local HidePetsEvent      = ReplicatedStorage.RemotesEvent.HidePetsEvent
+local PunchEvent         = ReplicatedStorage.RemotesEvent.PunchEvent
+local BodyMovement       = ReplicatedStorage.RemotesEvent.BodyMovement
+local SizeChanged        = ReplicatedStorage.RemotesEvent.SizeChanged
+local eggsFolder         = workspace:WaitForChild("EggsFolder")
+local chestsFolder       = workspace:WaitForChild("ChestsFolder")
+
+-- STATE
+local isAuto            = false
+local isAutolift        = false
+local isapin            = false
+local isAutoHatch       = false
+local isAutoSell        = false
+local isAutoChest       = false
+local isAutoPunch       = false
+local isSticking        = false
+local isAutoKillAll     = false
+local isTinyCombo       = false
+local isAutoGlitch      = false
+local isAutoEat         = false
+local isEating          = false
+local lastSpinTime      = 0
+local lastHatchTime     = 0
+local lastChestTime     = 0
+local lastEatTime       = 0
+local liftCooldown      = 0.08
+local lastLiftTime      = 0
+local consecutiveErrors = 0
+local EAT_COOLDOWN      = 2.5
+local SPIN_COOLDOWN     = 0.35
+local HATCH_COOLDOWN    = 1.5
+local CHEST_COOLDOWN    = 1.0
+local savedLighting     = {}
+local selectedEggFolder = "Mythic"
+local selectedSellPets  = {}
+local selectedTarget    = nil
+local selectedSpyPlayer = nil
+local hands             = {"RightHand","LeftHand"}
+local handIndex         = 1
+local totalChocoEaten   = 0
+local chocoSessionStart = tick()
+
+local selectedPlayerToSpectate = nil
+local spectating               = false
+local currentTargetConnection  = nil
+local camera                   = workspace.CurrentCamera
+
+-- DATA
+local CHESTS = {
+    {name="Big Chest",     pos=Vector3.new(2,5,132)},
+    {name="Chest",         pos=Vector3.new(13,6,-198)},
+    {name="Legend Chest",  pos=Vector3.new(-188,2,458)},
+    {name="Stone Chest",   pos=Vector3.new(-13,5,4490)},
+    {name="Frost Chest",   pos=Vector3.new(-3089,5,179)},
+    {name="Master Chest",  pos=Vector3.new(5839,3,73)},
+    {name="Emperor Chest", pos=Vector3.new(2787,8,197)},
+    {name="Ocean Chest",   pos=Vector3.new(-5792,8,49)},
+}
+local ISLANDS = {
+    {name="Main",               pos=Vector3.new(0,5,0)},
+    {name="Stone Realm",        pos=Vector3.new(68,13,4463)},
+    {name="Frost",              pos=Vector3.new(-2856,14,176)},
+    {name="The Muscle Emperor", pos=Vector3.new(2542,14,211)},
+    {name="Folder Island",      pos=Vector3.new(5428,12,215)},
+    {name="Ocean",              pos=Vector3.new(-5812,13,-93)},
+}
+local EGG_DATA = {
+    {label="Common  (1K)",    folder="Common",    pets={"Sprout","Whisker","Fangor","Fox","RageSpike"}},
+    {label="Rare  (3K)",      folder="Rare",      pets={"Bubbles","SparkPup","Hippopotamus","ShadowBun","FrostKit"}},
+    {label="Epic  (20K)",     folder="Epic",      pets={"Captain","Tiger","TigEye","Dino","NerthEye"}},
+    {label="Legendary (75K)", folder="Legendary", pets={"Dragon","Farmer","Military","Mighty Bull","Pyroclaw"}},
+    {label="Mythic  (500K)",  folder="Mythic",    pets={"Violet Fury","Leviathos","Abyss Titan","Ragehorn","Space Dragon","RedHorn"}},
+}
+local labelToFolder = {}
+for _, d in ipairs(EGG_DATA) do labelToFolder[d.label] = d.folder end
+
+-- HELPERS
+local function getEggPrompt(folderName)
+    local ok, result = pcall(function()
+        return eggsFolder:WaitForChild(folderName,5):WaitForChild("EggsModel",5):WaitForChild("mesh_2",5):WaitForChild("VisiblePrompt",5)
+    end)
+    if ok and result then return result end
+end
+local function getPetsMenu()
+    local ok, result = pcall(function()
+        return Player.PlayerGui:WaitForChild("gamegui",5):WaitForChild("petsMenu",5):WaitForChild("pets_item",5)
+    end)
+    if ok then return result end
+end
+local function teleportToEgg(folderName)
+    pcall(function()
+        local root = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+        local camMove = eggsFolder:FindFirstChild(folderName):FindFirstChild("EggsModel"):FindFirstChild("CameraMove")
+        if root and camMove then root.CFrame = camMove.CFrame + Vector3.new(0,0,5) end
+    end)
+end
+local function teleportTo(pos)
+    pcall(function()
+        local root = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+        if root then root.CFrame = CFrame.new(pos + Vector3.new(0,5,0)) end
+    end)
+end
+local function setCharSize(size)
+    pcall(function() SizeChanged:FireServer(size) end)
+    pcall(function()
+        local char = Player.Character
+        if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.BodyDepthScale.Value  = size
+            hum.BodyHeightScale.Value = size
+            hum.BodyWidthScale.Value  = size
+            hum.HeadScale.Value       = size
+        end
+    end)
+end
+local function AutoEquipPunch()
+    local char = Player.Character
+    if not char then return end
+    local hum = char:FindFirstChild("Humanoid")
+    if not hum then return end
+    for _, obj in pairs(char:GetChildren()) do
+        if obj:IsA("Tool") then
+            local n = obj.Name:lower()
+            if n:find("punch") or n:find("glove") or n:find("fist") or n:find("hand") or n:find("gauntlet") then return end
+        end
+    end
+    local bp = Player:FindFirstChild("Backpack")
+    if bp then
+        for _, tool in pairs(bp:GetChildren()) do
+            if tool:IsA("Tool") then
+                local n = tool.Name:lower()
+                if n:find("punch") or n:find("glove") or n:find("fist") or n:find("hand") or n:find("gauntlet") then
+                    pcall(function() hum:EquipTool(tool) end) return
+                end
+            end
+        end
+        local ft = bp:FindFirstChildOfClass("Tool")
+        if ft then pcall(function() hum:EquipTool(ft) end) end
+    end
+end
+task.spawn(function() task.wait(2) AutoEquipPunch() end)
+Player.CharacterAdded:Connect(function(char)
+    task.wait(2) AutoEquipPunch()
+    if isTinyCombo then task.wait(0.5) setCharSize(0.001) end
+end)
+local function getPunchCFrame(targetPlayer)
+    local result = nil
+    pcall(function()
+        local tc = targetPlayer.Character
+        if not tc then return end
+        local tRoot = tc:FindFirstChild("HumanoidRootPart")
+        if not tRoot then return end
+        local hrpSize = tRoot.Size
+        local offsetZ = hrpSize.X <= 0.5 and 0.2 or hrpSize.X >= 5 and 1.5 or 1.0
+        local minY, maxY = math.huge, -math.huge
+        for _, part in pairs(tc:GetDescendants()) do
+            if part:IsA("BasePart") and part.Transparency < 1 and part.Name ~= "lookTO" then
+                pcall(function()
+                    minY = math.min(minY, part.Position.Y - part.Size.Y/2)
+                    maxY = math.max(maxY, part.Position.Y + part.Size.Y/2)
+                end)
+            end
+        end
+        local centerY = (minY == math.huge) and tRoot.Position.Y or (maxY+minY)/2
+        local vel = tRoot.AssemblyLinearVelocity
+        local pp = tRoot.Position + Vector3.new(vel.X*0.083, 0, vel.Z*0.083)
+        local lookTO = tc:FindFirstChild("lookTO")
+        if lookTO then
+            local dir = Vector3.new(lookTO.Position.X-tRoot.Position.X, 0, lookTO.Position.Z-tRoot.Position.Z)
+            if dir.Magnitude > 0.01 then
+                dir = dir.Unit
+                result = CFrame.new(pp.X+dir.X*offsetZ, centerY, pp.Z+dir.Z*offsetZ) * CFrame.Angles(0, math.atan2(-dir.X,-dir.Z), 0)
+                return
+            end
+        end
+        result = CFrame.new(pp.X+tRoot.CFrame.LookVector.X*-offsetZ, centerY, pp.Z+tRoot.CFrame.LookVector.Z*-offsetZ) * CFrame.Angles(0, math.atan2(-tRoot.CFrame.LookVector.X, tRoot.CFrame.LookVector.Z), 0)
+    end)
+    return result
+end
+local function updateSpectateTarget(player)
+    if currentTargetConnection then currentTargetConnection:Disconnect() end
+    if player and player.Character then
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            camera.CameraSubject = humanoid
+            currentTargetConnection = player.CharacterAdded:Connect(function(newChar)
+                task.wait(0.2)
+                local newHumanoid = newChar:FindFirstChildOfClass("Humanoid")
+                if newHumanoid then camera.CameraSubject = newHumanoid end
+            end)
+        end
+    end
+end
+local function addSeparator(tab)
+    local sep = tab:AddLabel("────────────────────")
+sep.TextColor3 = Color3.fromRGB(60,10,10)
+    sep.TextSize = 10
+    sep.TextXAlignment = Enum.TextXAlignment.Center
+    sep.Size = UDim2.new(1,0,0,12)
+    sep.TextTransparency = 0.4
+    return sep
+end
+
+-- FARM TAB
+mainTab:AddSwitch("Auto Rebirth", function(state)
+    isAuto = state
+    if isAuto then pcall(function() remoterebirths:FireServer() end) end
+end)
+strong.Changed:Connect(function()
+    if isAuto then pcall(function() remoterebirths:FireServer() end) end
+end)
+mainTab:AddSwitch("Auto Strength",   function(state) isAutolift   = state end)
+mainTab:AddSwitch("Auto Glitch",     function(state) isAutoGlitch = state end)
+mainTab:AddSwitch("Auto Spin Wheel", function(state) isapin        = state end)
+mainTab:AddSwitch("Anti Afk", function(state)
+    if state then
+        if antiAFKConnection then antiAFKConnection:Disconnect() end
+        antiAFKConnection = Player.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    else
+        if antiAFKConnection then antiAFKConnection:Disconnect() antiAFKConnection = nil end
+    end
+end)
+mainTab:AddSwitch("Anti Lag [BLACK SCREEN]", function(state)
+    if state then
+        pcall(function()
+            local L = game:GetService("Lighting")
+            savedLighting.GlobalShadows  = L.GlobalShadows
+            savedLighting.Brightness     = L.Brightness
+            savedLighting.FogEnd         = L.FogEnd
+            savedLighting.Ambient        = L.Ambient
+            savedLighting.OutdoorAmbient = L.OutdoorAmbient
+            L.GlobalShadows = false L.Brightness = 0 L.FogEnd = 9e9
+            L.Ambient = Color3.fromRGB(0,0,0) L.OutdoorAmbient = Color3.fromRGB(0,0,0)
+            for _, v in ipairs(L:GetChildren()) do
+                if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect")
+                or v:IsA("BloomEffect") or v:IsA("DepthOfFieldEffect") or v:IsA("Atmosphere") then
+                    v.Enabled = false
+                end
+            end
+        end)
+        pcall(function() settings().Rendering.QualityLevel = 1 end)
+    else
