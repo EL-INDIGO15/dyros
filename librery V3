@@ -1,0 +1,1085 @@
+--// =========================================================
+--// HADES UI V3 - CORE ENGINE
+--// UNIVERSAL + SMART MEMORY + THEME ENGINE BASE
+--// =========================================================
+
+if getgenv().HADES_V3_LOADED then
+    if getgenv().HadesUI and getgenv().HadesUI.Destroy then
+        getgenv().HadesUI:Destroy()
+    end
+end
+
+getgenv().HADES_V3_LOADED = true
+
+local HadesUI = {}
+HadesUI.__index = HadesUI
+
+getgenv().HadesUI = HadesUI
+
+--// =============================
+--// SERVICES
+--// =============================
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+--// =============================
+--// INTERNAL STORAGE
+--// =============================
+
+HadesUI._MainGui = nil
+HadesUI._Windows = {}
+HadesUI._Memory = {}
+HadesUI._Connections = {}
+
+--// =============================
+--// COLOR ENGINE V3
+--// =============================
+
+local NamedColors = {
+    gold = Color3.fromRGB(255,215,0),
+    silver = Color3.fromRGB(192,192,192),
+    crimson = Color3.fromRGB(220,20,60),
+    neonblue = Color3.fromRGB(0,255,255),
+    emerald = Color3.fromRGB(80,200,120),
+    violet = Color3.fromRGB(138,43,226),
+    orange = Color3.fromRGB(255,140,0),
+    pink = Color3.fromRGB(255,105,180)
+}
+
+function HadesUI:ParseColor(input)
+
+    if typeof(input) == "Color3" then
+        return input
+    end
+
+    if typeof(input) == "string" then
+        local lower = string.lower(input)
+
+        if NamedColors[lower] then
+            return NamedColors[lower]
+        end
+
+        if string.sub(lower,1,1) == "#" then
+            local hex = string.sub(lower,2)
+            return Color3.fromRGB(
+                tonumber("0x"..hex:sub(1,2)),
+                tonumber("0x"..hex:sub(3,4)),
+                tonumber("0x"..hex:sub(5,6))
+            )
+        end
+    end
+
+    return Color3.fromRGB(255,255,255)
+end
+
+--// =============================
+--// DEFAULT CONFIG
+--// =============================
+
+HadesUI.DefaultConfig = {
+    Title = "Hades UI V3",
+    TabStyle = "HorizontalTab", -- or VerticalTab
+    SmartMemory = false,
+    MainColor = Color3.fromRGB(30,30,30),
+    AccentColor = Color3.fromRGB(170,0,0),
+    TextColor = Color3.fromRGB(255,255,255),
+    CornerRadius = 10,
+    Background = nil
+}
+
+--// =============================
+--// CREATE WINDOW
+--// =============================
+
+function HadesUI:CreateWindow(config)
+
+    config = config or {}
+
+    for k,v in pairs(HadesUI.DefaultConfig) do
+        if config[k] == nil then
+            config[k] = v
+        end
+    end
+
+    config.MainColor = self:ParseColor(config.MainColor)
+    config.AccentColor = self:ParseColor(config.AccentColor)
+    config.TextColor = self:ParseColor(config.TextColor)
+
+    -- Destroy old
+    if HadesUI._MainGui then
+        HadesUI._MainGui:Destroy()
+    end
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "HADES_UI_V3"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = game.CoreGui
+
+    HadesUI._MainGui = ScreenGui
+
+    local Main = Instance.new("Frame")
+    Main.Size = UDim2.new(0,600,0,400)
+    Main.Position = UDim2.new(0.5,-300,0.5,-200)
+    Main.BackgroundColor3 = config.MainColor
+    Main.Parent = ScreenGui
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0,config.CornerRadius)
+    corner.Parent = Main
+
+    -- Drag System
+    local dragging = false
+    local dragInput, dragStart, startPos
+
+    Main.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = Main.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    Main.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            Main.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    -- Title
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1,0,0,40)
+    Title.BackgroundTransparency = 1
+    Title.Text = config.Title
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 18
+    Title.TextColor3 = config.TextColor
+    Title.Parent = Main
+
+    -- Container
+    local Container = Instance.new("Frame")
+    Container.Size = UDim2.new(1,0,1,-40)
+    Container.Position = UDim2.new(0,0,0,40)
+    Container.BackgroundTransparency = 1
+    Container.Parent = Main
+
+    -- Store window
+    local Window = {}
+    Window.Main = Main
+    Window.Container = Container
+    Window.Config = config
+    Window.Tabs = {}
+
+    table.insert(HadesUI._Windows, Window)
+
+    return Window
+end
+
+--// =============================
+--// SMART MEMORY SYSTEM
+--// =============================
+
+function HadesUI:SaveMemory(key, value)
+    HadesUI._Memory[key] = value
+end
+
+function HadesUI:GetMemory(key)
+    return HadesUI._Memory[key]
+end
+
+--// =============================
+--// DESTROY SYSTEM
+--// =============================
+
+function HadesUI:Destroy()
+    if HadesUI._MainGui then
+        HadesUI._MainGui:Destroy()
+        HadesUI._MainGui = nil
+    end
+
+    for _,conn in pairs(HadesUI._Connections) do
+        pcall(function()
+            conn:Disconnect()
+        end)
+    end
+
+    HadesUI._Connections = {}
+end
+
+--// =========================================================
+--// HADES UI V3 - TAB ENGINE
+--// HorizontalTab + VerticalTab + Auto Mode
+--// =========================================================
+
+-- Create Tab System
+function HadesUI:_CreateTabSystem(Window)
+
+    local config = Window.Config
+    local Main = Window.Main
+    local Container = Window.Container
+
+    local TabHolder = Instance.new("Frame")
+    TabHolder.Name = "HADES_TAB_HOLDER"
+    TabHolder.BackgroundTransparency = 1
+    TabHolder.Parent = Container
+
+    local PageHolder = Instance.new("Frame")
+    PageHolder.Name = "HADES_PAGE_HOLDER"
+    PageHolder.BackgroundTransparency = 1
+    PageHolder.Parent = Container
+
+    if config.TabStyle == "VerticalTab" then
+        
+        TabHolder.Size = UDim2.new(0,150,1,0)
+        TabHolder.Position = UDim2.new(0,0,0,0)
+
+        PageHolder.Size = UDim2.new(1,-150,1,0)
+        PageHolder.Position = UDim2.new(0,150,0,0)
+
+    else -- Default Horizontal
+        
+        TabHolder.Size = UDim2.new(1,0,0,40)
+        TabHolder.Position = UDim2.new(0,0,0,0)
+
+        PageHolder.Size = UDim2.new(1,0,1,-40)
+        PageHolder.Position = UDim2.new(0,0,0,40)
+
+        config.TabStyle = "HorizontalTab"
+    end
+
+    local TabLayout = Instance.new("UIListLayout")
+    TabLayout.FillDirection = config.TabStyle == "VerticalTab" and Enum.FillDirection.Vertical or Enum.FillDirection.Horizontal
+    TabLayout.Parent = TabHolder
+
+    Window.TabHolder = TabHolder
+    Window.PageHolder = PageHolder
+end
+
+-- Add Tab
+function HadesUI:AddTab(Window, name)
+
+    if not Window.TabHolder then
+        self:_CreateTabSystem(Window)
+    end
+
+    local config = Window.Config
+
+    local TabButton = Instance.new("TextButton")
+    TabButton.Text = name
+    TabButton.Font = Enum.Font.Gotham
+    TabButton.TextSize = 14
+    TabButton.TextColor3 = config.TextColor
+    TabButton.BackgroundColor3 = config.MainColor
+    TabButton.AutoButtonColor = false
+
+    if config.TabStyle == "VerticalTab" then
+        TabButton.Size = UDim2.new(1,0,0,40)
+    else
+        TabButton.Size = UDim2.new(0,120,1,0)
+    end
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0,config.CornerRadius)
+    corner.Parent = TabButton
+
+    TabButton.Parent = Window.TabHolder
+
+    local Page = Instance.new("Frame")
+    Page.Name = name .. "_PAGE"
+    Page.Size = UDim2.new(1,0,1,0)
+    Page.BackgroundTransparency = 1
+    Page.Visible = false
+    Page.Parent = Window.PageHolder
+
+    local UIList = Instance.new("UIListLayout")
+    UIList.Padding = UDim.new(0,6)
+    UIList.Parent = Page
+
+    Window.Tabs[name] = {
+        Button = TabButton,
+        Page = Page
+    }
+
+    -- First tab auto visible
+    if #Window.PageHolder:GetChildren() == 2 then
+        Page.Visible = true
+        TabButton.BackgroundColor3 = config.AccentColor
+    end
+
+    TabButton.MouseButton1Click:Connect(function()
+
+        for tabName,tabData in pairs(Window.Tabs) do
+            tabData.Page.Visible = false
+            tabData.Button.BackgroundColor3 = config.MainColor
+        end
+
+        Page.Visible = true
+        TabButton.BackgroundColor3 = config.AccentColor
+
+    end)
+
+    return Page
+end
+
+-- Universal Aliases for compatibility
+HadesUI.CreateTab = HadesUI.AddTab
+HadesUI.CreatePage = HadesUI.AddTab
+HadesUI.AddPage = HadesUI.AddTab
+
+--// =========================================================
+--// HADES UI V3 - ELEMENT ENGINE
+--// Button + Toggle + Slider + SmartMemory Connected
+--// =========================================================
+
+-- Internal Memory Helper
+local function HandleMemory(window, key, defaultValue)
+
+    if not window.Config.SmartMemory then
+        return defaultValue
+    end
+
+    if HadesUI._Memory[key] ~= nil then
+        return HadesUI._Memory[key]
+    end
+
+    HadesUI._Memory[key] = defaultValue
+    return defaultValue
+end
+
+--// =============================
+--// BUTTON
+--// =============================
+
+function HadesUI:AddButton(TabPage, text, callback)
+
+    local window = HadesUI._Windows[#HadesUI._Windows]
+    local config = window.Config
+
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1,-10,0,35)
+    Button.Position = UDim2.new(0,5,0,0)
+    Button.Text = text
+    Button.Font = Enum.Font.Gotham
+    Button.TextSize = 14
+    Button.TextColor3 = config.TextColor
+    Button.BackgroundColor3 = config.MainColor
+    Button.Parent = TabPage
+
+    Instance.new("UICorner", Button).CornerRadius = UDim.new(0,config.CornerRadius)
+
+    Button.MouseButton1Click:Connect(function()
+        if callback then
+            callback()
+        end
+    end)
+
+    return Button
+end
+
+HadesUI.CreateButton = HadesUI.AddButton
+
+--// =============================
+--// TOGGLE / SWITCH
+--// =============================
+
+function HadesUI:AddToggle(TabPage, text, default, callback)
+
+    local window = HadesUI._Windows[#HadesUI._Windows]
+    local config = window.Config
+
+    local memoryKey = text .. "_TOGGLE"
+    default = HandleMemory(window, memoryKey, default or false)
+
+    local State = default
+
+    local Toggle = Instance.new("TextButton")
+    Toggle.Size = UDim2.new(1,-10,0,35)
+    Toggle.Position = UDim2.new(0,5,0,0)
+    Toggle.Text = text
+    Toggle.Font = Enum.Font.Gotham
+    Toggle.TextSize = 14
+    Toggle.TextColor3 = config.TextColor
+    Toggle.BackgroundColor3 = State and config.AccentColor or config.MainColor
+    Toggle.Parent = TabPage
+
+    Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0,config.CornerRadius)
+
+    Toggle.MouseButton1Click:Connect(function()
+
+        State = not State
+        Toggle.BackgroundColor3 = State and config.AccentColor or config.MainColor
+
+        if window.Config.SmartMemory then
+            HadesUI._Memory[memoryKey] = State
+        end
+
+        if callback then
+            callback(State)
+        end
+    end)
+
+    if callback then
+        callback(State)
+    end
+
+    return {
+        Get = function()
+            return State
+        end,
+        Set = function(val)
+            State = val
+            Toggle.BackgroundColor3 = State and config.AccentColor or config.MainColor
+            if window.Config.SmartMemory then
+                HadesUI._Memory[memoryKey] = State
+            end
+        end
+    }
+end
+
+-- Aliases
+HadesUI.AddSwitch = HadesUI.AddToggle
+HadesUI.CreateToggle = HadesUI.AddToggle
+HadesUI.CreateSwitch = HadesUI.AddToggle
+
+--// =============================
+--// SLIDER
+--// =============================
+
+function HadesUI:AddSlider(TabPage, text, min, max, default, callback)
+
+    local window = HadesUI._Windows[#HadesUI._Windows]
+    local config = window.Config
+
+    min = min or 0
+    max = max or 100
+
+    local memoryKey = text .. "_SLIDER"
+    default = HandleMemory(window, memoryKey, default or min)
+
+    local Value = default
+
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(1,-10,0,50)
+    Frame.Position = UDim2.new(0,5,0,0)
+    Frame.BackgroundColor3 = config.MainColor
+    Frame.Parent = TabPage
+
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,config.CornerRadius)
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1,0,0,20)
+    Label.BackgroundTransparency = 1
+    Label.Text = text .. " : " .. Value
+    Label.TextColor3 = config.TextColor
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 13
+    Label.Parent = Frame
+
+    local Bar = Instance.new("Frame")
+    Bar.Size = UDim2.new(1,-20,0,10)
+    Bar.Position = UDim2.new(0,10,0,30)
+    Bar.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    Bar.Parent = Frame
+
+    Instance.new("UICorner", Bar).CornerRadius = UDim.new(1,0)
+
+    local Fill = Instance.new("Frame")
+    Fill.Size = UDim2.new((Value-min)/(max-min),0,1,0)
+    Fill.BackgroundColor3 = config.AccentColor
+    Fill.Parent = Bar
+
+    Instance.new("UICorner", Fill).CornerRadius = UDim.new(1,0)
+
+    local dragging = false
+
+    Bar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+
+            local pos = math.clamp(
+                (input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X,
+                0,1
+            )
+
+            Fill.Size = UDim2.new(pos,0,1,0)
+
+            Value = math.floor(min + ((max-min) * pos))
+            Label.Text = text .. " : " .. Value
+
+            if window.Config.SmartMemory then
+                HadesUI._Memory[memoryKey] = Value
+            end
+
+            if callback then
+                callback(Value)
+            end
+        end
+    end)
+
+    if callback then
+        callback(Value)
+    end
+
+    return {
+        Get = function()
+            return Value
+        end,
+        Set = function(v)
+            v = math.clamp(v, min, max)
+            Value = v
+            Fill.Size = UDim2.new((v-min)/(max-min),0,1,0)
+            Label.Text = text .. " : " .. Value
+            if window.Config.SmartMemory then
+                HadesUI._Memory[memoryKey] = Value
+            end
+        end
+    }
+end
+
+HadesUI.CreateSlider = HadesUI.AddSlider
+
+--// =========================================================
+--// HADES UI V3 - ADVANCED ELEMENTS
+--// Dropdown + PlayerDropdown + TextBox + Keybind
+--// =========================================================
+
+local Players = game:GetService("Players")
+
+--// =============================
+--// DROPDOWN
+--// =============================
+
+function HadesUI:AddDropdown(TabPage, text, options, default, callback, searchable)
+
+    local window = HadesUI._Windows[#HadesUI._Windows]
+    local config = window.Config
+
+    options = options or {}
+
+    local memoryKey = text .. "_DROPDOWN"
+    default = HandleMemory(window, memoryKey, default or options[1])
+
+    local Selected = default
+
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(1,-10,0,35)
+    Frame.Position = UDim2.new(0,5,0,0)
+    Frame.BackgroundColor3 = config.MainColor
+    Frame.Parent = TabPage
+
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,config.CornerRadius)
+
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1,0,1,0)
+    Button.Text = text .. " : " .. tostring(Selected)
+    Button.Font = Enum.Font.Gotham
+    Button.TextSize = 14
+    Button.TextColor3 = config.TextColor
+    Button.BackgroundTransparency = 1
+    Button.Parent = Frame
+
+    local DropFrame = Instance.new("Frame")
+    DropFrame.Size = UDim2.new(1,-10,0,0)
+    DropFrame.Position = UDim2.new(0,5,0,40)
+    DropFrame.BackgroundColor3 = config.MainColor
+    DropFrame.Visible = false
+    DropFrame.Parent = TabPage
+
+    Instance.new("UICorner", DropFrame).CornerRadius = UDim.new(0,config.CornerRadius)
+
+    local Layout = Instance.new("UIListLayout", DropFrame)
+    Layout.Padding = UDim.new(0,3)
+
+    local SearchBox
+
+    if searchable then
+        SearchBox = Instance.new("TextBox")
+        SearchBox.Size = UDim2.new(1,0,0,30)
+        SearchBox.PlaceholderText = "Search..."
+        SearchBox.Text = ""
+        SearchBox.Font = Enum.Font.Gotham
+        SearchBox.TextSize = 13
+        SearchBox.TextColor3 = config.TextColor
+        SearchBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+        SearchBox.Parent = DropFrame
+
+        Instance.new("UICorner", SearchBox).CornerRadius = UDim.new(0,6)
+    end
+
+    local function Refresh(filter)
+
+        for _, child in pairs(DropFrame:GetChildren()) do
+            if child:IsA("TextButton") then
+                child:Destroy()
+            end
+        end
+
+        for _, option in pairs(options) do
+
+            if filter and not string.find(string.lower(option), string.lower(filter)) then
+                continue
+            end
+
+            local OptionBtn = Instance.new("TextButton")
+            OptionBtn.Size = UDim2.new(1,0,0,30)
+            OptionBtn.Text = option
+            OptionBtn.Font = Enum.Font.Gotham
+            OptionBtn.TextSize = 13
+            OptionBtn.TextColor3 = config.TextColor
+            OptionBtn.BackgroundColor3 = Color3.fromRGB(45,45,45)
+            OptionBtn.Parent = DropFrame
+
+            Instance.new("UICorner", OptionBtn).CornerRadius = UDim.new(0,6)
+
+            OptionBtn.MouseButton1Click:Connect(function()
+                Selected = option
+                Button.Text = text .. " : " .. Selected
+                DropFrame.Visible = false
+                DropFrame.Size = UDim2.new(1,-10,0,0)
+
+                if window.Config.SmartMemory then
+                    HadesUI._Memory[memoryKey] = Selected
+                end
+
+                if callback then
+                    callback(Selected)
+                end
+            end)
+        end
+
+        DropFrame.Size = UDim2.new(1,-10,0,#DropFrame:GetChildren()*33)
+    end
+
+    Button.MouseButton1Click:Connect(function()
+        DropFrame.Visible = not DropFrame.Visible
+        if DropFrame.Visible then
+            Refresh()
+        else
+            DropFrame.Size = UDim2.new(1,-10,0,0)
+        end
+    end)
+
+    if SearchBox then
+        SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+            Refresh(SearchBox.Text)
+        end)
+    end
+
+    if callback then
+        callback(Selected)
+    end
+
+    return {
+        Get = function()
+            return Selected
+        end,
+        Set = function(val)
+            Selected = val
+            Button.Text = text .. " : " .. Selected
+        end
+    }
+end
+
+HadesUI.CreateDropdown = HadesUI.AddDropdown
+
+--// =============================
+--// PLAYER DROPDOWN
+--// =============================
+
+function HadesUI:AddPlayerDropdown(TabPage, text, callback)
+
+    local function GetPlayers()
+        local list = {}
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= Players.LocalPlayer then
+                table.insert(list, plr.Name)
+            end
+        end
+        return list
+    end
+
+    return HadesUI:AddDropdown(
+        TabPage,
+        text,
+        GetPlayers(),
+        nil,
+        callback,
+        true
+    )
+end
+
+HadesUI.CreatePlayerDropdown = HadesUI.AddPlayerDropdown
+
+--// =============================
+--// TEXTBOX
+--// =============================
+
+function HadesUI:AddTextBox(TabPage, text, default, callback)
+
+    local window = HadesUI._Windows[#HadesUI._Windows]
+    local config = window.Config
+
+    local memoryKey = text .. "_TEXTBOX"
+    default = HandleMemory(window, memoryKey, default or "")
+
+    local Box = Instance.new("TextBox")
+    Box.Size = UDim2.new(1,-10,0,35)
+    Box.Position = UDim2.new(0,5,0,0)
+    Box.Text = default
+    Box.PlaceholderText = text
+    Box.Font = Enum.Font.Gotham
+    Box.TextSize = 14
+    Box.TextColor3 = config.TextColor
+    Box.BackgroundColor3 = config.MainColor
+    Box.Parent = TabPage
+
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0,config.CornerRadius)
+
+    Box.FocusLost:Connect(function()
+        if window.Config.SmartMemory then
+            HadesUI._Memory[memoryKey] = Box.Text
+        end
+
+        if callback then
+            callback(Box.Text)
+        end
+    end)
+
+    if callback then
+        callback(Box.Text)
+    end
+
+    return Box
+end
+
+HadesUI.CreateTextBox = HadesUI.AddTextBox
+
+--// =============================
+--// KEYBIND
+--// =============================
+
+function HadesUI:AddKeybind(TabPage, text, defaultKey, callback)
+
+    local window = HadesUI._Windows[#HadesUI._Windows]
+    local config = window.Config
+
+    local memoryKey = text .. "_KEYBIND"
+    defaultKey = HandleMemory(window, memoryKey, defaultKey or Enum.KeyCode.RightControl)
+
+    local CurrentKey = defaultKey
+    local waiting = false
+
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1,-10,0,35)
+    Button.Position = UDim2.new(0,5,0,0)
+    Button.Text = text .. " : " .. CurrentKey.Name
+    Button.Font = Enum.Font.Gotham
+    Button.TextSize = 14
+    Button.TextColor3 = config.TextColor
+    Button.BackgroundColor3 = config.MainColor
+    Button.Parent = TabPage
+
+    Instance.new("UICorner", Button).CornerRadius = UDim.new(0,config.CornerRadius)
+
+    Button.MouseButton1Click:Connect(function()
+        waiting = true
+        Button.Text = text .. " : ..."
+    end)
+
+    UIS.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+
+        if waiting then
+            if input.KeyCode ~= Enum.KeyCode.Unknown then
+                CurrentKey = input.KeyCode
+                Button.Text = text .. " : " .. CurrentKey.Name
+                waiting = false
+
+                if window.Config.SmartMemory then
+                    HadesUI._Memory[memoryKey] = CurrentKey
+                end
+            end
+        else
+            if input.KeyCode == CurrentKey then
+                if callback then
+                    callback()
+                end
+            end
+        end
+    end)
+
+    return {
+        Get = function()
+            return CurrentKey
+        end
+    }
+end
+
+HadesUI.CreateKeybind = HadesUI.AddKeybind
+
+--// =========================================================
+--// HADES UI V3 - SYSTEM ENGINE
+--// Sections + Notifications + Themes + Destroy + AntiDuplicate
+--// =========================================================
+
+local TweenService = game:GetService("TweenService")
+
+--// =============================
+--// ANTI DUPLICATE PROTECTION
+--// =============================
+
+if game.CoreGui:FindFirstChild("HadesUI_V3") then
+    game.CoreGui:FindFirstChild("HadesUI_V3"):Destroy()
+end
+
+--// =============================
+--// SECTION
+--// =============================
+
+function HadesUI:AddSection(TabPage, text)
+
+    local window = HadesUI._Windows[#HadesUI._Windows]
+    local config = window.Config
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1,-10,0,25)
+    Label.Position = UDim2.new(0,5,0,0)
+    Label.Text = "─── "..text.." ───"
+    Label.Font = Enum.Font.GothamBold
+    Label.TextSize = 14
+    Label.TextColor3 = config.AccentColor
+    Label.BackgroundTransparency = 1
+    Label.Parent = TabPage
+
+    return Label
+end
+
+HadesUI.CreateSection = HadesUI.AddSection
+
+--// =============================
+--// NOTIFICATION SYSTEM
+--// =============================
+
+function HadesUI:Notify(title, message, duration)
+
+    duration = duration or 3
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "HadesNotification"
+    ScreenGui.Parent = game.CoreGui
+
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0,300,0,80)
+    Frame.Position = UDim2.new(1,-310,1,-100)
+    Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    Frame.Parent = ScreenGui
+
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,10)
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1,-10,0,25)
+    Title.Position = UDim2.new(0,5,0,5)
+    Title.Text = title
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 14
+    Title.TextColor3 = Color3.fromRGB(255,255,255)
+    Title.BackgroundTransparency = 1
+    Title.Parent = Frame
+
+    local Message = Instance.new("TextLabel")
+    Message.Size = UDim2.new(1,-10,0,40)
+    Message.Position = UDim2.new(0,5,0,35)
+    Message.TextWrapped = true
+    Message.Text = message
+    Message.Font = Enum.Font.Gotham
+    Message.TextSize = 13
+    Message.TextColor3 = Color3.fromRGB(200,200,200)
+    Message.BackgroundTransparency = 1
+    Message.Parent = Frame
+
+    Frame.Position = UDim2.new(1,300,1,-100)
+
+    TweenService:Create(
+        Frame,
+        TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        {Position = UDim2.new(1,-310,1,-100)}
+    ):Play()
+
+    task.delay(duration, function()
+        TweenService:Create(
+            Frame,
+            TweenInfo.new(0.4),
+            {Position = UDim2.new(1,300,1,-100)}
+        ):Play()
+
+        task.wait(0.5)
+        ScreenGui:Destroy()
+    end)
+end
+
+--// =============================
+--// DYNAMIC THEME SYSTEM
+--// =============================
+
+function HadesUI:SetTheme(newTheme)
+
+    for _, window in pairs(HadesUI._Windows) do
+        for key,value in pairs(newTheme) do
+            window.Config[key] = value
+        end
+    end
+
+    HadesUI:Notify("Theme Updated","Theme applied successfully",2)
+end
+
+--// =============================
+--// PRESET THEMES
+--// =============================
+
+HadesUI.Themes = {
+
+    Dark = {
+        MainColor = Color3.fromRGB(30,30,30),
+        AccentColor = Color3.fromRGB(170,0,255),
+        TextColor = Color3.fromRGB(255,255,255)
+    },
+
+    Gold = {
+        MainColor = Color3.fromRGB(40,35,15),
+        AccentColor = Color3.fromRGB(255,215,0),
+        TextColor = Color3.fromRGB(255,240,180)
+    },
+
+    Blood = {
+        MainColor = Color3.fromRGB(40,0,0),
+        AccentColor = Color3.fromRGB(255,0,0),
+        TextColor = Color3.fromRGB(255,180,180)
+    }
+
+}
+
+--// =============================
+--// DESTROY CLEAN
+--// =============================
+
+function HadesUI:Destroy()
+
+    if game.CoreGui:FindFirstChild("HadesUI_V3") then
+        game.CoreGui:FindFirstChild("HadesUI_V3"):Destroy()
+    end
+
+    HadesUI._Windows = {}
+    HadesUI._Memory = {}
+
+end
+
+--// =========================================================
+--// HADES UI V3 - FINAL CORE
+--// Universal Compatibility + Loader + Final Return
+--// =========================================================
+
+--// =============================
+--// UNIVERSAL COMPATIBILITY LAYER
+--// =============================
+
+-- Dyros style aliases
+HadesUI.new = HadesUI.CreateWindow
+HadesUI.Window = HadesUI.CreateWindow
+HadesUI.Tab = HadesUI.CreateTab
+HadesUI.Button = HadesUI.AddButton
+HadesUI.Switch = HadesUI.AddSwitch
+HadesUI.Slider = HadesUI.AddSlider
+HadesUI.Dropdown = HadesUI.AddDropdown
+HadesUI.Keybind = HadesUI.AddKeybind
+HadesUI.TextBox = HadesUI.AddTextBox
+
+-- Jelo style fallback
+function HadesUI:CreateFolder(...)
+    return self:CreateTab(...)
+end
+
+function HadesUI:AddToggle(...)
+    return self:AddSwitch(...)
+end
+
+--// =============================
+--// AUTO MEMORY RECONNECT
+--// =============================
+
+function HadesUI:ReconnectMemory()
+
+    for _, window in pairs(HadesUI._Windows) do
+        if window.Config.SmartMemory then
+            for key,value in pairs(HadesUI._Memory) do
+                HadesUI._Memory[key] = value
+            end
+        end
+    end
+
+end
+
+--// =============================
+--// RAINBOW ACCENT MODE
+--// =============================
+
+function HadesUI:EnableRainbow(speed)
+
+    speed = speed or 0.1
+
+    task.spawn(function()
+        while task.wait(speed) do
+            local hue = tick() % 5 / 5
+            local color = Color3.fromHSV(hue,1,1)
+
+            for _, window in pairs(HadesUI._Windows) do
+                window.Config.AccentColor = color
+            end
+        end
+    end)
+end
+
+--// =============================
+--// UNIVERSAL LOADER SUPPORT
+--// =============================
+
+HadesUI.Version = "V3.0 UNIVERSAL"
+HadesUI.Author = "Hades"
+
+--// =============================
+--// FINAL RETURN
+--// =============================
+
+return HadesUI
