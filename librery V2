@@ -1,0 +1,948 @@
+--// ==============================
+--// HADES UI LIBRARY V2 - CORE
+--// ==============================
+
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+local Player = Players.LocalPlayer
+
+--// ==============================
+--// ANTI DUPLICATE SYSTEM
+--// ==============================
+
+if Player:WaitForChild("PlayerGui"):FindFirstChild("HadesUI") then
+	Player.PlayerGui.HadesUI:Destroy()
+end
+
+if Player.PlayerGui:FindFirstChild("HadesNotify") then
+	Player.PlayerGui.HadesNotify:Destroy()
+end
+
+--// ==============================
+--// LIBRARY TABLE
+--// ==============================
+
+local HadesUI = {}
+HadesUI.__index = HadesUI
+
+--// DEFAULT CONFIG
+HadesUI.Config = {
+	MainColor = Color3.fromRGB(25,25,25),
+	AccentColor = Color3.fromRGB(170,0,255),
+	TextColor = Color3.fromRGB(255,255,255),
+	BackgroundImage = nil,
+	CornerRadius = 0 -- 0 = cuadrado
+}
+
+--// ==============================
+--// PERSONALIZACIÓN
+--// ==============================
+
+function HadesUI:SetSquare()
+	self.Config.CornerRadius = 0
+end
+
+function HadesUI:SetRounded(radius)
+	self.Config.CornerRadius = radius or 12
+end
+
+function HadesUI:SetMainColor(color)
+	self.Config.MainColor = color
+end
+
+function HadesUI:SetAccentColor(color)
+	self.Config.AccentColor = color
+end
+
+function HadesUI:SetTextColor(color)
+	self.Config.TextColor = color
+end
+
+function HadesUI:SetBackground(imageId)
+	self.Config.BackgroundImage = "rbxassetid://" .. imageId
+end
+
+--// ==============================
+--// CREATE WINDOW
+--// ==============================
+
+function HadesUI:CreateWindow(title)
+
+	local ScreenGui = Instance.new("ScreenGui")
+	ScreenGui.Name = "HadesUI"
+	ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+
+	local Main = Instance.new("Frame")
+	Main.Size = UDim2.new(0,550,0,400)
+	Main.Position = UDim2.new(0.5,-275,0.5,-200)
+	Main.BackgroundColor3 = self.Config.MainColor
+	Main.Parent = ScreenGui
+
+	if self.Config.CornerRadius > 0 then
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0,self.Config.CornerRadius)
+		corner.Parent = Main
+	end
+
+	if self.Config.BackgroundImage then
+		local BG = Instance.new("ImageLabel")
+		BG.Size = UDim2.new(1,0,1,0)
+		BG.BackgroundTransparency = 1
+		BG.Image = self.Config.BackgroundImage
+		BG.Parent = Main
+	end
+
+	--// TITLE
+	local Title = Instance.new("TextLabel")
+	Title.Size = UDim2.new(1,0,0,40)
+	Title.BackgroundTransparency = 1
+	Title.Text = title
+	Title.TextColor3 = self.Config.TextColor
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 20
+	Title.Parent = Main
+
+	--// MINIMIZE BUTTON
+	local MinBtn = Instance.new("TextButton")
+	MinBtn.Size = UDim2.new(0,80,0,28)
+	MinBtn.Position = UDim2.new(1,-90,0,6)
+	MinBtn.Text = "Hades"
+	MinBtn.BackgroundColor3 = self.Config.AccentColor
+	MinBtn.TextColor3 = Color3.new(1,1,1)
+	MinBtn.Font = Enum.Font.GothamBold
+	MinBtn.TextSize = 14
+	MinBtn.Parent = Main
+
+	if self.Config.CornerRadius > 0 then
+		local c = Instance.new("UICorner")
+		c.CornerRadius = UDim.new(0,6)
+		c.Parent = MinBtn
+	end
+
+	--// HOLDER
+	local Holder = Instance.new("Frame")
+	Holder.Size = UDim2.new(1,-20,1,-60)
+	Holder.Position = UDim2.new(0,10,0,50)
+	Holder.BackgroundTransparency = 1
+	Holder.Parent = Main
+
+	local UIList = Instance.new("UIListLayout")
+	UIList.Padding = UDim.new(0,8)
+	UIList.Parent = Holder
+
+	--// DRAG SYSTEM
+	local dragging, dragInput, dragStart, startPos
+
+	Main.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = Main.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			local delta = input.Position - dragStart
+			Main.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+
+	--// MINIMIZE LOGIC
+	local minimized = false
+
+	MinBtn.MouseButton1Click:Connect(function()
+		minimized = not minimized
+
+		if minimized then
+			TweenService:Create(Main, TweenInfo.new(0.25), {
+				Size = UDim2.new(0,550,0,45)
+			}):Play()
+		else
+			TweenService:Create(Main, TweenInfo.new(0.25), {
+				Size = UDim2.new(0,550,0,400)
+			}):Play()
+		end
+	end)
+
+	local Window = {}
+	Window.Holder = Holder
+	Window.Config = self.Config
+
+	return Window
+end
+
+--// ==============================
+--// FOLDER SYSTEM
+--// ==============================
+
+function Window:AddFolder(name)
+
+	local Folder = {}
+	Folder.Config = self.Config
+
+	--// HEADER
+	local Header = Instance.new("TextButton")
+	Header.Size = UDim2.new(1,0,0,35)
+	Header.BackgroundColor3 = self.Config.AccentColor
+	Header.Text = "▼ "..name
+	Header.TextColor3 = Color3.new(1,1,1)
+	Header.Font = Enum.Font.GothamBold
+	Header.TextSize = 14
+	Header.Parent = self.Holder
+
+	if self.Config.CornerRadius > 0 then
+		local c = Instance.new("UICorner")
+		c.CornerRadius = UDim.new(0,6)
+		c.Parent = Header
+	end
+
+	--// CONTAINER
+	local Container = Instance.new("Frame")
+	Container.Size = UDim2.new(1,0,0,0)
+	Container.BackgroundTransparency = 1
+	Container.ClipsDescendants = true
+	Container.Parent = self.Holder
+
+	local UIList = Instance.new("UIListLayout")
+	UIList.Padding = UDim.new(0,6)
+	UIList.Parent = Container
+
+	local opened = false
+
+	Header.MouseButton1Click:Connect(function()
+		opened = not opened
+		Header.Text = (opened and "▲ " or "▼ ")..name
+
+		if opened then
+			Container:TweenSize(
+				UDim2.new(1,0,0,UIList.AbsoluteContentSize.Y + 5),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				0.25,
+				true
+			)
+		else
+			Container:TweenSize(
+				UDim2.new(1,0,0,0),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				0.25,
+				true
+			)
+		end
+	end)
+
+	UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		if opened then
+			Container.Size = UDim2.new(1,0,0,UIList.AbsoluteContentSize.Y + 5)
+		end
+	end)
+
+	Folder.Container = Container
+
+	--// ==============================
+	--// BUTTON
+	--// ==============================
+
+	function Folder:AddButton(text, callback)
+
+		local Btn = Instance.new("TextButton")
+		Btn.Size = UDim2.new(1,0,0,30)
+		Btn.BackgroundColor3 = self.Config.MainColor
+		Btn.Text = text
+		Btn.TextColor3 = self.Config.TextColor
+		Btn.Font = Enum.Font.Gotham
+		Btn.TextSize = 14
+		Btn.Parent = Container
+
+		if self.Config.CornerRadius > 0 then
+			local c = Instance.new("UICorner")
+			c.CornerRadius = UDim.new(0,6)
+			c.Parent = Btn
+		end
+
+		Btn.MouseButton1Click:Connect(function()
+
+			Btn:TweenSize(UDim2.new(0.97,0,0,28),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				0.1,true)
+
+			task.wait(0.1)
+
+			Btn:TweenSize(UDim2.new(1,0,0,30),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				0.1,true)
+
+			if callback then
+				callback()
+			end
+		end)
+
+	end
+
+	--// ==============================
+	--// SWITCH
+	--// ==============================
+
+	function Folder:AddSwitch(text, callback)
+
+		local toggled = false
+
+		local Frame = Instance.new("Frame")
+		Frame.Size = UDim2.new(1,0,0,30)
+		Frame.BackgroundColor3 = self.Config.MainColor
+		Frame.Parent = Container
+
+		if self.Config.CornerRadius > 0 then
+			local c = Instance.new("UICorner")
+			c.CornerRadius = UDim.new(0,6)
+			c.Parent = Frame
+		end
+
+		local Label = Instance.new("TextLabel")
+		Label.Size = UDim2.new(0.7,0,1,0)
+		Label.BackgroundTransparency = 1
+		Label.Text = text
+		Label.TextColor3 = self.Config.TextColor
+		Label.Font = Enum.Font.Gotham
+		Label.TextSize = 14
+		Label.TextXAlignment = Enum.TextXAlignment.Left
+		Label.Parent = Frame
+
+		local ToggleBG = Instance.new("Frame")
+		ToggleBG.Size = UDim2.new(0,40,0,20)
+		ToggleBG.Position = UDim2.new(1,-50,0.5,-10)
+		ToggleBG.BackgroundColor3 = Color3.fromRGB(60,60,60)
+		ToggleBG.Parent = Frame
+
+		local Circle = Instance.new("Frame")
+		Circle.Size = UDim2.new(0,18,0,18)
+		Circle.Position = UDim2.new(0,1,0,1)
+		Circle.BackgroundColor3 = Color3.new(1,1,1)
+		Circle.Parent = ToggleBG
+
+		Instance.new("UICorner", ToggleBG).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", Circle).CornerRadius = UDim.new(1,0)
+
+		local function Update()
+			if toggled then
+				ToggleBG.BackgroundColor3 = self.Config.AccentColor
+				Circle:TweenPosition(
+					UDim2.new(1,-19,0,1),
+					Enum.EasingDirection.Out,
+					Enum.EasingStyle.Quad,
+					0.2,true
+				)
+			else
+				ToggleBG.BackgroundColor3 = Color3.fromRGB(60,60,60)
+				Circle:TweenPosition(
+					UDim2.new(0,1,0,1),
+					Enum.EasingDirection.Out,
+					Enum.EasingStyle.Quad,
+					0.2,true
+				)
+			end
+
+			if callback then
+				callback(toggled)
+			end
+		end
+
+		Frame.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				toggled = not toggled
+				Update()
+			end
+		end)
+
+		return {
+			Set = function(state)
+				toggled = state
+				Update()
+			end,
+			Get = function()
+				return toggled
+			end
+		}
+	end
+
+	return Folder
+end
+
+--// ==============================
+--// SLIDER
+--// ==============================
+
+function Folder:AddSlider(text, min, max, default, callback)
+
+	min = min or 0
+	max = max or 100
+	default = default or min
+
+	local value = default
+
+	local Frame = Instance.new("Frame")
+	Frame.Size = UDim2.new(1,0,0,50)
+	Frame.BackgroundColor3 = self.Config.MainColor
+	Frame.Parent = self.Container
+
+	if self.Config.CornerRadius > 0 then
+		local c = Instance.new("UICorner")
+		c.CornerRadius = UDim.new(0,6)
+		c.Parent = Frame
+	end
+
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.new(1,-10,0,20)
+	Label.Position = UDim2.new(0,5,0,0)
+	Label.BackgroundTransparency = 1
+	Label.Text = text.." : "..value
+	Label.TextColor3 = self.Config.TextColor
+	Label.Font = Enum.Font.Gotham
+	Label.TextSize = 14
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = Frame
+
+	local Bar = Instance.new("Frame")
+	Bar.Size = UDim2.new(1,-20,0,10)
+	Bar.Position = UDim2.new(0,10,0,30)
+	Bar.BackgroundColor3 = Color3.fromRGB(60,60,60)
+	Bar.Parent = Frame
+
+	if self.Config.CornerRadius > 0 then
+		Instance.new("UICorner", Bar).CornerRadius = UDim.new(1,0)
+	end
+
+	local Fill = Instance.new("Frame")
+	Fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
+	Fill.BackgroundColor3 = self.Config.AccentColor
+	Fill.Parent = Bar
+
+	if self.Config.CornerRadius > 0 then
+		Instance.new("UICorner", Fill).CornerRadius = UDim.new(1,0)
+	end
+
+	local dragging = false
+	local UIS = game:GetService("UserInputService")
+
+	Bar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+		end
+	end)
+
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+
+			local pos = math.clamp(
+				(input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X,
+				0,1
+			)
+
+			Fill.Size = UDim2.new(pos,0,1,0)
+
+			value = math.floor(min + ((max-min) * pos))
+			Label.Text = text.." : "..value
+
+			if callback then
+				callback(value)
+			end
+		end
+	end)
+
+	return {
+		Get = function()
+			return value
+		end,
+		Set = function(v)
+			v = math.clamp(v, min, max)
+			value = v
+			Fill.Size = UDim2.new((v-min)/(max-min),0,1,0)
+			Label.Text = text.." : "..value
+		end
+	}
+end
+
+
+--// ==============================
+--// DROPDOWN
+--// ==============================
+
+function Folder:AddDropdown(text, list, callback)
+
+	list = list or {}
+	local selected = nil
+	local opened = false
+
+	local Main = Instance.new("Frame")
+	Main.Size = UDim2.new(1,0,0,35)
+	Main.BackgroundColor3 = self.Config.MainColor
+	Main.Parent = self.Container
+
+	if self.Config.CornerRadius > 0 then
+		Instance.new("UICorner", Main).CornerRadius = UDim.new(0,6)
+	end
+
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.new(1,0,1,0)
+	Button.BackgroundTransparency = 1
+	Button.Text = text
+	Button.TextColor3 = self.Config.TextColor
+	Button.Font = Enum.Font.Gotham
+	Button.TextSize = 14
+	Button.Parent = Main
+
+	local Container = Instance.new("Frame")
+	Container.Size = UDim2.new(1,0,0,0)
+	Container.BackgroundColor3 = self.Config.MainColor
+	Container.ClipsDescendants = true
+	Container.Parent = self.Container
+
+	local UIList = Instance.new("UIListLayout")
+	UIList.Parent = Container
+
+	local function Refresh(options)
+
+		Container:ClearAllChildren()
+		UIList.Parent = Container
+
+		for _,v in pairs(options) do
+
+			local Option = Instance.new("TextButton")
+			Option.Size = UDim2.new(1,0,0,30)
+			Option.Text = tostring(v)
+			Option.BackgroundColor3 = self.Config.MainColor
+			Option.TextColor3 = self.Config.TextColor
+			Option.Font = Enum.Font.Gotham
+			Option.TextSize = 14
+			Option.Parent = Container
+
+			Option.MouseButton1Click:Connect(function()
+				selected = v
+				Button.Text = text.." : "..v
+				opened = false
+
+				Container:TweenSize(
+					UDim2.new(1,0,0,0),
+					Enum.EasingDirection.Out,
+					Enum.EasingStyle.Quad,
+					0.2,true
+				)
+
+				if callback then
+					callback(v)
+				end
+			end)
+		end
+	end
+
+	Refresh(list)
+
+	Button.MouseButton1Click:Connect(function()
+
+		opened = not opened
+
+		if opened then
+			Container:TweenSize(
+				UDim2.new(1,0,0,UIList.AbsoluteContentSize.Y),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				0.2,true
+			)
+		else
+			Container:TweenSize(
+				UDim2.new(1,0,0,0),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				0.2,true
+			)
+		end
+	end)
+
+	return {
+		Get = function()
+			return selected
+		end,
+		Refresh = function(newList)
+			Refresh(newList)
+		end
+	}
+end
+
+
+--// ==============================
+--// PLAYER DROPDOWN (AUTO)
+--// ==============================
+
+function Folder:AddPlayerDropdown(text, callback)
+
+	local Players = game:GetService("Players")
+
+	local function GetPlayers()
+		local t = {}
+		for _,p in pairs(Players:GetPlayers()) do
+			table.insert(t, p.Name)
+		end
+		return t
+	end
+
+	local dropdown = self:AddDropdown(text, GetPlayers(), callback)
+
+	Players.PlayerAdded:Connect(function()
+		dropdown.Refresh(GetPlayers())
+	end)
+
+	Players.PlayerRemoving:Connect(function()
+		dropdown.Refresh(GetPlayers())
+	end)
+
+	return dropdown
+end
+
+--// ==============================
+--// KEYBIND
+--// ==============================
+
+function Folder:AddKeybind(text, defaultKey, callback)
+
+	defaultKey = defaultKey or Enum.KeyCode.RightControl
+	local currentKey = defaultKey
+
+	local Frame = Instance.new("Frame")
+	Frame.Size = UDim2.new(1,0,0,35)
+	Frame.BackgroundColor3 = self.Config.MainColor
+	Frame.Parent = self.Container
+
+	if self.Config.CornerRadius > 0 then
+		Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,6)
+	end
+
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.new(1,0,1,0)
+	Button.BackgroundTransparency = 1
+	Button.Text = text.." : "..currentKey.Name
+	Button.TextColor3 = self.Config.TextColor
+	Button.Font = Enum.Font.Gotham
+	Button.TextSize = 14
+	Button.Parent = Frame
+
+	local waiting = false
+	local UIS = game:GetService("UserInputService")
+
+	Button.MouseButton1Click:Connect(function()
+		Button.Text = text.." : ..."
+		waiting = true
+	end)
+
+	UIS.InputBegan:Connect(function(input, gpe)
+		if gpe then return end
+
+		if waiting then
+			if input.KeyCode ~= Enum.KeyCode.Unknown then
+				currentKey = input.KeyCode
+				Button.Text = text.." : "..currentKey.Name
+				waiting = false
+			end
+		else
+			if input.KeyCode == currentKey then
+				if callback then
+					callback()
+				end
+			end
+		end
+	end)
+
+	return {
+		Get = function()
+			return currentKey
+		end
+	}
+end
+
+
+--// ==============================
+--// COLOR PICKER (SIMPLE RGB)
+--// ==============================
+
+function Folder:AddColorPicker(text, defaultColor, callback)
+
+	defaultColor = defaultColor or Color3.fromRGB(255,0,0)
+	local currentColor = defaultColor
+
+	local Frame = Instance.new("Frame")
+	Frame.Size = UDim2.new(1,0,0,40)
+	Frame.BackgroundColor3 = self.Config.MainColor
+	Frame.Parent = self.Container
+
+	if self.Config.CornerRadius > 0 then
+		Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,6)
+	end
+
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.new(0.7,0,1,0)
+	Button.BackgroundTransparency = 1
+	Button.Text = text
+	Button.TextColor3 = self.Config.TextColor
+	Button.Font = Enum.Font.Gotham
+	Button.TextSize = 14
+	Button.Parent = Frame
+
+	local Preview = Instance.new("Frame")
+	Preview.Size = UDim2.new(0.25,0,0.6,0)
+	Preview.Position = UDim2.new(0.72,0,0.2,0)
+	Preview.BackgroundColor3 = currentColor
+	Preview.Parent = Frame
+
+	if self.Config.CornerRadius > 0 then
+		Instance.new("UICorner", Preview).CornerRadius = UDim.new(1,0)
+	end
+
+	Button.MouseButton1Click:Connect(function()
+
+		local r = math.random(0,255)
+		local g = math.random(0,255)
+		local b = math.random(0,255)
+
+		currentColor = Color3.fromRGB(r,g,b)
+		Preview.BackgroundColor3 = currentColor
+
+		if callback then
+			callback(currentColor)
+		end
+	end)
+
+	return {
+		Get = function()
+			return currentColor
+		end
+	}
+end
+
+
+--// ==============================
+--// NOTIFICATION SYSTEM
+--// ==============================
+
+function HadesUI:Notify(title, message, duration)
+
+	duration = duration or 3
+
+	local ScreenGui = game.CoreGui:FindFirstChild("HADES_NOTIFICATION_GUI")
+
+	if not ScreenGui then
+		ScreenGui = Instance.new("ScreenGui")
+		ScreenGui.Name = "HADES_NOTIFICATION_GUI"
+		ScreenGui.ResetOnSpawn = false
+		ScreenGui.Parent = game.CoreGui
+	end
+
+	local Frame = Instance.new("Frame")
+	Frame.Size = UDim2.new(0,250,0,80)
+	Frame.Position = UDim2.new(1,-260,1,-100)
+	Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	Frame.Parent = ScreenGui
+
+	Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,8)
+
+	local Title = Instance.new("TextLabel")
+	Title.Size = UDim2.new(1,-10,0,30)
+	Title.Position = UDim2.new(0,5,0,5)
+	Title.BackgroundTransparency = 1
+	Title.Text = title
+	Title.TextColor3 = Color3.fromRGB(255,255,255)
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 14
+	Title.TextXAlignment = Enum.TextXAlignment.Left
+	Title.Parent = Frame
+
+	local Message = Instance.new("TextLabel")
+	Message.Size = UDim2.new(1,-10,0,35)
+	Message.Position = UDim2.new(0,5,0,35)
+	Message.BackgroundTransparency = 1
+	Message.TextWrapped = true
+	Message.Text = message
+	Message.TextColor3 = Color3.fromRGB(200,200,200)
+	Message.Font = Enum.Font.Gotham
+	Message.TextSize = 13
+	Message.TextXAlignment = Enum.TextXAlignment.Left
+	Message.Parent = Frame
+
+	Frame.Position = UDim2.new(1,0,1,-100)
+
+	Frame:TweenPosition(
+		UDim2.new(1,-260,1,-100),
+		Enum.EasingDirection.Out,
+		Enum.EasingStyle.Quad,
+		0.3,true
+	)
+
+	task.delay(duration,function()
+		Frame:TweenPosition(
+			UDim2.new(1,0,1,-100),
+			Enum.EasingDirection.Out,
+			Enum.EasingStyle.Quad,
+			0.3,true
+		)
+		task.wait(0.3)
+		Frame:Destroy()
+	end)
+end
+
+--// ==============================
+--// REGISTRO INTERNO DE OBJETOS
+--// ==============================
+
+HadesUI._Instances = HadesUI._Instances or {}
+HadesUI._MainGui = nil
+
+--// ==============================
+--// MEJORAR CREATEWINDOW
+--// ==============================
+
+local oldCreateWindow = HadesUI.CreateWindow
+
+function HadesUI:CreateWindow(title)
+
+	-- Eliminar GUI anterior si existe
+	if HadesUI._MainGui and HadesUI._MainGui.Parent then
+		HadesUI._MainGui:Destroy()
+	end
+
+	local Window = oldCreateWindow(self, title)
+
+	HadesUI._MainGui = Window.Main
+	table.insert(HadesUI._Instances, Window.Main)
+
+	return Window
+end
+
+
+--// ==============================
+--// DESTROY COMPLETO
+--// ==============================
+
+function HadesUI:Destroy()
+
+	if HadesUI._MainGui then
+		HadesUI._MainGui:Destroy()
+		HadesUI._MainGui = nil
+	end
+
+	local notif = game.CoreGui:FindFirstChild("HADES_NOTIFICATION_GUI")
+	if notif then
+		notif:Destroy()
+	end
+
+	HadesUI._Instances = {}
+end
+
+
+--// ==============================
+--// UPDATE THEME DINÁMICO
+--// ==============================
+
+function HadesUI:SetTheme(newTheme)
+
+	for k,v in pairs(newTheme) do
+		if self.Config[k] then
+			self.Config[k] = v
+		end
+	end
+
+	if not HadesUI._MainGui then return end
+
+	local function UpdateObjects(obj)
+		for _,child in pairs(obj:GetDescendants()) do
+
+			if child:IsA("Frame") then
+				if child.BackgroundColor3 ~= Color3.fromRGB(25,25,25) then
+					child.BackgroundColor3 = self.Config.MainColor
+				end
+			end
+
+			if child:IsA("TextLabel") or child:IsA("TextButton") then
+				child.TextColor3 = self.Config.TextColor
+			end
+		end
+	end
+
+	UpdateObjects(HadesUI._MainGui)
+end
+
+
+--// ==============================
+--// CUADRADO / REDONDO GLOBAL
+--// ==============================
+
+function HadesUI:SetSquare()
+	self.Config.CornerRadius = 0
+	self:SetTheme({})
+end
+
+function HadesUI:SetRound(radius)
+	radius = radius or 12
+	self.Config.CornerRadius = radius
+
+	if not HadesUI._MainGui then return end
+
+	for _,obj in pairs(HadesUI._MainGui:GetDescendants()) do
+		if obj:IsA("Frame") then
+			local corner = obj:FindFirstChildOfClass("UICorner")
+			if corner then
+				corner.CornerRadius = UDim.new(0, radius)
+			end
+		end
+	end
+end
+
+
+--// ==============================
+--// CAMBIAR FONDO DINÁMICO
+--// ==============================
+
+function HadesUI:SetBackground(imageId, transparency)
+
+	if not HadesUI._MainGui then return end
+
+	local bg = HadesUI._MainGui:FindFirstChild("HADES_BG")
+
+	if not bg then
+		bg = Instance.new("ImageLabel")
+		bg.Name = "HADES_BG"
+		bg.Size = UDim2.new(1,0,1,0)
+		bg.BackgroundTransparency = 1
+		bg.ZIndex = 0
+		bg.Parent = HadesUI._MainGui
+	end
+
+	bg.Image = "rbxassetid://"..imageId
+	bg.ImageTransparency = transparency or 0.3
+end
