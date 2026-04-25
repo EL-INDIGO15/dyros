@@ -1199,3 +1199,345 @@ local colorDropdown = settingsTab:AddDropdown("Main Color", function(selected)
         end
     end
 end)
+
+for _, opt in ipairs(colorOptions) do colorDropdown:Add(opt.name) end
+
+local wmHeader = settingsTab:AddLabel("WATERMARK")
+wmHeader.Font = Enum.Font.Bodoni wmHeader.TextSize = 18
+local watermark = nil
+settingsTab:AddSwitch("Show Watermark", function(state)
+    if state then
+        if watermark then return end
+        pcall(function()
+            local gui = Instance.new("ScreenGui")
+            gui.Name = "K13Watermark" gui.ResetOnSpawn = false gui.DisplayOrder = 999 gui.Parent = Player.PlayerGui
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(0,220,0,28) frame.Position = UDim2.new(0,8,0,8)
+            frame.BackgroundColor3 = Color3.fromRGB(10,0,20) frame.BackgroundTransparency = 0.3
+            frame.BorderSizePixel = 0 frame.Parent = gui
+            local corner = Instance.new("UICorner") corner.CornerRadius = UDim.new(0,6) corner.Parent = frame
+            local stroke = Instance.new("UIStroke") stroke.Color = Color3.fromRGB(180,0,255) stroke.Thickness = 1.2 stroke.Parent = frame
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1,0,1,0) label.BackgroundTransparency = 1
+            label.Text = "🔮 K13 | Muscle Masters" label.Font = Enum.Font.PermanentMarker
+            label.TextSize = 13 label.TextColor3 = Color3.fromRGB(200,100,255) label.Parent = frame
+            watermark = gui
+            task.spawn(function()
+                local hue = 0
+                while watermark and watermark.Parent do
+                    hue = (hue+0.004)%1
+                    pcall(function() label.TextColor3 = Color3.fromHSV(hue,1,1) stroke.Color = Color3.fromHSV(hue,1,1) end)
+                    task.wait(0.05)
+                end
+            end)
+        end)
+    else
+        if watermark then pcall(function() watermark:Destroy() end) watermark = nil end
+    end
+end)
+
+local resetHeader = settingsTab:AddLabel("RESET")
+resetHeader.Font = Enum.Font.Bodoni resetHeader.TextSize = 18
+settingsTab:AddButton("Reset All Settings", function()
+    pcall(function()
+        windowFrame.ImageTransparency = 0.1
+        local bar = windowFrame:FindFirstChild("Bar")
+        if bar then bar.BackgroundTransparency = 0 end
+        local tabSel = windowFrame:FindFirstChild("TabSelection")
+        if tabSel then tabSel.ImageTransparency = 0.4 end
+        for _, v in pairs(windowFrame:GetDescendants()) do
+            pcall(function()
+                if v:IsA("ImageLabel") and v.Name == "TextButton_Roundify_4px" then
+                    if v.Parent and v.Parent.Name ~= "TabButton" then v.ImageTransparency = 0 end
+                end
+                if v:IsA("ImageButton") and v.Name == "Box" then v.ImageTransparency = 0.1 end
+            end)
+        end
+        for _, v in pairs(windowFrame:GetDescendants()) do
+            pcall(function()
+                if v:IsA("Frame") and v.Name == "Bar" then
+                    applyGradient(v, {Color3.fromRGB(10,0,40),Color3.fromRGB(60,0,120),Color3.fromRGB(120,0,180),Color3.fromRGB(180,0,255),Color3.fromRGB(255,50,180)})
+                end
+                if v:IsA("ImageLabel") and v.Name == "TextButton_Roundify_4px" then
+                    if v.Parent and v.Parent.Name ~= "TabButton" then
+                        applyGradient(v, {Color3.fromRGB(10,0,40), Color3.fromRGB(120,0,180)})
+                    end
+                end
+                if v:IsA("ImageButton") and v.Name == "Box" then
+                    applyGradient(v, {Color3.fromRGB(10,0,40), Color3.fromRGB(60,0,120)})
+                end
+            end)
+        end
+        if watermark then watermark:Destroy() watermark = nil end
+    end)
+end)
+
+-- RAINBOW MODE ULTRA MAX
+local rainbowHeader = settingsTab:AddLabel("✨ RAINBOW MODE ✨")
+rainbowHeader.Font = Enum.Font.LuckiestGuy rainbowHeader.TextSize = 22
+
+local isRainbow       = false
+local rainbowSpeed    = 0.003
+local rainbowRotSpeed = 20
+local rainbowPulse    = true
+local rainbowStroke   = true
+local rainbowBounce   = false
+
+local shimmerActive   = false
+local shimmerTimer    = 0
+local shimmerDuration = 0
+local shimmerTarget   = nil
+
+settingsTab:AddSwitch("Rainbow Gui", function(state)
+    isRainbow = state
+    if state then
+        task.spawn(function()
+            local hue    = 0
+            local pulseT = 0
+            local rotT   = 0
+            local satT   = 0
+            local bounceT = 0
+
+            -- HUE SPLITS per element
+            local HUE_BAR = 0.00
+            local HUE_TAB = 0.18
+            local HUE_WIN = 0.36
+            local HUE_BTN = 0.54
+            local HUE_BOX = 0.72
+
+            while isRainbow do
+                hue     = (hue    + rainbowSpeed) % 1
+                pulseT  = pulseT  + 0.04
+                rotT    = rotT    + 0.04
+                satT    = satT    + 0.025
+                bounceT = bounceT + 0.04
+
+                -- DEEP BREATHING
+                local breathe    = rainbowPulse and (0.45 + math.abs(math.sin(pulseT*0.6))*0.55) or 1
+                local microPulse = 0.85 + math.sin(pulseT*3.5)*0.15
+                local finalBright = math.clamp(breathe * microPulse, 0, 1)
+
+                -- SATURATION PULSE
+                local saturation = 0.75 + math.abs(math.sin(satT*0.8))*0.25
+
+                -- ROTATION (bounce or spin)
+                local function getRot(mult)
+                    if rainbowBounce then
+                        return math.sin(bounceT * mult * 0.4) * 180
+                    else
+                        return (rotT * rainbowRotSpeed * mult) % 360
+                    end
+                end
+                local barRot = getRot(1.00)
+                local tabRot = getRot(0.65)
+                local winRot = getRot(0.35)
+                local btnRot = getRot(0.50)
+
+                -- SHIMMER
+                shimmerTimer = shimmerTimer + 1
+                if not shimmerActive and math.random(1,80) == 1 then
+                    shimmerActive   = true
+                    shimmerTimer    = 0
+                    shimmerDuration = math.random(3,8)
+                    local targets   = {"Bar","TabSelection","TextButton_Roundify_4px","Box"}
+                    shimmerTarget   = targets[math.random(1,#targets)]
+                end
+                local doShimmer = shimmerActive and shimmerTimer <= shimmerDuration
+                if shimmerActive and shimmerTimer > shimmerDuration then
+                    shimmerActive = false shimmerTarget = nil
+                end
+
+                -- COLORS with hue split + saturation pulse
+                local function makeColors(hueOffset)
+                    local h = (hue + hueOffset) % 1
+                    local b = finalBright
+                    return {
+                        Color3.fromHSV(h,               saturation, b),
+                        Color3.fromHSV((h+0.16)%1,      saturation, b),
+                        Color3.fromHSV((h+0.33)%1,      saturation, b),
+                        Color3.fromHSV((h+0.50)%1,      saturation, b),
+                        Color3.fromHSV((h+0.66)%1,      saturation, b),
+                        Color3.fromHSV((h+0.83)%1,      saturation, b),
+                    }
+                end
+                local function makeDarkColors(hueOffset)
+                    local h = (hue + hueOffset) % 1
+                    local dB = math.clamp(finalBright*0.45, 0, 1)
+                    return {
+                        Color3.fromHSV(h,          saturation, math.max(dB,0.07)),
+                        Color3.fromHSV((h+0.33)%1, saturation, math.max(dB,0.10)),
+                        Color3.fromHSV((h+0.66)%1, saturation, math.max(dB,0.13)),
+                    }
+                end
+                local function makeMidColors(hueOffset)
+                    local h = (hue + hueOffset) % 1
+                    local mB = math.clamp(finalBright*0.65, 0, 1)
+                    return {
+                        Color3.fromHSV(h,          saturation, math.max(mB,0.25)),
+                        Color3.fromHSV((h+0.25)%1, saturation, math.max(mB,0.40)),
+                        Color3.fromHSV((h+0.50)%1, saturation, math.max(mB,0.50)),
+                    }
+                end
+
+                local cBar = makeColors(HUE_BAR)
+                local cTab = makeColors(HUE_TAB)
+                local dWin = makeDarkColors(HUE_WIN)
+                local mBtn = makeMidColors(HUE_BTN)
+                local dBox = makeDarkColors(HUE_BOX)
+
+                local strokeColor = Color3.fromHSV((hue+0.5)%1, 1, finalBright)
+                local shimmerColor = Color3.new(1,1,1)
+
+                pcall(function()
+                    for _, v in pairs(windowFrame:GetDescendants()) do
+                        pcall(function()
+                            -- BAR
+                            if v:IsA("Frame") and v.Name == "Bar" then
+                                local grad = v:FindFirstChildOfClass("UIGradient")
+                                if not grad then grad = Instance.new("UIGradient") grad.Parent = v end
+                                grad.Rotation = barRot
+                                if doShimmer and shimmerTarget == "Bar" then
+                                    grad.Color = ColorSequence.new(shimmerColor)
+                                else
+                                    grad.Color = ColorSequence.new({
+                                        ColorSequenceKeypoint.new(0,   cBar[1]),
+                                        ColorSequenceKeypoint.new(0.2, cBar[2]),
+                                        ColorSequenceKeypoint.new(0.4, cBar[3]),
+                                        ColorSequenceKeypoint.new(0.6, cBar[4]),
+                                        ColorSequenceKeypoint.new(0.8, cBar[5]),
+                                        ColorSequenceKeypoint.new(1,   cBar[6]),
+                                    })
+                                end
+                                v.BackgroundColor3 = Color3.new(1,1,1)
+                                if rainbowStroke then
+                                    local st = v:FindFirstChildOfClass("UIStroke")
+                                    if not st then st = Instance.new("UIStroke") st.Thickness = 1.5 st.Parent = v end
+                                    st.Color = strokeColor
+                                    st.Transparency = 1 - math.clamp(finalBright*0.8, 0, 1)
+                                end
+                            end
+                            -- TAB SELECTION
+                            if v:IsA("ImageLabel") and v.Name == "TabSelection" then
+                                local grad = v:FindFirstChildOfClass("UIGradient")
+                                if not grad then grad = Instance.new("UIGradient") grad.Parent = v end
+                                grad.Rotation = tabRot
+                                if doShimmer and shimmerTarget == "TabSelection" then
+                                    grad.Color = ColorSequence.new(shimmerColor)
+                                else
+                                    grad.Color = ColorSequence.new({
+                                        ColorSequenceKeypoint.new(0,   cTab[1]),
+                                        ColorSequenceKeypoint.new(0.2, cTab[2]),
+                                        ColorSequenceKeypoint.new(0.4, cTab[3]),
+                                        ColorSequenceKeypoint.new(0.6, cTab[4]),
+                                        ColorSequenceKeypoint.new(0.8, cTab[5]),
+                                        ColorSequenceKeypoint.new(1,   cTab[6]),
+                                    })
+                                end
+                                v.ImageColor3 = Color3.new(1,1,1)
+                            end
+                            -- WINDOW BACKGROUND
+                            if v:IsA("ImageLabel") and v.Name == "Window" then
+                                local grad = v:FindFirstChildOfClass("UIGradient")
+                                if not grad then grad = Instance.new("UIGradient") grad.Parent = v end
+                                grad.Rotation = winRot
+                                grad.Color = ColorSequence.new({
+                                    ColorSequenceKeypoint.new(0,   dWin[1]),
+                                    ColorSequenceKeypoint.new(0.5, dWin[2]),
+                                    ColorSequenceKeypoint.new(1,   dWin[3]),
+                                })
+                                v.ImageColor3 = Color3.new(1,1,1)
+                            end
+                            -- BUTTONS
+                            if v:IsA("ImageLabel") and v.Name == "TextButton_Roundify_4px" then
+                                local parent = v.Parent
+                                if parent and parent.Name ~= "TabButton" then
+                                    local grad = v:FindFirstChildOfClass("UIGradient")
+                                    if not grad then grad = Instance.new("UIGradient") grad.Parent = v end
+                                    grad.Rotation = btnRot
+                                    if doShimmer and shimmerTarget == "TextButton_Roundify_4px" then
+                                        grad.Color = ColorSequence.new(shimmerColor)
+                                    else
+                                        grad.Color = ColorSequence.new({
+                                            ColorSequenceKeypoint.new(0,   mBtn[1]),
+                                            ColorSequenceKeypoint.new(0.5, mBtn[2]),
+                                            ColorSequenceKeypoint.new(1,   mBtn[3]),
+                                        })
+                                    end
+                                    v.ImageColor3 = Color3.new(1,1,1)
+                                    if rainbowStroke then
+                                        local st = parent:FindFirstChildOfClass("UIStroke")
+                                        if not st then st = Instance.new("UIStroke") st.Thickness = 1.2 st.Parent = parent end
+                                        st.Color = strokeColor
+                                        st.Transparency = 1 - math.clamp(finalBright*0.6, 0, 1)
+                                    end
+                                end
+                            end
+                            -- BOX / TOGGLE
+                            if v:IsA("ImageButton") and v.Name == "Box" then
+                                local grad = v:FindFirstChildOfClass("UIGradient")
+                                if not grad then grad = Instance.new("UIGradient") grad.Parent = v end
+                                grad.Rotation = btnRot
+                                if doShimmer and shimmerTarget == "Box" then
+                                    grad.Color = ColorSequence.new(shimmerColor)
+                                else
+                                    grad.Color = ColorSequence.new({
+                                        ColorSequenceKeypoint.new(0,   dBox[1]),
+                                        ColorSequenceKeypoint.new(0.5, dBox[2]),
+                                        ColorSequenceKeypoint.new(1,   dBox[3]),
+                                    })
+                                end
+                                v.ImageColor3 = Color3.new(1,1,1)
+                            end
+                            -- TAB BUTTON GLOW
+                            if v:IsA("TextButton") and v.Name == "TabButton" then
+                                if rainbowStroke then
+                                    local st = v:FindFirstChildOfClass("UIStroke")
+                                    if not st then st = Instance.new("UIStroke") st.Thickness = 1.0 st.Parent = v end
+                                    st.Color = Color3.fromHSV((hue+HUE_TAB)%1, 1, 1)
+                                    st.Transparency = 1 - math.clamp(breathe*0.5, 0, 1)
+                                end
+                            end
+                        end)
+                    end
+                end)
+                task.wait(0.03)
+            end
+        end)
+    end
+end)
+
+settingsTab:AddSwitch("Rainbow Pulse / Breathing", function(state) rainbowPulse  = state end)
+settingsTab:AddSwitch("Rainbow Stroke Glow",       function(state) rainbowStroke = state end)
+settingsTab:AddSwitch("Gradient Bounce Mode",      function(state) rainbowBounce = state end)
+
+local speedHeader = settingsTab:AddLabel("Rainbow Color Speed")
+speedHeader.Font = Enum.Font.Bodoni speedHeader.TextSize = 16
+local speedOptions = {"Slow","Normal","Fast","Very Fast","Ultra Fast"}
+local speedValues  = {0.001, 0.003, 0.006, 0.012, 0.025}
+local speedDropdown = settingsTab:AddDropdown("Rainbow Speed", function(selected)
+    for i, lbl in ipairs(speedOptions) do if lbl == selected then rainbowSpeed = speedValues[i] break end end
+end)
+for _, lbl in ipairs(speedOptions) do speedDropdown:Add(lbl) end
+
+local rotHeader = settingsTab:AddLabel("Rainbow Rotation Speed")
+rotHeader.Font = Enum.Font.Bodoni rotHeader.TextSize = 16
+local rotOptions = {"No Rotation","Slow Spin","Normal Spin","Fast Spin","Ultra Spin"}
+local rotValues  = {0, 8, 20, 40, 80}
+local rotDropdown = settingsTab:AddDropdown("Rotation Speed", function(selected)
+    for i, lbl in ipairs(rotOptions) do if lbl == selected then rainbowRotSpeed = rotValues[i] break end end
+end)
+for _, lbl in ipairs(rotOptions) do rotDropdown:Add(lbl) end
+
+local sizeHeader = settingsTab:AddLabel("WINDOW SIZE")
+sizeHeader.Font = Enum.Font.Bodoni sizeHeader.TextSize = 18
+local sizeOptions = {"Small (400x280)","Medium (500x380)","Large (600x480)","Extra Large (700x550)"}
+local sizeValues  = {Vector2.new(400,280), Vector2.new(500,380), Vector2.new(600,480), Vector2.new(700,550)}
+local sizeDropdown = settingsTab:AddDropdown("Window Size", function(selected)
+    for i, lbl in ipairs(sizeOptions) do
+        if lbl == selected then
+            pcall(function() windowFrame.Size = UDim2.new(0,sizeValues[i].X,0,sizeValues[i].Y) end)
+            break
+        end
+    end
+end)
+for _, lbl in ipairs(sizeOptions) do sizeDropdown:Add(lbl) end
