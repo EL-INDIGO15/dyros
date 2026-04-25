@@ -946,3 +946,5 @@ function HadesUI:SetBackground(imageId, transparency)
 	bg.Image = "rbxassetid://"..imageId
 	bg.ImageTransparency = transparency or 0.3
 end
+
+return HadesUI
