@@ -64,7 +64,7 @@ local function addBodoniLabel(tab, text, color)
 end
 
 -- ================= LIBRARY =================
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/GeloXOshiru/PrimeJelo-Hub/refs/heads/main/Image.png", true))()
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/GeloXOshiru/ImJelo/refs/heads/main/Jelo.lua", true))()
 
 local window, windowFrame = library:AddWindow("PrimeJelo On Top", {
     title_bar = {
