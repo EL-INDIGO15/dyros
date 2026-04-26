@@ -1416,37 +1416,47 @@ Misc:AddSwitch("Auto Eat Chocolate", function(state)
     end
 end)
 
--- ================= ANTI AFK PRO =================
-local AntiAFK = true
+-- =========================
+-- 🔥 ANTI AFK V1 SIMPLE
+-- =========================
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 local VirtualUser = game:GetService("VirtualUser")
-local AntiAFKConnection = nil
 
-Anti Afk = Misc:AddSwitch("Anti AFKV1", function(state)
-    AntiAFKEnabled = state
+local AntiAFK_V1_Enabled = false
+local AntiAFK_V1_Connection = nil
+
+local function EnableAntiAFK_V1()
+    if AntiAFK_V1_Connection then
+        AntiAFK_V1_Connection:Disconnect()
+    end
+
+    AntiAFK_V1_Connection = LocalPlayer.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end
+
+local function DisableAntiAFK_V1()
+    if AntiAFK_V1_Connection then
+        AntiAFK_V1_Connection:Disconnect()
+        AntiAFK_V1_Connection = nil
+    end
+end
+
+local AntiAFK_V1_Switch = Misc:AddSwitch("Anti AFK V1", function(state)
+    AntiAFK_V1_Enabled = state
 
     if state then
-        EnableAntiAFK()
+        EnableAntiAFK_V1()
     else
-        DisableAntiAFK()
+        DisableAntiAFK_V1()
     end
 end)
 
--- Encender automáticamente
-AntiAfk:Set(true)
-
-
-    if AntiAFKConnection then
-        AntiAFKConnection:Disconnect()
-        AntiAFKConnection = nil
-    end
-
-    if state then
-        AntiAFKConnection = player.Idled:Connect(function()
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new())
-        end)
-    end
-end)
+-- 🔥 ACTIVADO POR DEFECTO
+AntiAFK_V1_Switch:Set(true)
 
 -- ================= ANTI AFK SISTEMA COMPLETO =================
 
