@@ -317,8 +317,6 @@ MainTab:AddSwitch("auto rebirth", function(state)
     end
 end)
 
-AutoFarm:AddLabel("para farm mas rápido activa todo")
-
 local Stats = window:AddTab("Stats Farm")
 
 Stats:AddLabel("━━━━━━━━━━━━━━━━━━")
@@ -481,5 +479,100 @@ task.spawn(function()
 
 		lastDura = currentDura
 		lastMuerte = currentMuerte
+	end
+end)
+
+-- =========================
+-- 📊 STATS JUGADORES FIX FINAL
+-- =========================
+
+local estadisticas = window:AddTab("Stats Jugadores")
+
+local Players = game:GetService("Players")
+
+local SelectedPlayer = nil
+
+local PlayerDrop = estadisticas:AddDropdown("Select Player", function(Value)
+	local name = Value:match("| (.+)")
+	SelectedPlayer = Players:FindFirstChild(name)
+end)
+
+-- llenar dropdown
+for _, plr in pairs(Players:GetPlayers()) do
+	PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
+end
+
+Players.PlayerAdded:Connect(function(plr)
+	PlayerDrop:Add(plr.DisplayName .. " | " .. plr.Name)
+end)
+
+-- formato abreviado
+local function FormatNumber(n)
+	if typeof(n) ~= "number" then return tostring(n) end
+	
+	local suffix = {"","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"}
+	local i = 1
+	
+	while n >= 1000 and i < #suffix do
+		n = n / 1000
+		i = i + 1
+	end
+	
+	return string.format("%.2f", n) .. suffix[i]
+end
+
+-- obtener stat segura
+local function getLeaderStat(player, statName)
+	if not player then return 0 end
+	
+	local leader = player:FindFirstChild("leaderstats")
+	if not leader then
+		leader = player:WaitForChild("leaderstats", 3)
+	end
+	if not leader then return 0 end
+	
+	local stat = leader:FindFirstChild(statName)
+	if stat and (stat:IsA("IntValue") or stat:IsA("NumberValue")) then
+		return stat.Value
+	end
+	
+	return 0
+end
+
+-- durabilidad desde PrivateStats
+local function getDurability(player)
+	if not player then return 0 end
+	
+	local folder = player:FindFirstChild("PrivateStats")
+	if not folder then
+		folder = player:WaitForChild("PrivateStats", 3)
+	end
+	if not folder then return 0 end
+	
+	local dura = folder:FindFirstChild("Durabilidad")
+	if dura and (dura:IsA("IntValue") or dura:IsA("NumberValue")) then
+		return dura.Value
+	end
+	
+	return 0
+end
+
+-- labels
+local Fuerza = estadisticas:AddLabel("Fuerza: 0")
+local Durabilidad = estadisticas:AddLabel("Durabilidad: 0")
+local Renacimientos = estadisticas:AddLabel("Renacimientos: 0")
+local Muertes = estadisticas:AddLabel("Muertes: 0")
+local Peleas = estadisticas:AddLabel("Peleas: 0")
+
+-- loop actualización
+task.spawn(function()
+	while task.wait(0.3) do
+		if SelectedPlayer then
+			Fuerza.Text = "Fuerza: " .. FormatNumber(getLeaderStat(SelectedPlayer, "Fuerza"))
+			Durabilidad.Text = "Durabilidad: " .. FormatNumber(getDurability(SelectedPlayer))
+			Renacimientos.Text = "Renacimientos: " .. FormatNumber(getLeaderStat(SelectedPlayer, "Renacimientos"))
+			Muertes.Text = "Muertes: " .. FormatNumber(getLeaderStat(SelectedPlayer, "Muertes"))
+			Peleas.Text = "Peleas: " .. FormatNumber(getLeaderStat(SelectedPlayer, "Peleas"))
+		end
 	end
 end)
