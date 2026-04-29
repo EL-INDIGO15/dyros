@@ -807,3 +807,159 @@ end)
 -- Encender automáticamente
 AntiAFK_SwitchRef:Set(true)
 
+-- =========================
+-- ⚡ ANTI LAG (todo el código sin cambios)
+-- =========================
+Misc:AddSwitch("Anti Lag", function() 
+    for _, v in pairs(game:GetDescendants()) do 
+        if v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then 
+            v.Enabled = false 
+        end 
+    end 
+
+    local lighting = game:GetService("Lighting") 
+    lighting.GlobalShadows = false 
+    lighting.FogEnd = 9e9 
+    lighting.Brightness = 0 
+
+    settings().Rendering.QualityLevel = 1 
+
+    for _, v in pairs(game:GetDescendants()) do 
+        if v:IsA("Decal") or v:IsA("Texture") then 
+            v.Transparency = 1 
+        elseif v:IsA("BasePart") and not v:IsA("MeshPart") then 
+            v.Material = Enum.Material.SmoothPlastic 
+            if v.Parent and (v.Parent:FindFirstChild("Humanoid") or v.Parent.Parent:FindFirstChild("Humanoid")) then 
+            else 
+                v.Reflectance = 0 
+            end 
+        end 
+    end 
+
+    for _, v in pairs(lighting:GetChildren()) do 
+        if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("DepthOfFieldEffect") then 
+            v.Enabled = false 
+        end 
+    end 
+
+    game:GetService("StarterGui"):SetCore("SendNotification", { 
+        Title = "anti lag activado", 
+        Text = "Full optimization applied!", 
+        Duration = 5 
+    }) 
+end) 
+
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+
+local AntiLagEnabled = false
+local OriginalSettings = {}
+local OriginalParts = {}
+
+-- Guardar settings originales
+local function SaveOriginalSettings()
+    OriginalSettings.Brightness = Lighting.Brightness
+    OriginalSettings.GlobalShadows = Lighting.GlobalShadows
+    OriginalSettings.FogEnd = Lighting.FogEnd
+    OriginalSettings.Ambient = Lighting.Ambient
+    OriginalSettings.OutdoorAmbient = Lighting.OutdoorAmbient
+    OriginalSettings.Technology = Lighting.Technology
+end
+
+-- Activar AntiLag
+local function EnableAntiLag()
+    if AntiLagEnabled then return end
+    AntiLagEnabled = true
+
+    SaveOriginalSettings()
+
+    -- 1. Lighting al mínimo
+    Lighting.Brightness = 0
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 9e9
+    Lighting.Ambient = Color3.new(0, 0, 0)
+    Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
+    Lighting.Technology = Enum.Technology.Compatibility
+
+    -- 2. Quitar efectos de luz
+    for _, v in pairs(Lighting:GetDescendants()) do
+        if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") then
+            v.Enabled = false
+        end
+    end
+
+    -- 3. Poner todo el mapa negro
+    for _, part in pairs(Workspace:GetDescendants()) do
+        if part:IsA("BasePart") and part.Transparency < 1 then
+            OriginalParts[part] = {
+                Color = part.Color,
+                Material = part.Material,
+                Reflectance = part.Reflectance
+            }
+            part.Color = Color3.new(0, 0, 0)
+            part.Material = Enum.Material.SmoothPlastic
+            part.Reflectance = 0
+        elseif part:IsA("Decal") or part:IsA("Texture") then
+            OriginalParts[part] = {Transparency = part.Transparency}
+            part.Transparency = 1
+        elseif part:IsA("ParticleEmitter") or part:IsA("Fire") or part:IsA("Smoke") or part:IsA("Sparkles") then
+            OriginalParts[part] = {Enabled = part.Enabled}
+            part.Enabled = false
+        end
+    end
+end
+
+-- Desactivar AntiLag
+local function DisableAntiLag()
+    if not AntiLagEnabled then return end
+    AntiLagEnabled = false
+
+    -- Restaurar Lighting
+    for setting, value in pairs(OriginalSettings) do
+        Lighting[setting] = value
+    end
+
+    for _, v in pairs(Lighting:GetDescendants()) do
+        if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") then
+            v.Enabled = true
+        end
+    end
+
+    -- Restaurar partes
+    for part, props in pairs(OriginalParts) do
+        if part and part.Parent then
+            for prop, val in pairs(props) do
+                part[prop] = val
+            end
+        end
+    end
+
+    table.clear(OriginalParts)
+end
+
+-- Full AntiLag Switch
+Misc:AddSwitch("FullAntiLag", function(Value)
+    if Value then
+        EnableAntiLag()
+        print("AntiLag: ON")
+    else
+        DisableAntiLag()
+        print("AntiLag: OFF")
+    end
+end)
+
+Misc:AddSwitch("Lock Position", function(Value) 
+    if Value then 
+        local currentPos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame 
+        getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function() 
+            if game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then 
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = currentPos 
+            end 
+        end) 
+    else 
+        if getgenv().posLock then 
+            getgenv().posLock:Disconnect() 
+            getgenv().posLock = nil 
+        end 
+    end 
+end) 
