@@ -412,3 +412,73 @@ task.spawn(function()
                 lastRenas = currentRenas
         end
 end)
+
+-- 🛡️ DURABILIDAD
+Stats:AddLabel(" ")
+Stats:AddLabel("🛡️ DURABILIDAD")
+
+local duraActualLabel = Stats:AddLabel("Durabilidad: 0")
+local duraGanadoLabel = Stats:AddLabel("Ganado: 0")
+local duraMinLabel = Stats:AddLabel("Proyección: 0")
+local duraHoraLabel = Stats:AddLabel("Hora: 0")
+local duraDiaLabel = Stats:AddLabel("Día: 0")
+
+-- ☠️ MUERTES
+Stats:AddLabel(" ")
+Stats:AddLabel("☠️ MUERTES")
+
+local muerteActualLabel = Stats:AddLabel("Muertes: 0")
+local muerteGanadoLabel = Stats:AddLabel("Ganado: 0")
+local muerteMinLabel = Stats:AddLabel("Proyección: 0")
+local muerteHoraLabel = Stats:AddLabel("Hora: 0")
+local muerteDiaLabel = Stats:AddLabel("Día: 0")
+
+-- VARIABLES
+local duraInicial
+local muerteInicial
+local lastDura = 0
+local lastMuerte = 0
+
+task.spawn(function()
+	while true do
+		task.wait(1)
+
+		local leaderstats = player:FindFirstChild("leaderstats")
+		local privateStats = player:FindFirstChild("PrivateStats")
+		if not leaderstats or not privateStats then continue end
+
+		local duraValue = privateStats:FindFirstChild("Durabilidad")
+		local muerteValue = leaderstats:FindFirstChild("Muertes")
+
+		if not duraValue or not muerteValue then continue end
+
+		local currentDura = duraValue.Value
+		local currentMuerte = muerteValue.Value
+
+		if not duraInicial then duraInicial = currentDura end
+		if not muerteInicial then muerteInicial = currentMuerte end
+
+		local duraGanada = currentDura - duraInicial
+		local muerteGanada = currentMuerte - muerteInicial
+
+		local duraGain = math.max(0, currentDura - lastDura)
+		local muerteGain = math.max(0, currentMuerte - lastMuerte)
+
+		-- 🛡️ DURABILIDAD
+		duraActualLabel.Text = "🛡️ Durabilidad: " .. format(currentDura)
+		duraGanadoLabel.Text = "📈 Ganado: " .. format(duraGanada)
+		duraMinLabel.Text = "⚡ minutos → " .. format(duraGain * multiplier)
+		duraHoraLabel.Text = "⚡ Hora → " .. format(duraGain * multiplier * 60)
+		duraDiaLabel.Text = "⚡ Día → " .. format(duraGain * multiplier * 1440)
+
+		-- ☠️ MUERTES
+		muerteActualLabel.Text = "☠️ Muertes: " .. format(currentMuerte)
+		muerteGanadoLabel.Text = "📈 Ganado: " .. format(muerteGanada)
+		muerteMinLabel.Text = "⚡ minutos → " .. format(muerteGain * multiplier)
+		muerteHoraLabel.Text = "⚡ Hora → " .. format(muerteGain * multiplier * 60)
+		muerteDiaLabel.Text = "⚡ Día → " .. format(muerteGain * multiplier * 1440)
+
+		lastDura = currentDura
+		lastMuerte = currentMuerte
+	end
+end)
