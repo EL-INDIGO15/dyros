@@ -269,7 +269,7 @@ MainTab:AddSwitch("auto durabilidad", function(state)
     end
 end)
 
-MainTab:AddSwitch("Auto Equip inventario+farm", function(state)
+MainTab:AddSwitch("activar para empezar farm durabilidad", function(state)
     _G.AutoFarm = state
     if state then
         task.spawn(function()
@@ -316,9 +316,6 @@ MainTab:AddSwitch("auto rebirth", function(state)
         end)
     end
 end)
-
-AutoFarm:AddLabel("consejo:para farm más rápido activa todo menos el auto respawn")
-AutoFarm:AddLabel("Para farmear durabilidad activa auto durabilidad y Auto Equip inventario+farm")
 
 -- ⚡ AUTO RESPAWN ULTRA FAST
 local autoRespawn = false
