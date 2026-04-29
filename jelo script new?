@@ -882,7 +882,7 @@ end):Set(false)
 -- ⚡ ANTI LAG 1 (BAJA CALIDAD)
 -- =====================================================
 
-Misc:AddSwitch("Anti Lag V2", function(state)
+Misc:AddSwitch("Anti Lag", function(state)
 	if state then
 		settings().Rendering.QualityLevel = 1
 	else
