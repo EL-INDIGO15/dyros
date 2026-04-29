@@ -830,3 +830,124 @@ Misc:AddSwitch("Lock Position", function(Value)
         end 
     end 
 end)
+
+-- =========================
+-- 🧩 MISC TAB
+-- =========================
+
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local VirtualUser = game:GetService("VirtualUser")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local Misc = window:AddTab("Misc")
+
+-- =========================
+-- ⚙️ CONFIG
+-- =========================
+
+local config = {
+	AutoReset = false
+}
+
+-- =====================================================
+-- 💀 AUTO RESPAWN (FUNCIONA)
+-- =====================================================
+
+task.spawn(function()
+	while true do
+		if config.AutoReset then
+			pcall(function()
+				local char = player.Character
+				if char and char:FindFirstChild("Humanoid") then
+					char.Humanoid.Health = 0
+				end
+				task.wait(0.8)
+				if not player.Character then
+					player:LoadCharacter()
+				end
+			end)
+		end
+		task.wait(1)
+	end
+end)
+
+Misc:AddSwitch("Auto Respawn(para el top de kills)", function(state)
+	config.AutoReset = state
+end):Set(false)
+
+
+
+-- =====================================================
+-- ⚡ ANTI LAG 1 (BAJA CALIDAD)
+-- =====================================================
+
+Misc:AddSwitch("Anti Lag V1 (Low Quality)", function(state)
+	if state then
+		settings().Rendering.QualityLevel = 1
+	else
+		settings().Rendering.QualityLevel = 10
+	end
+end):Set(false)
+
+
+
+-- =====================================================
+-- ⚫ ANTI LAG 2 (MAPA NEGRO)
+-- =====================================================
+
+local OriginalParts = {}
+local OriginalLighting = {}
+local FullLagEnabled = false
+
+local function EnableFullBlack()
+	if FullLagEnabled then return end
+	FullLagEnabled = true
+
+	OriginalLighting.Brightness = Lighting.Brightness
+	OriginalLighting.GlobalShadows = Lighting.GlobalShadows
+
+	Lighting.Brightness = 0
+	Lighting.GlobalShadows = false
+
+	for _, part in pairs(Workspace:GetDescendants()) do
+		if part:IsA("BasePart") then
+			OriginalParts[part] = {
+				Color = part.Color,
+				Material = part.Material
+			}
+			part.Color = Color3.new(0,0,0)
+			part.Material = Enum.Material.SmoothPlastic
+		end
+	end
+end
+
+local function DisableFullBlack()
+	if not FullLagEnabled then return end
+	FullLagEnabled = false
+
+	for setting, value in pairs(OriginalLighting) do
+		Lighting[setting] = value
+	end
+
+	for part, props in pairs(OriginalParts) do
+		if part and part.Parent then
+			part.Color = props.Color
+			part.Material = props.Material
+		end
+	end
+
+	table.clear(OriginalParts)
+end
+
+Misc:AddSwitch("Anti Lag V2 (Black Map)", function(state)
+	if state then
+		EnableFullBlack()
+	else
+		DisableFullBlack()
+	end
+end):Set(false)
+
+
