@@ -629,23 +629,6 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Cuando se va alguien
-Players.PlayerRemoving:Connect(function(player)
-    if targetDropdownItems[player.Name] then
-        targetDropdownItems[player.Name] = nil
-        targetDropdown:Clear()
-        for _, displayName in pairs(targetDropdownItems) do
-            targetDropdown:Add(displayName)
-        end
-    end
-
-    for i = #targetPlayerNames, 1, -1 do
-        if targetPlayerNames[i] == player.Name then
-            table.remove(targetPlayerNames, i)
-        end
-    end
-end)
-
 
 -- 📌 Botón para dejar de seguir
 Killer:AddButton("Dejar de Seguir", function()
