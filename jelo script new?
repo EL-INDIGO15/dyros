@@ -317,40 +317,7 @@ MainTab:AddSwitch("auto rebirth", function(state)
     end
 end)
 
--- ⚡ AUTO RESPAWN ULTRA FAST
-local autoRespawn = false
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-
-AutoFarm:AddSwitch("Auto Respawn Ultra", function(state)
-	autoRespawn = state
-end)
-
-local function hookCharacter(character)
-	if not autoRespawn then return end
-	
-	local humanoid = character:WaitForChild("Humanoid", 5)
-	if humanoid then
-		humanoid.Died:Connect(function()
-			if autoRespawn then
-				-- Respawn casi instantáneo
-				player:LoadCharacter()
-			end
-		end)
-	end
-end
-
--- Hook cuando reaparece
-player.CharacterAdded:Connect(function(character)
-	task.wait()
-	hookCharacter(character)
-end)
-
--- Hook inicial
-if player.Character then
-	hookCharacter(player.Character)
-end
-
+AutoFarm:AddLabel("para farm mas rápido activa todo")
 
 local Stats = window:AddTab("Stats Farm")
 
