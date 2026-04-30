@@ -863,3 +863,28 @@ Misc:AddSwitch("Full antilag", function(state)
 end):Set(false)
 
 
+local Note = window:AddTab("Note") 
+
+Note:AddLabel("ლHadedHubლ") 
+Note:AddLabel("Script Done By HadesXSadKing") 
+Note:AddLabel("Tiktok: indigoxoriginal") 
+Note:AddLabel("script publico") 
+Note:AddLabel("GHT on top") 
+Note:AddLabel("gracias por usar HadesHub ❤️")
+
+Note:AddLabel("sigueme en tik tok:")
+
+Note:AddButton("Copiar TikTok del Clan", function()
+    setclipboard("https://www.tiktok.com/@clan.ght0?_r=1&_t=ZS-95xVezWoHxt")
+end)
+
+Note:AddButton("Copiar TikTok Creador", function()
+    setclipboard("https://www.tiktok.com/@indigoxoriginal?_r=1&_t=ZS-95xVqUPp1ca")
+end)
+
+Note:AddLabel("si tienes ideas para el script mándame mensaje a tik tok o a dicord")
+
+
+Note:AddButton("Copiar mi Discord", function()
+    setclipboard("https://discord.gg/PyYAxWa9")
+end)
