@@ -130,17 +130,24 @@ MainTab:AddSwitch("Auto Equip new", function(state)
     end
 end)
 
--- --- ANIMACIÓN DE COLORES LIBRERÍA ---
-local colores = {Color3.fromRGB(220, 20, 60), Color3.fromRGB(255, 0, 0), Color3.fromRGB(255, 255, 0)}
-task.spawn(function()
-    local indice = 1
-    while true do
-        local c1, c2 = colores[indice], colores[indice % #colores + 1]
-        for i = 0, 50 do
-            options.main_color = c1:Lerp(c2, i/50)
-            task.wait(0.05)
-        end
-        indice = indice % #colores + 1
+
+-- --- VARIABLES ---
+_G.AutoFarm = false
+local PesaEvent = ReplicatedStorage:WaitForChild("PesaEvent")
+
+-- --- AUTO FARM (SOLO EVENTO - SIN PROMPTS) ---
+MainTab:AddSwitch("Auto Farm", function(state)
+    _G.AutoFarm = state
+    if state then
+        task.spawn(function()
+            while _G.AutoFarm do
+                -- Dispara el evento de fuerza directamente al servidor
+                PesaEvent:FireServer()
+                
+                -- Sin tiempo de espera para máxima velocidad de clics
+                task.wait() 
+            end
+        end)
     end
 end)
 
