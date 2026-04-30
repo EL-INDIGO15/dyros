@@ -13,230 +13,137 @@ local options = {
 
 local window = library:AddWindow("HadesHub Public|Bienvenid@ " .. player.DisplayName, options)
 
--- --- INTERFAZ DE CARGA MEJORADA ---
-local LoadGui = Instance.new("ScreenGui")
-LoadGui.Name = "CargaSistema"
-LoadGui.Parent = game.CoreGui
-LoadGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-LoadGui.DisplayOrder = 999
-
--- FONDO PRINCIPAL (CUBRE TODA LA PANTALLA)
-local MainBg = Instance.new("Frame")
-MainBg.Size = UDim2.new(1, 0, 1, 0)
-MainBg.Position = UDim2.new(0, 0, 0, 0)
-MainBg.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
-MainBg.Visible = false
-MainBg.ZIndex = 1
-MainBg.Parent = LoadGui
-
--- EFECTO DE GRADIENTE
-local Gradiente = Instance.new("UIGradient")
-Gradiente.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 10, 30)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(10, 10, 20)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 5, 25))
-})
-Gradiente.Rotation = 90
-Gradiente.Parent = MainBg
-
--- CONTENEDOR CENTRAL
-local Container = Instance.new("Frame")
-Container.Size = UDim2.new(0, 550, 0, 220)
-Container.Position = UDim2.new(0.5, -275, 0.5, -110)
-Container.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
-Container.BorderSizePixel = 0
-Container.ZIndex = 2
-Container.Parent = MainBg
-
-local EsquinaContenedor = Instance.new("UICorner")
-EsquinaContenedor.CornerRadius = UDim.new(0, 12)
-EsquinaContenedor.Parent = Container
-
--- BORDE LUMINOSO
-local BordeLuz = Instance.new("UIStroke")
-BordeLuz.Thickness = 2
-BordeLuz.Color = Color3.fromRGB(220, 20, 60)
-BordeLuz.Transparency = 0.2
-BordeLuz.Parent = Container
-
--- TÍTULO PRINCIPAL
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -20, 0, 70)
-Title.Position = UDim2.new(0, 10, 0, 0)
-Title.Text = "Auto Equip"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 32
-Title.TextColor3 = Color3.new(1, 1, 1)
-Title.BackgroundTransparency = 1
-Title.TextStrokeTransparency = 0.8
-Title.ZIndex = 3
-Title.Parent = Container
-
--- SUBTÍTULO
-local SubTitle = Instance.new("TextLabel")
-SubTitle.Size = UDim2.new(1, -20, 0, 30)
-SubTitle.Position = UDim2.new(0, 10, 0, 60)
-SubTitle.Text = "Cargando..."
-SubTitle.Font = Enum.Font.GothamSemibold
-SubTitle.TextSize = 16
-SubTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
-SubTitle.BackgroundTransparency = 1
-SubTitle.ZIndex = 3
-SubTitle.Parent = Container
-
--- TEXTO DE PORCENTAJE
-local PercentText = Instance.new("TextLabel")
-PercentText.Size = UDim2.new(1, -20, 0, 35)
-PercentText.Position = UDim2.new(0, 10, 0, 100)
-PercentText.Text = "0% COMPLETADO"
-PercentText.Font = Enum.Font.GothamBold
-PercentText.TextSize = 22
-PercentText.TextColor3 = Color3.fromRGB(255, 60, 80)
-PercentText.BackgroundTransparency = 1
-PercentText.ZIndex = 3
-PercentText.Parent = Container
-
--- FONDO DE BARRA
-local BarBg = Instance.new("Frame")
-BarBg.Size = UDim2.new(0.9, 0, 0, 20)
-BarBg.Position = UDim2.new(0.05, 0, 0.75, 0)
-BarBg.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-BarBg.BorderSizePixel = 0
-BarBg.ZIndex = 3
-BarBg.Parent = Container
-
-local EsquinaBarra = Instance.new("UICorner")
-EsquinaBarra.CornerRadius = UDim.new(1, 0)
-EsquinaBarra.Parent = BarBg
-
--- BARRA DE PROGRESO
-local BarFill = Instance.new("Frame")
-BarFill.Size = UDim2.new(0, 0, 1, 0)
-BarFill.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
-BarFill.BorderSizePixel = 0
-BarFill.ZIndex = 4
-BarFill.Parent = BarBg
-
-local EsquinaRelleno = Instance.new("UICorner")
-EsquinaRelleno.CornerRadius = UDim.new(1, 0)
-EsquinaRelleno.Parent = BarFill
-
--- EFECTO DE BRILLO EN LA BARRA
-local BrilloBarra = Instance.new("Frame")
-BrilloBarra.Size = UDim2.new(0.3, 0, 1, 0)
-BrilloBarra.Position = UDim2.new(-0.3, 0, 0, 0)
-BrilloBarra.BackgroundColor3 = Color3.new(1, 1, 1)
-BrilloBarra.BackgroundTransparency = 0.6
-BrilloBarra.ZIndex = 5
-BrilloBarra.Parent = BarFill
-
-task.spawn(function()
-    while true do
-        if MainBg.Visible then
-            TweenService:Create(BrilloBarra, TweenInfo.new(0.6, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 0, 0, 0)}):Play()
-            task.wait(0.6)
-            BrilloBarra.Position = UDim2.new(-0.3, 0, 0, 0)
-        end
-        task.wait()
-    end
-end)
-
--- BORDE RGB ANIMADO
-local RGBStroke = Instance.new("UIStroke")
-RGBStroke.Thickness = 2
-RGBStroke.Transparency = 0.3
-RGBStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-RGBStroke.Parent = BarBg
-
-task.spawn(function()
-    while true do
-        RGBStroke.Color = Color3.fromHSV(tick() % 5 / 5, 0.9, 1)
-        BordeLuz.Color = Color3.fromHSV(tick() % 5 / 5, 0.9, 1)
-        task.wait()
-    end
-end)
-
--- --- LÓGICA DE FARM ---
-local pesasCoords = {
-    Vector3.new(-172.12, 21.41, -58.76), Vector3.new(-77.64, 18.99, -130.70),
-    Vector3.new(-77.37, 18.99, -154.29), Vector3.new(-75.86, 18.99, -181.25),
-    Vector3.new(-77.89, 18.99, -208.86), Vector3.new(-179.35, 18.99, -210.28),
-    Vector3.new(-178.45, 18.99, -183.38), Vector3.new(-178.88, 18.99, -159.05),
-    Vector3.new(-178.63, 18.99, -132.09), Vector3.new(-83.09, 20.47, -924.31),
-    Vector3.new(-119.55, 20.47, -923.85), Vector3.new(-155.70, 20.47, -920.99),
-    Vector3.new(-194.14, 20.47, -923.30), Vector3.new(684.39, 27.87, -1212.78),
-    Vector3.new(682.37, 27.87, -1261.31), Vector3.new(684.59, 27.87, -1314.04),
-    Vector3.new(686.63, 27.87, -1372.44), Vector3.new(-1315.23, 28.81, 172.22),
-    Vector3.new(-217.58, 25.55, 820.00),
-    Vector3.new(-1243.89, 20.74, 183.92)
-}
-local tpIslaFinal = CFrame.new(-1240.90, 19.86, 184.41)
-
-_G.AutoEquip = false
-_G.AutoDurability = false
-_G.AutoFarm = false
-_G.AutoRebirth = false
-
--- --- PESTAÑAS ---
 local MainTab = window:AddTab("Main+")
 
-MainTab:AddSwitch("auto equip", function(state)
-    _G.AutoEquip = state
-    if state then
-        -- ANIMACIÓN DE ENTRADA
-        MainBg.Visible = true
-        Container.Position = UDim2.new(0.5, -275, 0.5, -500)
-        TweenService:Create(Container, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -275, 0.5, -110)}):Play()
+-- --- INTERFAZ DE CARGA (PANTALLA NEGRA TOTAL) ---
+local LoadGui = Instance.new("ScreenGui")
+LoadGui.Name = "BlackoutSystem"
+LoadGui.Parent = game.CoreGui
+LoadGui.DisplayOrder = 999
 
-        task.spawn(function()
-            local total = #pesasCoords
-            for i, coord in ipairs(pesasCoords) do
-                if not _G.AutoEquip then break end
-                local progress = i / total
-                -- ACTUALIZACIÓN DE BARRA CON ANIMACIÓN
-                TweenService:Create(BarFill, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Size = UDim2.new(progress, 0, 1, 0)}):Play()
-                PercentText.Text = math.floor(progress * 100) .. "% COMPLETADO"
-                SubTitle.Text = "Procesando zona: "..i.." de "..total
+local MainBg = Instance.new("Frame")
+MainBg.Size = UDim2.new(1, 0, 1, 0)
+MainBg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainBg.BackgroundTransparency = 0 
+MainBg.Visible = false
+MainBg.Parent = LoadGui
 
-                local char = player.Character or player.CharacterAdded:Wait()
-                char:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(coord + Vector3.new(0, 3, 0))
-                task.wait(0.3)
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(0, 400, 0, 150)
+Container.Position = UDim2.new(0.5, -200, 0.5, -75)
+Container.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Container.BorderSizePixel = 0
+Container.Parent = MainBg
 
-                -- ACTIVAR TODOS LOS PROMPTS
-                for _, v in pairs(workspace:GetDescendants()) do
-                    if v:IsA("ProximityPrompt") and (v.Parent.Position - coord).Magnitude < 12 then
-                        fireproximityprompt(v)
-                    end
-                end
+local StatusText = Instance.new("TextLabel")
+StatusText.Size = UDim2.new(1, 0, 0, 50)
+StatusText.Position = UDim2.new(0, 0, 0, 30)
+StatusText.Text = "INICIANDO RUTA..."
+StatusText.Font = Enum.Font.GothamBold
+StatusText.TextSize = 22
+StatusText.TextColor3 = Color3.new(1, 1, 1)
+StatusText.BackgroundTransparency = 1
+StatusText.Parent = Container
 
-                -- REVIVIR PARA ACTIVAR CORRECTAMENTE
-                if i < total and _G.AutoEquip then
-                    player.Character:BreakJoints()
-                    player.CharacterAdded:Wait()
-                    task.wait(0.2)
+local BarFill = Instance.new("Frame")
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+BarFill.Parent = Container -- Simplificado para la barra
+
+-- --- COORDENADAS ---
+_G.AutoFarmActive = false
+local pesasCoords = {
+    Vector3.new(694.62, 27.87, -1270.40), Vector3.new(696.49, 27.87, -1242.98),
+    Vector3.new(695.33, 27.87, -1223.68), Vector3.new(695.86, 27.87, -1202.15),
+    Vector3.new(-59.53, 20.47, -800.21), Vector3.new(-59.15, 20.47, -768.81),
+    Vector3.new(-59.26, 20.47, -738.31), Vector3.new(-61.37, 20.47, -706.93),
+    Vector3.new(-182.77, 19.99, -95.70), Vector3.new(-161.17, 19.99, -94.88),
+    Vector3.new(-89.05, 19.99, -92.99), Vector3.new(-105.42, 19.99, -98.02),
+    Vector3.new(-90.30, 19.99, 77.85), Vector3.new(-107.11, 19.99, 78.78),
+    Vector3.new(-789.61, 20.92, -117.28), Vector3.new(-762.22, 20.92, -117.68),
+    Vector3.new(-741.80, 20.92, -116.77), Vector3.new(-211.24, 20.92, 875.87),
+    Vector3.new(-184.88, 20.92, 873.65), Vector3.new(-165.80, 20.92, 875.92),
+    Vector3.new(-142.43, 20.92, 873.87), Vector3.new(-1240.07, 25.68, 181.62),
+    Vector3.new(-1314.62, 25.44, 166.56) -- ESTA ES LA ÚLTIMA (Isla Final)
+}
+
+-- --- LÓGICA DE EJECUCIÓN ---
+local function startFarming()
+    MainBg.Visible = true
+    local total = #pesasCoords
+    local ultimaCoord = pesasCoords[total]
+    
+    -- FASE 1: RECORRIDO CON PANTALLA NEGRA
+    for i, coord in ipairs(pesasCoords) do
+        if not _G.AutoFarmActive then break end
+        
+        StatusText.Text = "EQUIPANDO: " .. i .. " / " .. total
+        local char = player.Character or player.CharacterAdded:Wait()
+        char:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(coord + Vector3.new(0, 3, 0))
+        
+        task.wait(0.5)
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ProximityPrompt") then
+                local pPos = (v.Parent:IsA("BasePart") and v.Parent.Position) or (v.Parent:IsA("Model") and v.Parent:GetPivot().Position)
+                if pPos and (pPos - coord).Magnitude < 15 then
+                    fireproximityprompt(v)
                 end
             end
-
-            -- TELETRANSPORTE FINAL
-            if _G.AutoEquip then 
-                PercentText.Text = "Cargado"
-                SubTitle.Text = "Auto Equip Cargado"
-                task.wait(0.8)
-                player.Character:WaitForChild("HumanoidRootPart").CFrame = tpIslaFinal
-                -- ANIMACIÓN DE SALIDA
-                TweenService:Create(Container, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -275, 0.5, -500)}):Play()
-                task.wait(0.4)
-                MainBg.Visible = false
-            end
-        end)
-    else
-        if MainBg.Visible then
-            TweenService:Create(Container, TweenInfo.new(0.3), {Position = UDim2.new(0.5, -275, 0.5, -500)}):Play()
-            task.wait(0.3)
-            MainBg.Visible = false
         end
     end
+
+    -- FASE 2: LLEGADA AL FINAL Y QUITAR GUI
+    if _G.AutoFarmActive then
+        MainBg.Visible = false -- Quitamos el blackout
+        
+        -- Bucle infinito en la última posición
+        while _G.AutoFarmActive do
+            local char = player.Character or player.CharacterAdded:Wait()
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            
+            if hrp then
+                -- Se mantiene en la última coordenada
+                hrp.CFrame = CFrame.new(ultimaCoord + Vector3.new(0, 3, 0))
+                
+                -- Spam del prompt de la última pesa
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:IsA("ProximityPrompt") then
+                        local pPos = (v.Parent:IsA("BasePart") and v.Parent.Position) or (v.Parent:IsA("Model") and v.Parent:GetPivot().Position)
+                        if pPos and (pPos - ultimaCoord).Magnitude < 15 then
+                            fireproximityprompt(v)
+                        end
+                    end
+                end
+            end
+            task.wait(0.1) -- Velocidad de farmeo constante
+        end
+    end
+end
+
+-- --- SWITCH LIBRERÍA ---
+MainTab:AddSwitch("Auto Equip new", function(state)
+    _G.AutoFarmActive = state
+    if state then
+        task.spawn(startFarming)
+    else
+        MainBg.Visible = false
+    end
 end)
+
+-- --- ANIMACIÓN DE COLORES LIBRERÍA ---
+local colores = {Color3.fromRGB(220, 20, 60), Color3.fromRGB(255, 0, 0), Color3.fromRGB(255, 255, 0)}
+task.spawn(function()
+    local indice = 1
+    while true do
+        local c1, c2 = colores[indice], colores[indice % #colores + 1]
+        for i = 0, 50 do
+            options.main_color = c1:Lerp(c2, i/50)
+            task.wait(0.05)
+        end
+        indice = indice % #colores + 1
+    end
+end)
+
 
 MainTab:AddSwitch("auto durabilidad", function(state)
     _G.AutoDurability = state
