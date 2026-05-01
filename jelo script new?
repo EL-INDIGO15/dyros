@@ -15,16 +15,15 @@ local window = library:AddWindow("HadesHub Public|Bienvenid@ " .. player.Display
 
 local MainTab = window:AddTab("Main+")
 
--- --- INTERFAZ DE CARGA (PANTALLA NEGRA TOTAL) ---
+-- --- INTERFAZ NEGRA (BLACKOUT) ---
 local LoadGui = Instance.new("ScreenGui")
-LoadGui.Name = "BlackoutSystem"
+LoadGui.Name = "UltraBlackout"
 LoadGui.Parent = game.CoreGui
 LoadGui.DisplayOrder = 999
 
 local MainBg = Instance.new("Frame")
 MainBg.Size = UDim2.new(1, 0, 1, 0)
 MainBg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-MainBg.BackgroundTransparency = 0 
 MainBg.Visible = false
 MainBg.Parent = LoadGui
 
@@ -32,25 +31,19 @@ local Container = Instance.new("Frame")
 Container.Size = UDim2.new(0, 400, 0, 150)
 Container.Position = UDim2.new(0.5, -200, 0.5, -75)
 Container.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Container.BorderSizePixel = 0
 Container.Parent = MainBg
 
 local StatusText = Instance.new("TextLabel")
 StatusText.Size = UDim2.new(1, 0, 0, 50)
-StatusText.Position = UDim2.new(0, 0, 0, 30)
-StatusText.Text = "INICIANDO RUTA..."
+StatusText.Position = UDim2.new(0, 0, 0, 40)
+StatusText.Text = "CARGANDO EQUIPAMIENTO..."
 StatusText.Font = Enum.Font.GothamBold
-StatusText.TextSize = 22
+StatusText.TextSize = 20
 StatusText.TextColor3 = Color3.new(1, 1, 1)
 StatusText.BackgroundTransparency = 1
 StatusText.Parent = Container
 
-local BarFill = Instance.new("Frame")
-BarFill.Size = UDim2.new(0, 0, 1, 0)
-BarFill.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-BarFill.Parent = Container -- Simplificado para la barra
-
--- --- COORDENADAS ---
+-- --- COORDENADAS ACTUALIZADAS ---
 _G.AutoFarmActive = false
 local pesasCoords = {
     Vector3.new(694.62, 27.87, -1270.40), Vector3.new(696.49, 27.87, -1242.98),
@@ -63,25 +56,30 @@ local pesasCoords = {
     Vector3.new(-789.61, 20.92, -117.28), Vector3.new(-762.22, 20.92, -117.68),
     Vector3.new(-741.80, 20.92, -116.77), Vector3.new(-211.24, 20.92, 875.87),
     Vector3.new(-184.88, 20.92, 873.65), Vector3.new(-165.80, 20.92, 875.92),
-    Vector3.new(-142.43, 20.92, 873.87), Vector3.new(-1240.07, 25.68, 181.62),
-    Vector3.new(-1314.62, 25.44, 166.56) -- ESTA ES LA ÚLTIMA (Isla Final)
+    Vector3.new(-142.43, 20.92, 873.87), Vector3.new(1240.07, 25.68, 181.62),
+    Vector3.new(1661.79, 23.54, -1436.80), -- Nueva coordenada añadida
+    Vector3.new(1780.15, 31.62, -1441.65)  -- NUEVA ÚLTIMA COORDENADA
 }
 
 -- --- LÓGICA DE EJECUCIÓN ---
-local function startFarming()
+local function startUltraFarm()
     MainBg.Visible = true
     local total = #pesasCoords
     local ultimaCoord = pesasCoords[total]
+    local PesaEvent = ReplicatedStorage:WaitForChild("PesaEvent")
     
-    -- FASE 1: RECORRIDO CON PANTALLA NEGRA
+    -- 1. FASE: RUTA DE EQUIPAMIENTO (PANTALLA NEGRA)
     for i, coord in ipairs(pesasCoords) do
         if not _G.AutoFarmActive then break end
         
-        StatusText.Text = "EQUIPANDO: " .. i .. " / " .. total
+        StatusText.Text = "PROCESANDO PUNTO: " .. i .. " / " .. total
         local char = player.Character or player.CharacterAdded:Wait()
-        char:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(coord + Vector3.new(0, 3, 0))
+        local hrp = char:WaitForChild("HumanoidRootPart")
         
+        hrp.CFrame = CFrame.new(coord + Vector3.new(0, 3, 0))
         task.wait(0.5)
+
+        -- Activar Prompts cercanos
         for _, v in pairs(workspace:GetDescendants()) do
             if v:IsA("ProximityPrompt") then
                 local pPos = (v.Parent:IsA("BasePart") and v.Parent.Position) or (v.Parent:IsA("Model") and v.Parent:GetPivot().Position)
@@ -92,20 +90,19 @@ local function startFarming()
         end
     end
 
-    -- FASE 2: LLEGADA AL FINAL Y QUITAR GUI
+    -- 2. FASE: FARM INFINITO (PANTALLA NORMAL)
     if _G.AutoFarmActive then
-        MainBg.Visible = false -- Quitamos el blackout
+        MainBg.Visible = false -- Quitamos el blackout al llegar al final
         
-        -- Bucle infinito en la última posición
         while _G.AutoFarmActive do
-            local char = player.Character or player.CharacterAdded:Wait()
-            local hrp = char:FindFirstChild("HumanoidRootPart")
+            -- Evento de fuerza al servidor
+            PesaEvent:FireServer()
             
+            -- Asegurar posición y spam de prompt final
+            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
             if hrp then
-                -- Se mantiene en la última coordenada
                 hrp.CFrame = CFrame.new(ultimaCoord + Vector3.new(0, 3, 0))
                 
-                -- Spam del prompt de la última pesa
                 for _, v in pairs(workspace:GetDescendants()) do
                     if v:IsA("ProximityPrompt") then
                         local pPos = (v.Parent:IsA("BasePart") and v.Parent.Position) or (v.Parent:IsA("Model") and v.Parent:GetPivot().Position)
@@ -115,42 +112,20 @@ local function startFarming()
                     end
                 end
             end
-            task.wait(0.1) -- Velocidad de farmeo constante
+            task.wait() -- Máxima velocidad
         end
     end
 end
 
--- --- SWITCH LIBRERÍA ---
-MainTab:AddSwitch("Auto Equip new", function(state)
+-- --- SWITCH EN LA LIBRERÍA ---
+MainTab:AddSwitch("Auto Equip", function(state)
     _G.AutoFarmActive = state
     if state then
-        task.spawn(startFarming)
+        task.spawn(startUltraFarm)
     else
         MainBg.Visible = false
     end
 end)
-
-
--- --- VARIABLES ---
-_G.AutoFarm = false
-local PesaEvent = ReplicatedStorage:WaitForChild("PesaEvent")
-
--- --- AUTO FARM (SOLO EVENTO - SIN PROMPTS) ---
-MainTab:AddSwitch("Auto Farm", function(state)
-    _G.AutoFarm = state
-    if state then
-        task.spawn(function()
-            while _G.AutoFarm do
-                -- Dispara el evento de fuerza directamente al servidor
-                PesaEvent:FireServer()
-                
-                -- Sin tiempo de espera para máxima velocidad de clics
-                task.wait() 
-            end
-        end)
-    end
-end)
-
 
 MainTab:AddSwitch("auto durabilidad", function(state)
     _G.AutoDurability = state
