@@ -231,7 +231,25 @@ MainTab:AddSwitch("activar para empezar farm durabilidad", function(state)
     end
 end)
 
+-- --- VARIABLES ---
+_G.AutoFarm = false
+local PesaEvent = ReplicatedStorage:WaitForChild("PesaEvent")
 
+-- --- AUTO FARM (SOLO EVENTO - SIN PROMPTS) ---
+Tab:AddSwitch("Auto Farm", function(state)
+    _G.AutoFarm = state
+    if state then
+        task.spawn(function()
+            while _G.AutoFarm do
+                -- Dispara el evento de fuerza directamente al servidor
+                PesaEvent:FireServer()
+                
+                -- Sin tiempo de espera para máxima velocidad de clics
+                task.wait() 
+            end
+        end)
+    end
+end)
 
 MainTab:AddSwitch("auto rebirth", function(state)
     _G.AutoRebirth = state
