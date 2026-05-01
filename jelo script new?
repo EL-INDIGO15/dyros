@@ -53,7 +53,7 @@ local function startUltraFarm()
         hrp.CFrame = CFrame.new(coord + Vector3.new(0, 3, 0))
         
         -- ESPERA AUMENTADA para que el servidor registre la posición y equipe bien
-        task.wait(1.2) 
+        task.wait(1.5) 
 
         -- Activar Prompts cercanos
         for _, v in pairs(workspace:GetDescendants()) do
@@ -104,7 +104,6 @@ end)
 -- --- VARIABLES ---
 _G.AutoFarm = false
 _G.AutoEquip = false
-local PesaEvent = ReplicatedStorage:WaitForChild("PesaEvent")
 
 -- --- LÓGICA DE TELETRANSPORTE SOLO (ZONA FINAL) ---
 local function tpSinEquipar()
@@ -236,7 +235,7 @@ _G.AutoFarm = false
 local PesaEvent = ReplicatedStorage:WaitForChild("PesaEvent")
 
 -- --- AUTO FARM (SOLO EVENTO - SIN PROMPTS) ---
-Tab:AddSwitch("Auto Farm", function(state)
+MainTab:AddSwitch("Auto Farm", function(state)
     _G.AutoFarm = state
     if state then
         task.spawn(function()
