@@ -158,6 +158,64 @@ MainTab:AddSwitch("auto durabilidad", function(state)
     end
 end)
 
+-- --- VARIABLES ---
+_G.AutoFarm = false
+_G.AutoEquip = false
+local PesaEvent = ReplicatedStorage:WaitForChild("PesaEvent")
+
+-- --- LÓGICA DE TELETRANSPORTE SOLO (ZONA FINAL) ---
+local function tpSinEquipar()
+    local targetPos = Vector3.new(1780.15, 31.62, -1441.65)
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
+end
+
+-- --- SECCIÓN: AUTO EQUIP (RUTA ACTUALIZADA) ---
+MainTab:AddSwitch("Auto Equip V1", function(state)
+    _G.AutoEquip = state
+    if state then
+        task.spawn(function()
+            local coordsEquip = {
+                Vector3.new(694.62, 27.87, -1270.40), Vector3.new(696.49, 27.87, -1242.98),
+                Vector3.new(695.33, 27.87, -1223.68), Vector3.new(695.86, 27.87, -1202.15),
+                Vector3.new(-59.53, 20.47, -800.21), Vector3.new(-59.15, 20.47, -768.81),
+                Vector3.new(-59.26, 20.47, -738.31), Vector3.new(-61.37, 20.47, -706.93),
+                Vector3.new(-182.77, 19.99, -95.70), Vector3.new(-161.17, 19.99, -94.88),
+                Vector3.new(-89.05, 19.99, -92.99), Vector3.new(-105.42, 19.99, -98.02),
+                Vector3.new(-90.30, 19.99, 77.85), Vector3.new(-107.11, 19.99, 78.78),
+                Vector3.new(-789.61, 20.92, -117.28), Vector3.new(-762.22, 20.92, -117.68),
+                Vector3.new(-741.80, 20.92, -116.77), Vector3.new(-211.24, 20.92, 875.87),
+                Vector3.new(-184.88, 20.92, 873.65), Vector3.new(-165.80, 20.92, 875.92),
+                Vector3.new(-142.43, 20.92, 873.87), Vector3.new(-1240.07, 25.68, 181.62),
+                Vector3.new(1661.79, 23.54, -1436.80) -- NUEVA COORDENADA PARA EQUIPAR
+            }
+
+            for _, coord in ipairs(coordsEquip) do
+                if not _G.AutoEquip then break end
+                local char = player.Character or player.CharacterAdded:Wait()
+                local hrp = char:WaitForChild("HumanoidRootPart")
+                hrp.CFrame = CFrame.new(coord + Vector3.new(0, 3, 0))
+                
+                task.wait(0.4)
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:IsA("ProximityPrompt") and v.Parent:IsA("BasePart") then
+                        if (v.Parent.Position - coord).Magnitude < 15 then
+                            fireproximityprompt(v)
+                        end
+                    end
+                end
+            end
+            
+            -- TP Final Limpio al terminar la lista
+            if _G.AutoEquip then
+                tpSinEquipar()
+            end
+        end)
+    end
+end)
+
+
 MainTab:AddSwitch("activar para empezar farm durabilidad", function(state)
     _G.AutoFarm = state
     if state then
