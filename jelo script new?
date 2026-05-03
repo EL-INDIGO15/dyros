@@ -230,6 +230,84 @@ MainTab:AddSwitch("activar para empezar farm durabilidad", function(state)
     end
 end)
 
+
+MainTab:AddSwitch("Auto Gemas", function(state)
+    autoFarmActive = state
+
+    -- ACTIVAR / DESACTIVAR LOCK POSITION AUTOMÁTICAMENTE
+    if state then
+        local char = game.Players.LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local currentPos = char.HumanoidRootPart.CFrame
+
+            getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function()
+                if game.Players.LocalPlayer.Character 
+                and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = currentPos
+                end
+            end)
+        end
+    else
+        if getgenv().posLock then
+            getgenv().posLock:Disconnect()
+            getgenv().posLock = nil
+        end
+    end
+
+    task.spawn(function()
+        while autoFarmActive do
+            local char = player.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+            if hrp then
+                local posOriginal = hrp.CFrame
+
+                hrp.CFrame = CFrame.new(islaPos)
+                task.wait(tiempoEsperaIsla)
+                hrp.CFrame = posOriginal
+
+                local start = tick()
+                while (tick() - start) < tiempoCiclo and autoFarmActive do
+                    for _, v in pairs(game:GetDescendants()) do
+                        if v.Name == "Choripapa" then
+                            if not v:IsA("TouchTransmitter") and not v.Name:find("Portal") then
+                                pcall(function()
+
+                                    if v:IsA("BasePart") then
+                                        v.CanCollide = false
+                                        v.Transparency = 1 -- INVISIBLE
+                                        v.CFrame = hrp.CFrame * CFrame.new(0, 0, -4)
+                                        v.Velocity = Vector3.zero
+
+                                    elseif v:IsA("Model") then
+                                        for _, part in pairs(v:GetDescendants()) do
+                                            if part:IsA("BasePart") then
+                                                part.CanCollide = false
+                                                part.Transparency = 1 -- INVISIBLE
+                                            end
+                                        end
+
+                                        local primary = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart", true)
+                                        if primary then
+                                            primary.CFrame = hrp.CFrame * CFrame.new(0, 0, -4)
+                                            primary.Velocity = Vector3.zero
+                                        end
+                                    end
+
+                                end)
+                            end
+                        end
+                    end
+                    task.wait(0.05)
+                end
+            else
+                task.wait(1)
+            end
+        end
+    end)
+end)
+
+
 -- --- VARIABLES ---
 _G.AutoFarm = false
 local PesaEvent = ReplicatedStorage:WaitForChild("PesaEvent")
