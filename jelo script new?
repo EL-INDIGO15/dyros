@@ -230,75 +230,75 @@ MainTab:AddSwitch("activar para empezar farm durabilidad", function(state)
     end
 end)
 
+-- CONFIGURACIÓN
+local player = game.Players.LocalPlayer 
+local islaPos = Vector3.new(547.58, 24.95, 1379.64)
+local tiempoEsperaIsla = 0.2 -- Aumentado un poco para que el portal te detecte
+local tiempoCiclo = 2.6
 
-MainTab:AddSwitch("Auto Gemas", function(state)
+local autoFarmActive = false
+
+-- SISTEMA ANTI-KNOCKBACK (Prioridad Alta)
+task.spawn(function()
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if autoFarmActive and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            local hum = player.Character.Humanoid
+            if hum.MoveDirection.Magnitude <= 0 then
+                hrp.Velocity = Vector3.new(0, hrp.Velocity.Y, 0)
+                hrp.RotVelocity = Vector3.new(0, 0, 0)
+            end
+        end
+    end)
+end)
+
+MainTab:AddSwitch("Forzar Farm (Ciclo 2.6s)", function(state)
     autoFarmActive = state
-
-    -- ACTIVAR / DESACTIVAR LOCK POSITION AUTOMÁTICAMENTE
-    if state then
-        local char = game.Players.LocalPlayer.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            local currentPos = char.HumanoidRootPart.CFrame
-
-            getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function()
-                if game.Players.LocalPlayer.Character 
-                and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = currentPos
-                end
-            end)
-        end
-    else
-        if getgenv().posLock then
-            getgenv().posLock:Disconnect()
-            getgenv().posLock = nil
-        end
-    end
-
+    
     task.spawn(function()
         while autoFarmActive do
             local char = player.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
+            
             if hrp then
+                -- 1. GUARDAR POSICIÓN ACTUAL
                 local posOriginal = hrp.CFrame
-
+                
+                -- 2. IR A LA ISLA Y ESPERAR UN MOMENTO (Para que el portal cargue)
                 hrp.CFrame = CFrame.new(islaPos)
-                task.wait(tiempoEsperaIsla)
+                task.wait(tiempoEsperaIsla) 
+
+                -- 3. REGRESAR A DONDE ESTABAS
                 hrp.CFrame = posOriginal
 
+                -- 4. BUCLE DE ATRACCIÓN (Durante los 2.6 segundos)
                 local start = tick()
                 while (tick() - start) < tiempoCiclo and autoFarmActive do
+                    -- Buscamos en TODO el juego por si el mapa cambia de nombre
                     for _, v in pairs(game:GetDescendants()) do
                         if v.Name == "Choripapa" then
+                            -- Filtro para no jalar el Portal
                             if not v:IsA("TouchTransmitter") and not v.Name:find("Portal") then
                                 pcall(function()
-
+                                    -- Hacerlo invisible y sin colisión
                                     if v:IsA("BasePart") then
                                         v.CanCollide = false
-                                        v.Transparency = 1 -- INVISIBLE
+                                        v.Transparency = 1
                                         v.CFrame = hrp.CFrame * CFrame.new(0, 0, -4)
                                         v.Velocity = Vector3.zero
-
                                     elseif v:IsA("Model") then
-                                        for _, part in pairs(v:GetDescendants()) do
-                                            if part:IsA("BasePart") then
-                                                part.CanCollide = false
-                                                part.Transparency = 1 -- INVISIBLE
-                                            end
-                                        end
-
                                         local primary = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart", true)
                                         if primary then
+                                            primary.CanCollide = false
                                             primary.CFrame = hrp.CFrame * CFrame.new(0, 0, -4)
                                             primary.Velocity = Vector3.zero
                                         end
                                     end
-
                                 end)
                             end
                         end
                     end
-                    task.wait(0.05)
+                    task.wait(0.05) -- Refresco constante
                 end
             else
                 task.wait(1)
